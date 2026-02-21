@@ -14,15 +14,17 @@ See ADR-0006 (UI Theming), ADR-0001 (Technology Stack — DaisyUI + Tailwind).
 
 The application MUST define exactly two custom DaisyUI themes: `joe-light` (pastel light theme) and `joe-dark` (pastel dark theme). Both themes MUST be declared in `tailwind.config.js` under the `daisyui.themes` array. No built-in DaisyUI themes SHOULD be used as the application's primary themes. All color tokens (primary, secondary, accent, neutral, base-100/200/300, info, success, warning, error) MUST be explicitly defined for both themes.
 
+The authoritative palette is defined in ADR-0006. Backgrounds MUST be true white (`#ffffff`) in light mode and near-black (`#111111`) in dark mode. Foreground text MUST be true black (`#000000`) in light mode and true white (`#ffffff`) in dark mode. Pastel accent colors (lilac primary, peach secondary, mint accent, rose-red error) are layered on top of these neutral bases.
+
 #### Scenario: Light Theme Colors Applied
 
 - **WHEN** `data-theme="joe-light"` is set on the `<html>` element
-- **THEN** all DaisyUI components MUST render using the `joe-light` palette (lilac primary, peach secondary, mint accent, soft lavender-white base)
+- **THEN** all DaisyUI components MUST render using the `joe-light` palette (lilac primary, peach secondary, mint accent, white base, black text)
 
 #### Scenario: Dark Theme Colors Applied
 
 - **WHEN** `data-theme="joe-dark"` is set on the `<html>` element
-- **THEN** all DaisyUI components MUST render using the `joe-dark` palette (purple primary, orange secondary, emerald accent, deep purple-black base)
+- **THEN** all DaisyUI components MUST render using the `joe-dark` palette (purple primary, orange secondary, emerald accent, near-black base, white text)
 
 #### Scenario: No Unlisted Theme Accepted
 
@@ -112,7 +114,7 @@ All primary, secondary, and accent color pairings with their respective content 
 #### Scenario: Primary Color Contrast
 
 - **WHEN** body text is rendered on the `base-100` background
-- **THEN** the contrast ratio between `base-content` and `base-100` MUST be at least 4.5:1 in both `joe-light` and `joe-dark`
+- **THEN** the contrast ratio between `base-content` and `base-100` MUST be at least 4.5:1 in both `joe-light` and `joe-dark` (black on white and white on near-black both trivially satisfy this)
 
 #### Scenario: Button Text Contrast
 

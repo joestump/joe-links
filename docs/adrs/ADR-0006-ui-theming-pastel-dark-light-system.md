@@ -33,23 +33,23 @@ DaisyUI themes are defined as CSS property sets in `tailwind.config.js` under th
 
 ### Pastel Color Palette
 
-Both themes are built around a warm pastel palette:
+Both themes are built around a warm pastel palette. Backgrounds and foregrounds use true black/white so the pastel accent colors pop cleanly without a tinted cast.
 
 | Role            | Light (`joe-light`) | Dark (`joe-dark`)    |
 |-----------------|---------------------|----------------------|
 | Primary         | `#c084fc` (lilac)   | `#a855f7` (purple)   |
-| Primary content | `#fafafa`           | `#fafafa`            |
+| Primary content | `#ffffff`           | `#ffffff`            |
 | Secondary       | `#fb923c` (peach)   | `#f97316` (orange)   |
 | Accent          | `#34d399` (mint)    | `#10b981` (emerald)  |
 | Neutral         | `#6b7280` (slate)   | `#9ca3af`            |
-| Base-100        | `#fdf4ff` (soft lavender-white) | `#1e1b2e` (deep purple-black) |
-| Base-200        | `#f3e8ff`           | `#2d2840`            |
-| Base-300        | `#e9d5ff`           | `#3d3756`            |
-| Base content    | `#1f1335` (near-black purple) | `#e9d5ff`    |
+| Base-100        | `#ffffff` (white)   | `#111111` (near-black) |
+| Base-200        | `#f5f5f5` (light grey) | `#1c1c1c`         |
+| Base-300        | `#e8e8e8` (mid grey) | `#2a2a2a`           |
+| Base content    | `#000000` (black)   | `#ffffff` (white)    |
 | Info            | `#67e8f9` (sky)     | `#22d3ee`            |
 | Success         | `#86efac` (sage)    | `#4ade80`            |
 | Warning         | `#fde68a` (butter)  | `#fbbf24`            |
-| Error           | `#fca5a5` (rose)    | `#f87171`            |
+| Error           | `#fca5a5` (rose-red) | `#f87171` (red)     |
 
 ### Theme Switching UX
 
@@ -62,6 +62,7 @@ Both themes are built around a warm pastel palette:
 * Good, because DaisyUI theme variables cover all component colors automatically — no per-component theming needed
 * Good, because cookie-based persistence works identically for HTMX partial requests and full page renders (SSR-safe)
 * Good, because the inline anti-flash script is dependency-free and tiny
+* Good, because true black/white backgrounds let the pastel accent colors pop without a tinted cast
 * Good, because the pastel palette is cohesive — both themes feel "fun" while remaining accessible
 * Bad, because two custom themes add a small amount of Tailwind config boilerplate
 * Bad, because the anti-flash inline script is a minor departure from "no inline JS" — acceptable given its size and purpose
