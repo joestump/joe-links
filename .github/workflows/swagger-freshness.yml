@@ -1,0 +1,38 @@
+# Governing: SPEC-0007 REQ "Spec Freshness in CI", ADR-0010
+# Verifies that docs/swagger/ is up to date with handler annotations.
+# Fails if make swagger produces a diff (i.e., the spec is stale).
+name: Swagger Freshness
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  swagger-freshness:
+    name: Verify swagger spec is up to date
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Regenerate swagger spec
+        run: make swagger
+
+      - name: Check for stale swagger files
+        # Governing: SPEC-0007 REQ "Spec Freshness in CI"
+        # If any docs/swagger/ file changed, the spec is stale and CI must fail.
+        run: |
+          if ! git diff --exit-code docs/swagger/; then
+            echo "::error::docs/swagger/ is stale. Run 'make swagger' and commit the result."
+            exit 1
+          fi
