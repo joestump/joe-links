@@ -1,0 +1,26 @@
+{
+  "tracker": "github",
+  "tracker_config": {
+    "owner": "joestump",
+    "repo": "joe-links"
+  },
+  "projects": {
+    "default_mode": "per-epic",
+    "project_ids": {},
+    "views": ["All Work", "Board", "Roadmap"],
+    "columns": ["Todo", "In Progress", "In Review", "Done"],
+    "iteration_weeks": 2
+  },
+  "branches": {
+    "enabled": true,
+    "prefix": "feature",
+    "epic_prefix": "epic",
+    "slug_max_length": 50
+  },
+  "pr_conventions": {
+    "enabled": true,
+    "close_keyword": "Closes",
+    "ref_keyword": "Part of",
+    "include_spec_reference": true
+  }
+}
