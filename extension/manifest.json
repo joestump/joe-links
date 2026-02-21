@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "joe-links",
+  "version": "1.0.0",
+  "description": "Navigate to go/slug links without typing http://",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
+}
