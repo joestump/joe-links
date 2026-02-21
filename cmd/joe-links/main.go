@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	_ "github.com/joestump/joe-links/docs/swagger" // Governing: SPEC-0007 REQ "OpenAPI Spec Generation"
 )
 
 func main() {
