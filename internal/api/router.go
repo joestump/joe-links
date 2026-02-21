@@ -49,6 +49,10 @@ func NewAPIRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management"
 	registerLinkRoutes(r, deps.LinkStore, deps.OwnershipStore, deps.UserStore)
 
+	// Admin-only routes behind role-check middleware group.
+	// Governing: SPEC-0005 REQ "Admin Endpoints", ADR-0008
+	registerAdminRoutes(r, deps.UserStore, deps.LinkStore, deps.OwnershipStore)
+
 	return r
 }
 
