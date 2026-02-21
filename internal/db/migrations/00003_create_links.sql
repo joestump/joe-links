@@ -1,19 +1,15 @@
+-- Governing: SPEC-0002 REQ "Links Table"
 -- +goose Up
--- +goose StatementBegin
 CREATE TABLE IF NOT EXISTS links (
-    id          TEXT PRIMARY KEY,
-    slug        TEXT NOT NULL UNIQUE,
-    url         TEXT NOT NULL,
-    owner_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    description TEXT NOT NULL DEFAULT '',
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id TEXT PRIMARY KEY,
+    slug TEXT NOT NULL,
+    url TEXT NOT NULL,
+    title TEXT,
+    description TEXT,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX IF NOT EXISTS links_slug_idx ON links(slug);
-CREATE INDEX IF NOT EXISTS links_owner_idx ON links(owner_id);
--- +goose StatementEnd
+CREATE UNIQUE INDEX IF NOT EXISTS idx_links_slug ON links(slug);
 
 -- +goose Down
--- +goose StatementBegin
 DROP TABLE IF EXISTS links;
--- +goose StatementEnd
