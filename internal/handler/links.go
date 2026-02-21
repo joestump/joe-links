@@ -3,14 +3,11 @@ package handler
 
 import (
 	"net/http"
-	"regexp"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/store"
 )
-
-var slugRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
 
 // LinkForm holds form input values for creating or editing a link.
 type LinkForm struct {
@@ -59,8 +56,8 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Description: r.FormValue("description"),
 	}
 
-	if !slugRE.MatchString(form.Slug) {
-		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: "Invalid slug: use lowercase letters, numbers, and hyphens only."})
+	if err := store.ValidateSlugFormat(form.Slug); err != nil {
+		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: err.Error()})
 		return
 	}
 
@@ -117,8 +114,8 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Description: r.FormValue("description"),
 	}
 
-	if !slugRE.MatchString(form.Slug) {
-		render(w, "edit.html", LinkFormPage{User: user, Link: link, Form: form, Error: "Invalid slug format."})
+	if err := store.ValidateSlugFormat(form.Slug); err != nil {
+		render(w, "edit.html", LinkFormPage{User: user, Link: link, Form: form, Error: err.Error()})
 		return
 	}
 
