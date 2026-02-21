@@ -9,10 +9,10 @@
     <td class="text-sm text-base-content/60">{{.Description}}</td>
     <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
     <td class="flex gap-1 justify-end">
-        <a href="/links/{{.ID}}/edit" class="btn btn-xs btn-ghost">Edit</a>
+        <a href="/dashboard/links/{{.ID}}/edit" class="btn btn-xs btn-ghost">Edit</a>
         <button
             class="btn btn-xs btn-error btn-ghost"
-            hx-delete="/links/{{.ID}}"
+            hx-delete="/dashboard/links/{{.ID}}"
             hx-target="#link-{{.ID}}"
             hx-swap="outerHTML"
             hx-confirm="Delete '{{.Slug}}'?"

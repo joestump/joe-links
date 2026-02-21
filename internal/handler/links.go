@@ -60,7 +60,7 @@ func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore) *LinksHandle
 func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
-	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Form: form}
+	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form}
 	if isHTMX(r) {
 		renderFragment(w, "content", data)
 		return
@@ -84,7 +84,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Form: form, Error: err.Error()}
+		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return
@@ -93,13 +93,13 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isReservedSlug(form.Slug) {
-		render(w, "new.html", LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."})
+		render(w, "new.html", LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."})
 		return
 	}
 
 	_, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, "", form.Description)
 	if err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
+		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return
@@ -135,7 +135,7 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Link: link}
+	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link}
 	if isHTMX(r) {
 		renderFragment(w, "content", data)
 		return
@@ -176,7 +176,7 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable, not updated here.
 	_, err = h.links.Update(r.Context(), id, form.URL, "", form.Description)
 	if err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Link: link, Form: form, Error: "Update failed."}
+		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: "Update failed."}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return

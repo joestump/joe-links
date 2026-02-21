@@ -35,7 +35,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		user := auth.UserFromContext(r.Context())
 		w.WriteHeader(http.StatusNotFound)
-		data := notFoundPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Slug: slug}
+		data := notFoundPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Slug: slug}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return

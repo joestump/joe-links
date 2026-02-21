@@ -1,0 +1,16 @@
+{{template "base" .}}
+{{define "title"}}Link — Joe Links{{end}}
+{{define "content"}}
+<div class="card bg-base-200">
+    <div class="card-body">
+        {{if .Link}}
+        <h2 class="card-title">{{.Link.Slug}}</h2>
+        <p><a href="{{.Link.URL}}" class="link">{{.Link.URL}}</a></p>
+        {{if .Link.Description}}<p class="text-base-content/70">{{.Link.Description}}</p>{{end}}
+        <div class="card-actions justify-end">
+            <a href="/dashboard/links/{{.Link.ID}}/edit" class="btn btn-sm btn-primary">Edit</a>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}

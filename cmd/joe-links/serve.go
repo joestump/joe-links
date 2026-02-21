@@ -56,6 +56,7 @@ func newServeCmd() *cobra.Command {
 				AuthMiddleware: authMiddleware,
 				LinkStore:      linkStore,
 				OwnershipStore: ownershipStore,
+				TagStore:       tagStore,
 			})
 
 			log.Printf("listening on %s", cfg.HTTP.Addr)

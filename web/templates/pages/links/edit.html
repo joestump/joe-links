@@ -14,7 +14,7 @@
             </div>
             {{end}}
 
-            <form hx-put="/links/{{.Link.ID}}" hx-target="body" hx-push-url="/dashboard">
+            <form hx-put="/dashboard/links/{{.Link.ID}}" hx-target="body" hx-push-url="/dashboard">
                 <!-- Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation. -->
                 <div class="form-control mb-4">
                     <label class="label"><span class="label-text">Slug</span></label>

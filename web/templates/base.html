@@ -12,43 +12,71 @@
 <body class="min-h-screen bg-base-100"
       hx-on:themeChanged="document.documentElement.setAttribute('data-theme',event.detail.theme);document.getElementById('theme-toggle-icon').textContent=event.detail.theme==='joe-dark'?'☀️':'🌙'">
 
+{{if .User}}
+<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — navbar with nav links, conditional Admin, user dropdown -->
 <nav class="navbar bg-base-200 shadow-sm px-4">
     <div class="navbar-start">
-        <a href="/dashboard" class="btn btn-ghost text-xl font-bold">
-            Joe Links
-        </a>
+        <a href="/dashboard" class="btn btn-ghost text-xl font-bold">Joe Links</a>
+    </div>
+    <div class="navbar-center hidden lg:flex">
+        <ul class="menu menu-horizontal px-1">
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/dashboard/tags">Tags</a></li>
+            {{if eq .User.Role "admin"}}<li><a href="/admin">Admin</a></li>{{end}}
+        </ul>
     </div>
     <div class="navbar-end gap-2">
         <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun when dark, moon when light -->
-        <button id="theme-toggle"
-                class="btn btn-ghost btn-circle"
+        <button id="theme-toggle" class="btn btn-ghost btn-circle"
                 hx-post="/dashboard/theme"
                 hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
                 hx-swap="none">
             <span id="theme-toggle-icon">{{if eq .Theme "joe-dark"}}☀️{{else}}🌙{{end}}</span>
         </button>
-        {{if .User}}
-        <span class="text-sm text-base-content/70">{{.User.DisplayName}}</span>
-        <form method="POST" action="/auth/logout">
-            <button class="btn btn-sm btn-ghost">Sign out</button>
-        </form>
-        {{else}}
-        <a href="/auth/login" class="btn btn-sm btn-primary">Sign in</a>
-        {{end}}
+        <div class="dropdown dropdown-end">
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
+                <div class="bg-neutral text-neutral-content rounded-full w-8">
+                    <span class="text-xs">{{slice .User.DisplayName 0 1}}</span>
+                </div>
+            </div>
+            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                <li><span class="text-sm font-medium">{{.User.DisplayName}}</span></li>
+                <li>
+                    <form method="POST" action="/auth/logout">
+                        <button type="submit">Sign out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
     </div>
 </nav>
-
-{{if .Flash}}
-<div class="toast toast-top toast-end z-50">
-    <div class="alert alert-{{.Flash.Type}}">
-        <span>{{.Flash.Message}}</span>
+{{else}}
+<nav class="navbar bg-base-200 shadow-sm px-4">
+    <div class="navbar-start">
+        <a href="/" class="btn btn-ghost text-xl font-bold">Joe Links</a>
     </div>
-</div>
+    <div class="navbar-end gap-2">
+        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun when dark, moon when light -->
+        <button id="theme-toggle" class="btn btn-ghost btn-circle"
+                hx-post="/dashboard/theme"
+                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                hx-swap="none">
+            <span id="theme-toggle-icon">{{if eq .Theme "joe-dark"}}☀️{{else}}🌙{{end}}</span>
+        </button>
+        <a href="/auth/login" class="btn btn-sm btn-primary">Sign in</a>
+    </div>
+</nav>
 {{end}}
+
+<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — toast area for HTMX OOB swaps -->
+<div id="toast-area" class="toast toast-top toast-end z-50"></div>
 
 <main class="container mx-auto px-4 py-8 max-w-4xl">
     {{block "content" .}}{{end}}
 </main>
+
+<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — modal target for HTMX injection -->
+<div id="modal"></div>
 
 </body>
 </html>

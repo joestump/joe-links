@@ -47,6 +47,24 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
+// OptionalUser loads the authenticated user into context if a valid session exists,
+// but does not redirect or reject unauthenticated requests. Use this on routes that
+// behave differently for logged-in vs anonymous users (e.g. landing page, slug resolver).
+func (m *Middleware) OptionalUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID := m.sessions.GetString(r.Context(), SessionUserIDKey)
+		if userID != "" {
+			user, err := m.users.GetByID(r.Context(), userID)
+			if err == nil {
+				ctx := context.WithValue(r.Context(), UserContextKey, user)
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // RequireRole returns a middleware that requires the user to have the given role.
 // Must be used after RequireAuth.
 func (m *Middleware) RequireRole(role string) func(http.Handler) http.Handler {
