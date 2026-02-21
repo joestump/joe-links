@@ -1,5 +1,4 @@
-// Governing: SPEC-0003 REQ "HTMX Theme Endpoint", SPEC-0003 REQ "Theme Toggle Control",
-// SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
+// Governing: SPEC-0003 REQ "Theme Toggle Control", "Theme Persistence via Cookie", "HTMX Theme Endpoint", ADR-0006
 package handler
 
 import (
