@@ -17,6 +17,7 @@ type Deps struct {
 	OwnershipStore   *store.OwnershipStore
 	TagStore         *store.TagStore
 	UserStore        *store.UserStore
+	KeywordStore     *store.KeywordStore
 }
 
 // NewAPIRouter creates and returns a chi router for /api/v1.
@@ -29,29 +30,37 @@ func NewAPIRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0005 REQ "API Router Mounting"
 	r.Use(jsonContentType)
 
-	// Bearer token authentication — required on all /api/v1/* routes.
+	// Public routes (no auth required).
+	// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
+	r.Group(func(r chi.Router) {
+		registerKeywordRoutes(r, deps.KeywordStore)
+	})
+
+	// Authenticated routes — bearer token required.
 	// Governing: SPEC-0006 REQ "No Web UI Session on API Routes"
-	r.Use(deps.BearerMiddleware.Authenticate)
+	r.Group(func(r chi.Router) {
+		r.Use(deps.BearerMiddleware.Authenticate)
 
-	// Token management routes.
-	// Governing: SPEC-0006 REQ "Token Management API"
-	registerTokenRoutes(r, deps.TokenStore)
+		// Token management routes.
+		// Governing: SPEC-0006 REQ "Token Management API"
+		registerTokenRoutes(r, deps.TokenStore)
 
-	// Tag routes.
-	// Governing: SPEC-0005 REQ "Tags"
-	registerTagRoutes(r, deps.TagStore, deps.LinkStore)
+		// Tag routes.
+		// Governing: SPEC-0005 REQ "Tags"
+		registerTagRoutes(r, deps.TagStore, deps.LinkStore)
 
-	// User profile routes.
-	// Governing: SPEC-0005 REQ "User Profile"
-	registerUserRoutes(r)
+		// User profile routes.
+		// Governing: SPEC-0005 REQ "User Profile"
+		registerUserRoutes(r)
 
-	// Link and co-owner management routes.
-	// Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management"
-	registerLinkRoutes(r, deps.LinkStore, deps.OwnershipStore, deps.UserStore)
+		// Link and co-owner management routes.
+		// Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management"
+		registerLinkRoutes(r, deps.LinkStore, deps.OwnershipStore, deps.UserStore)
 
-	// Admin-only routes behind role-check middleware group.
-	// Governing: SPEC-0005 REQ "Admin Endpoints", ADR-0008
-	registerAdminRoutes(r, deps.UserStore, deps.LinkStore, deps.OwnershipStore)
+		// Admin-only routes behind role-check middleware group.
+		// Governing: SPEC-0005 REQ "Admin Endpoints", ADR-0008
+		registerAdminRoutes(r, deps.UserStore, deps.LinkStore, deps.OwnershipStore)
+	})
 
 	return r
 }

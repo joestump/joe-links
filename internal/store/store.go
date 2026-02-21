@@ -39,3 +39,13 @@ type TagStoreIface interface {
 	GetBySlug(ctx context.Context, slug string) (*Tag, error)
 	ListAll(ctx context.Context) ([]*Tag, error)
 }
+
+// KeywordStoreIface exposes keyword operations.
+// Governing: ADR-0011 REQ "Keyword Host Discovery"
+type KeywordStoreIface interface {
+	List(ctx context.Context) ([]*Keyword, error)
+	GetByKeyword(ctx context.Context, keyword string) (*Keyword, error)
+	Create(ctx context.Context, keyword, urlTemplate, description string) (*Keyword, error)
+	Update(ctx context.Context, id, keyword, urlTemplate, description string) (*Keyword, error)
+	Delete(ctx context.Context, id string) error
+}
