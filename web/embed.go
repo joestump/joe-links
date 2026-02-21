@@ -1,4 +1,5 @@
 // Package web holds embedded static assets and templates for joe-links.
+// Governing: SPEC-0001 REQ "Go HTTP Server"
 package web
 
 import "embed"

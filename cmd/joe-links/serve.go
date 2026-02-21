@@ -1,4 +1,4 @@
-// Governing: SPEC-0001 REQ "CLI Entrypoint", ADR-0004
+// Governing: SPEC-0001 REQ "CLI Entrypoint", "Go HTTP Server", ADR-0004
 package main
 
 import (
