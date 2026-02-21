@@ -5,6 +5,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joestump/joe-links/internal/auth"
@@ -13,12 +14,13 @@ import (
 
 // ResolveHandler handles short link slug resolution and redirection.
 type ResolveHandler struct {
-	links *store.LinkStore
+	links    *store.LinkStore
+	keywords *store.KeywordStore
 }
 
 // NewResolveHandler creates a new ResolveHandler.
-func NewResolveHandler(ls *store.LinkStore) *ResolveHandler {
-	return &ResolveHandler{links: ls}
+func NewResolveHandler(ls *store.LinkStore, ks *store.KeywordStore) *ResolveHandler {
+	return &ResolveHandler{links: ls, keywords: ks}
 }
 
 type notFoundPage struct {
@@ -32,6 +34,18 @@ type notFoundPage struct {
 // Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
+
+	// Governing: ADR-0011 — check if request host is a registered keyword.
+	host := strings.SplitN(r.Host, ":", 2)[0]
+	kw, kwErr := h.keywords.GetByKeyword(r.Context(), host)
+	if kwErr == nil {
+		// Substitute {slug} in the URL template and redirect.
+		target := strings.ReplaceAll(kw.URLTemplate, "{slug}", slug)
+		http.Redirect(w, r, target, http.StatusFound)
+		return
+	}
+	// kwErr == store.ErrNotFound → fall through to normal slug resolution
+
 	link, err := h.links.GetBySlug(r.Context(), slug)
 	if err != nil {
 		user := auth.UserFromContext(r.Context())
