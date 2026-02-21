@@ -6,19 +6,26 @@
 <!-- Governing: SPEC-0004 REQ "Admin Dashboard" -->
 <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
     <div class="stat bg-base-200 rounded-box shadow">
         <div class="stat-title">Total Users</div>
         <div class="stat-value text-primary">{{.UserCount}}</div>
         <div class="stat-actions">
-            <a href="/admin/users" class="btn btn-sm btn-ghost">Manage →</a>
+            <a href="/admin/users" class="btn btn-sm btn-ghost">Manage &rarr;</a>
         </div>
     </div>
     <div class="stat bg-base-200 rounded-box shadow">
         <div class="stat-title">Total Links</div>
         <div class="stat-value text-primary">{{.LinkCount}}</div>
         <div class="stat-actions">
-            <a href="/admin/links" class="btn btn-sm btn-ghost">View →</a>
+            <a href="/admin/links" class="btn btn-sm btn-ghost">View &rarr;</a>
+        </div>
+    </div>
+    <div class="stat bg-base-200 rounded-box shadow">
+        <div class="stat-title">Keywords</div>
+        <div class="stat-value text-primary">{{.KeywordCount}}</div>
+        <div class="stat-actions">
+            <a href="/admin/keywords" class="btn btn-sm btn-ghost">Manage &rarr;</a>
         </div>
     </div>
 </div>

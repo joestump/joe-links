@@ -11,20 +11,22 @@ import (
 
 // AdminHandler serves admin views.
 type AdminHandler struct {
-	links *store.LinkStore
-	users *store.UserStore
+	links    *store.LinkStore
+	users    *store.UserStore
+	keywords *store.KeywordStore
 }
 
 // NewAdminHandler creates a new AdminHandler.
-func NewAdminHandler(ls *store.LinkStore, us *store.UserStore) *AdminHandler {
-	return &AdminHandler{links: ls, users: us}
+func NewAdminHandler(ls *store.LinkStore, us *store.UserStore, ks *store.KeywordStore) *AdminHandler {
+	return &AdminHandler{links: ls, users: us, keywords: ks}
 }
 
 // AdminDashboardPage is the template data for the admin overview.
 type AdminDashboardPage struct {
 	BasePage
-	UserCount int
-	LinkCount int
+	UserCount    int
+	LinkCount    int
+	KeywordCount int
 }
 
 // AdminUsersPage is the template data for the user management list.
@@ -45,10 +47,12 @@ func (h *AdminHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	allUsers, _ := h.users.ListAll(r.Context())
 	allLinks, _ := h.links.ListAll(r.Context())
+	allKeywords, _ := h.keywords.List(r.Context())
 	data := AdminDashboardPage{
-		BasePage:  BasePage{Theme: themeFromRequest(r), User: user},
-		UserCount: len(allUsers),
-		LinkCount: len(allLinks),
+		BasePage:     BasePage{Theme: themeFromRequest(r), User: user},
+		UserCount:    len(allUsers),
+		LinkCount:    len(allLinks),
+		KeywordCount: len(allKeywords),
 	}
 	render(w, "admin/dashboard.html", data)
 }

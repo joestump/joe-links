@@ -1,0 +1,64 @@
+{{template "base" .}}
+
+{{define "title"}}Keywords — Admin — Joe Links{{end}}
+
+{{define "content"}}
+<!-- Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011 -->
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Keyword Templates</h1>
+    <a href="/admin" class="btn btn-ghost btn-sm">&larr; Admin</a>
+</div>
+
+<!-- Create form -->
+<form hx-post="/admin/keywords" hx-target="#keyword-list" hx-swap="outerHTML" class="card bg-base-200 p-4 mb-6">
+    <div class="flex gap-3 flex-wrap">
+        <input type="text" name="keyword" placeholder="keyword (e.g. jira)"
+               class="input input-bordered w-32 font-mono" required />
+        <input type="text" name="url_template" placeholder="https://example.com/search?q={slug}"
+               class="input input-bordered flex-1" required />
+        <input type="text" name="description" placeholder="Description (optional)"
+               class="input input-bordered w-48" />
+        <button type="submit" class="btn btn-primary">Add</button>
+    </div>
+    <p class="text-xs text-base-content/60 mt-1">URL template must contain <code>{slug}</code></p>
+</form>
+
+<!-- Keyword list -->
+<div id="keyword-list">
+    {{template "keyword_list" .}}
+</div>
+{{end}}
+
+{{define "keyword_list"}}
+{{if .Error}}
+<div class="alert alert-error mb-4"><span>{{.Error}}</span></div>
+{{end}}
+<table class="table w-full">
+    <thead>
+        <tr>
+            <th>Keyword</th>
+            <th>URL Template</th>
+            <th>Description</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {{range .Keywords}}
+    <tr id="keyword-{{.ID}}">
+        <td><code class="font-mono font-semibold">{{.Keyword}}</code></td>
+        <td class="text-sm font-mono">{{.URLTemplate}}</td>
+        <td class="text-sm text-base-content/70">{{.Description}}</td>
+        <td>
+            <button class="btn btn-ghost btn-xs text-error"
+                    hx-delete="/admin/keywords/{{.ID}}"
+                    hx-target="#keyword-{{.ID}}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Delete keyword '{{.Keyword}}'?">Delete</button>
+        </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="4" class="text-center text-base-content/50">No keywords configured.</td></tr>
+    {{end}}
+    </tbody>
+</table>
+{{end}}
