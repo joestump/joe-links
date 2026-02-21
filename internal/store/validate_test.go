@@ -1,12 +1,12 @@
 // Governing: SPEC-0002 REQ "Slug Uniqueness and Format Validation"
-package links
+package store
 
 import (
 	"errors"
 	"testing"
 )
 
-func TestValidateSlug(t *testing.T) {
+func TestValidateSlugFormat(t *testing.T) {
 	tests := []struct {
 		name    string
 		slug    string
@@ -21,21 +21,19 @@ func TestValidateSlug(t *testing.T) {
 		{name: "multiple hyphens", slug: "my-cool-link", wantErr: nil},
 		{name: "digits and letters", slug: "go2docs", wantErr: nil},
 		{name: "digits with hyphens", slug: "1-2-3", wantErr: nil},
-
-		// Empty slug
-		{name: "empty string", slug: "", wantErr: ErrSlugEmpty},
+		{name: "consecutive hyphens", slug: "my--link", wantErr: nil},
 
 		// Format violations
-		{name: "uppercase letters", slug: "MyLink", wantErr: ErrSlugFormat},
-		{name: "mixed case", slug: "myLink", wantErr: ErrSlugFormat},
-		{name: "starts with hyphen", slug: "-foo", wantErr: ErrSlugFormat},
-		{name: "ends with hyphen", slug: "foo-", wantErr: ErrSlugFormat},
-		{name: "only a hyphen", slug: "-", wantErr: ErrSlugFormat},
-		{name: "contains spaces", slug: "my link", wantErr: ErrSlugFormat},
-		{name: "contains underscore", slug: "my_link", wantErr: ErrSlugFormat},
-		{name: "contains period", slug: "my.link", wantErr: ErrSlugFormat},
-		{name: "contains slash", slug: "my/link", wantErr: ErrSlugFormat},
-		{name: "consecutive hyphens", slug: "my--link", wantErr: nil}, // spec allows this
+		{name: "empty string", slug: "", wantErr: ErrSlugInvalid},
+		{name: "uppercase letters", slug: "MyLink", wantErr: ErrSlugInvalid},
+		{name: "mixed case", slug: "myLink", wantErr: ErrSlugInvalid},
+		{name: "starts with hyphen", slug: "-foo", wantErr: ErrSlugInvalid},
+		{name: "ends with hyphen", slug: "foo-", wantErr: ErrSlugInvalid},
+		{name: "only a hyphen", slug: "-", wantErr: ErrSlugInvalid},
+		{name: "contains spaces", slug: "my link", wantErr: ErrSlugInvalid},
+		{name: "contains underscore", slug: "my_link", wantErr: ErrSlugInvalid},
+		{name: "contains period", slug: "my.link", wantErr: ErrSlugInvalid},
+		{name: "contains slash", slug: "my/link", wantErr: ErrSlugInvalid},
 
 		// Reserved slugs
 		{name: "reserved auth", slug: "auth", wantErr: ErrSlugReserved},
@@ -44,25 +42,25 @@ func TestValidateSlug(t *testing.T) {
 		{name: "reserved admin", slug: "admin", wantErr: ErrSlugReserved},
 
 		// Not reserved (substrings of reserved words are fine)
-		{name: "auth-settings is not reserved", slug: "auth-settings", wantErr: nil},
-		{name: "myadmin is not reserved", slug: "myadmin", wantErr: nil},
+		{name: "auth-settings not reserved", slug: "auth-settings", wantErr: nil},
+		{name: "myadmin not reserved", slug: "myadmin", wantErr: nil},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateSlug(tt.slug)
+			err := ValidateSlugFormat(tt.slug)
 			if tt.wantErr == nil {
 				if err != nil {
-					t.Errorf("ValidateSlug(%q) = %v, want nil", tt.slug, err)
+					t.Errorf("ValidateSlugFormat(%q) = %v, want nil", tt.slug, err)
 				}
 				return
 			}
 			if err == nil {
-				t.Errorf("ValidateSlug(%q) = nil, want %v", tt.slug, tt.wantErr)
+				t.Errorf("ValidateSlugFormat(%q) = nil, want %v", tt.slug, tt.wantErr)
 				return
 			}
 			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("ValidateSlug(%q) = %v, want error wrapping %v", tt.slug, err, tt.wantErr)
+				t.Errorf("ValidateSlugFormat(%q) = %v, want error wrapping %v", tt.slug, err, tt.wantErr)
 			}
 		})
 	}
