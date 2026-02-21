@@ -15,11 +15,11 @@ module.exports = {
       {
         "joe-light": {
           "primary": "#c084fc",
-          "primary-content": "#ffffff",
+          "primary-content": "#160030",
           "secondary": "#fb923c",
-          "secondary-content": "#ffffff",
+          "secondary-content": "#000000",
           "accent": "#34d399",
-          "accent-content": "#ffffff",
+          "accent-content": "#000000",
           "neutral": "#6b7280",
           "neutral-content": "#ffffff",
           "base-100": "#ffffff",
@@ -39,11 +39,11 @@ module.exports = {
       {
         "joe-dark": {
           "primary": "#a855f7",
-          "primary-content": "#ffffff",
+          "primary-content": "#160030",
           "secondary": "#f97316",
-          "secondary-content": "#ffffff",
+          "secondary-content": "#000000",
           "accent": "#10b981",
-          "accent-content": "#ffffff",
+          "accent-content": "#000000",
           "neutral": "#9ca3af",
           "neutral-content": "#000000",
           "base-100": "#111111",
