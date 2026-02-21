@@ -44,7 +44,7 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := DashboardPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Links: links}
+	data := DashboardPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Links: links}
 	if isHTMX(r) {
 		renderFragment(w, "content", data)
 		return

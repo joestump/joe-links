@@ -1,5 +1,6 @@
 // Governing: SPEC-0001 REQ "Go HTTP Server", "Role-Based Access Control", "Short Link Resolution", ADR-0001, ADR-0003
 // Governing: SPEC-0003 REQ "HTMX Theme Endpoint", ADR-0006
+// Governing: SPEC-0004 REQ "Route Registration and Priority", "Shared Base Layout"
 package handler
 
 import (
@@ -21,9 +22,12 @@ type Deps struct {
 	AuthMiddleware *auth.Middleware
 	LinkStore      *store.LinkStore
 	OwnershipStore *store.OwnershipStore
+	TagStore       *store.TagStore
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
+// Governing: SPEC-0004 REQ "Route Registration and Priority" — named routes registered
+// before catch-all slug resolver; reserved prefixes take precedence.
 func NewRouter(deps Deps) http.Handler {
 	r := chi.NewRouter()
 
@@ -51,30 +55,57 @@ func NewRouter(deps Deps) http.Handler {
 	themeHandler := NewThemeHandler()
 	r.Post("/dashboard/theme", themeHandler.Toggle)
 
+	// Landing page (unauthenticated; redirects authenticated to /dashboard)
+	// Uses OptionalUser so we can detect logged-in users without requiring auth.
+	// Governing: SPEC-0004 REQ "Landing Page"
+	landing := NewLandingHandler()
+	r.With(deps.AuthMiddleware.OptionalUser).Get("/", landing.Index)
+
 	// Authenticated routes
+	// Governing: SPEC-0004 REQ "Route Registration and Priority" — dashboard, link, and tag routes
 	dashboard := NewDashboardHandler(deps.LinkStore)
 	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore)
+	tags := NewTagsHandler(deps.TagStore)
 
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
 
 		r.Get("/dashboard", dashboard.Show)
-		r.Get("/links/new", links.New)
-		r.Post("/links", links.Create)
-		r.Get("/links/{id}/edit", links.Edit)
-		r.Put("/links/{id}", links.Update)
-		r.Delete("/links/{id}", links.Delete)
+
+		// NOTE: validate-slug MUST be before /{id} to avoid chi treating "validate-slug" as an id
+		r.Get("/dashboard/links/validate-slug", links.ValidateSlug)
+		r.Get("/dashboard/links/new", links.New)
+		r.Post("/dashboard/links", links.Create)
+		r.Get("/dashboard/links/{id}", links.Detail)
+		r.Get("/dashboard/links/{id}/edit", links.Edit)
+		r.Put("/dashboard/links/{id}", links.Update)
+		r.Delete("/dashboard/links/{id}", links.Delete)
+		r.Post("/dashboard/links/{id}/owners", links.AddOwner)
+		r.Delete("/dashboard/links/{id}/owners/{uid}", links.RemoveOwner)
+
+		r.Get("/dashboard/tags", tags.Index)
+		r.Get("/dashboard/tags/suggest", tags.Suggest)
+		r.Get("/dashboard/tags/{slug}", tags.Detail)
+	})
+
+	// Admin routes (require admin role)
+	// Governing: SPEC-0004 REQ "Route Registration and Priority" — admin group with RequireAdmin
+	admin := NewAdminHandler()
+	r.Group(func(r chi.Router) {
+		r.Use(deps.AuthMiddleware.RequireAuth)
+		r.Use(deps.AuthMiddleware.RequireRole("admin"))
+		r.Get("/admin", admin.Dashboard)
+		r.Get("/admin/users", admin.Users)
+		r.Put("/admin/users/{id}/role", admin.UpdateRole)
+		r.Get("/admin/links", admin.Links)
 	})
 
 	// Slug resolver -- catch-all, must be last.
 	// Resolver does not require auth (links are publicly accessible).
+	// Uses OptionalUser so the 404 page can offer "Create this link" when logged in.
+	// Governing: SPEC-0004 REQ "Route Registration and Priority" — catch-all AFTER named routes
 	resolver := NewResolveHandler(deps.LinkStore)
-	r.Get("/{slug}", resolver.Resolve)
-
-	// Root redirect
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/dashboard", http.StatusFound)
-	})
+	r.With(deps.AuthMiddleware.OptionalUser).Get("/{slug}", resolver.Resolve)
 
 	return r
 }
