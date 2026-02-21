@@ -37,6 +37,14 @@ func NewAPIRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0006 REQ "Token Management API"
 	registerTokenRoutes(r, deps.TokenStore)
 
+	// Tag routes.
+	// Governing: SPEC-0005 REQ "Tags"
+	registerTagRoutes(r, deps.TagStore, deps.LinkStore)
+
+	// User profile routes.
+	// Governing: SPEC-0005 REQ "User Profile"
+	registerUserRoutes(r)
+
 	return r
 }
 
