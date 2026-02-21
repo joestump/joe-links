@@ -51,13 +51,11 @@ func newServeCmd() *cobra.Command {
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
 			tokenStore := auth.NewSQLTokenStore(database)
-			bearerAuth := auth.NewBearerTokenMiddleware(tokenStore, userStore)
 
 			router := handler.NewRouter(handler.Deps{
 				SessionManager: sessionManager,
 				AuthHandlers:   authHandlers,
 				AuthMiddleware: authMiddleware,
-				BearerAuth:     bearerAuth,
 				LinkStore:      linkStore,
 				OwnershipStore: ownershipStore,
 				TagStore:       tagStore,

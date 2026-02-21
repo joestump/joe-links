@@ -9,40 +9,40 @@ import (
 	"github.com/joestump/joe-links/internal/store"
 )
 
-// Deps holds all dependencies required to build the API router.
+// Deps holds dependencies for the API router.
 type Deps struct {
-	BearerAuth     *auth.BearerTokenMiddleware
-	LinkStore      *store.LinkStore
-	OwnershipStore *store.OwnershipStore
-	TagStore       *store.TagStore
-	UserStore      *store.UserStore
-	TokenStore     auth.TokenStore
+	BearerMiddleware *auth.BearerTokenMiddleware
+	TokenStore       auth.TokenStore
+	LinkStore        *store.LinkStore
+	OwnershipStore   *store.OwnershipStore
+	TagStore         *store.TagStore
+	UserStore        *store.UserStore
 }
 
-// NewAPIRouter creates a chi sub-router for /api/v1.
-// All routes require Bearer token authentication and return application/json.
+// NewAPIRouter creates and returns a chi router for /api/v1.
+// The caller mounts it at /api/v1 in the main router.
 // Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
-func NewAPIRouter(deps Deps) chi.Router {
+func NewAPIRouter(deps Deps) http.Handler {
 	r := chi.NewRouter()
 
-	// All API responses are JSON.
-	// Governing: SPEC-0005 REQ "API Router Mounting" — all routes MUST return Content-Type: application/json
+	// Enforce JSON content type on all API responses.
+	// Governing: SPEC-0005 REQ "API Router Mounting"
 	r.Use(jsonContentType)
 
-	// Bearer token authentication on all API routes.
-	// Governing: SPEC-0005 REQ "API Router Mounting" — BearerTokenMiddleware MUST be applied
-	r.Use(deps.BearerAuth.Authenticate)
+	// Bearer token authentication — required on all /api/v1/* routes.
+	// Governing: SPEC-0006 REQ "No Web UI Session on API Routes"
+	r.Use(deps.BearerMiddleware.Authenticate)
 
-	// Placeholder: link routes will be added by Issue #46
-	// Placeholder: token routes will be added by Issue #44
-	// Placeholder: tag and user profile routes will be added by Issue #47
-	// Placeholder: admin routes will be added by Issue #48
+	// NOTE: Route handlers will be registered by subsequent stories.
+	// Placeholder to allow initial build:
+	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"status":"ok"}`))
+	})
 
 	return r
 }
 
-// jsonContentType is a middleware that sets Content-Type: application/json on all responses.
-// Governing: SPEC-0005 REQ "API Router Mounting"
+// jsonContentType middleware sets Content-Type: application/json on all responses.
 func jsonContentType(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

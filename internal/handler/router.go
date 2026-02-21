@@ -22,7 +22,6 @@ type Deps struct {
 	SessionManager *scs.SessionManager
 	AuthHandlers   *auth.Handlers
 	AuthMiddleware *auth.Middleware
-	BearerAuth     *auth.BearerTokenMiddleware
 	LinkStore      *store.LinkStore
 	OwnershipStore *store.OwnershipStore
 	TagStore       *store.TagStore
@@ -105,15 +104,17 @@ func NewRouter(deps Deps) http.Handler {
 		r.Get("/admin/links", admin.Links)
 	})
 
-	// API v1 sub-router — mounted before catch-all so /api/v1/* takes precedence.
-	// Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
+	// API sub-router at /api/v1 — must be before slug catch-all.
+	// Governing: SPEC-0005 REQ "API Router Mounting"
+	tokenStore := deps.TokenStore
+	bearerMiddleware := auth.NewBearerTokenMiddleware(tokenStore, deps.UserStore)
 	apiRouter := api.NewAPIRouter(api.Deps{
-		BearerAuth:     deps.BearerAuth,
-		LinkStore:      deps.LinkStore,
-		OwnershipStore: deps.OwnershipStore,
-		TagStore:       deps.TagStore,
-		UserStore:      deps.UserStore,
-		TokenStore:     deps.TokenStore,
+		BearerMiddleware: bearerMiddleware,
+		TokenStore:       tokenStore,
+		LinkStore:        deps.LinkStore,
+		OwnershipStore:   deps.OwnershipStore,
+		TagStore:         deps.TagStore,
+		UserStore:        deps.UserStore,
 	})
 	r.Mount("/api/v1", apiRouter)
 
