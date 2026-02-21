@@ -23,7 +23,7 @@ type LinkStoreIface interface {
 	GetByID(ctx context.Context, id string) (*Link, error)
 	ListByOwner(ctx context.Context, ownerID string) ([]*Link, error)
 	ListAll(ctx context.Context) ([]*Link, error)
-	Update(ctx context.Context, id, slug, url, title, description string) (*Link, error)
+	Update(ctx context.Context, id, url, title, description string) (*Link, error)
 	Delete(ctx context.Context, id string) error
 	AddOwner(ctx context.Context, linkID, userID string) error
 	RemoveOwner(ctx context.Context, linkID, userID string) error

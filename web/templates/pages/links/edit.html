@@ -15,13 +15,12 @@
             {{end}}
 
             <form hx-put="/links/{{.Link.ID}}" hx-target="body" hx-push-url="/dashboard">
+                <!-- Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation. -->
                 <div class="form-control mb-4">
                     <label class="label"><span class="label-text">Slug</span></label>
-                    <label class="input input-bordered flex items-center gap-2">
+                    <label class="input input-bordered flex items-center gap-2 opacity-60">
                         <span class="text-base-content/50 font-mono">go/</span>
-                        <input type="text" name="slug" class="grow font-mono"
-                            pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
-                            required value="{{.Link.Slug}}">
+                        <input type="text" class="grow font-mono" disabled value="{{.Link.Slug}}">
                     </label>
                 </div>
 
