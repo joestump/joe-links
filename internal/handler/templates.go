@@ -43,6 +43,7 @@ func init() {
 		"templates/pages/links/*.html",
 		"templates/pages/admin/*.html",
 		"templates/pages/tags/*.html",
+		"templates/pages/settings/*.html",
 	)
 	if err != nil {
 		panic("failed to parse templates: " + err.Error())

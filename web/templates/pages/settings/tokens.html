@@ -1,0 +1,14 @@
+{{template "base" .}}
+
+{{define "title"}}API Tokens — Joe Links{{end}}
+
+{{define "content"}}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">API Tokens</h1>
+    <a href="/dashboard" class="btn btn-ghost btn-sm">Back to Dashboard</a>
+</div>
+
+<div id="token-content">
+{{template "token_list" .}}
+</div>
+{{end}}

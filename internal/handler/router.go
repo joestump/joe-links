@@ -70,6 +70,7 @@ func NewRouter(deps Deps) http.Handler {
 	dashboard := NewDashboardHandler(deps.LinkStore, deps.TagStore)
 	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore)
 	tags := NewTagsHandler(deps.TagStore, deps.LinkStore)
+	tokensWeb := NewTokensHandler(deps.TokenStore)
 
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
@@ -90,6 +91,11 @@ func NewRouter(deps Deps) http.Handler {
 		r.Get("/dashboard/tags", tags.Index)
 		r.Get("/dashboard/tags/suggest", tags.Suggest)
 		r.Get("/dashboard/tags/{slug}", tags.Detail)
+
+		// Governing: SPEC-0006 REQ "Token Management Web UI"
+		r.Get("/dashboard/settings/tokens", tokensWeb.Index)
+		r.Post("/dashboard/settings/tokens", tokensWeb.Create)
+		r.Delete("/dashboard/settings/tokens/{id}", tokensWeb.Revoke)
 	})
 
 	// Admin routes (require admin role)
