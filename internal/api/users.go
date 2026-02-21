@@ -22,6 +22,16 @@ func registerUserRoutes(r chi.Router) {
 // Me returns the authenticated caller's profile.
 // GET /api/v1/users/me
 // Governing: SPEC-0005 REQ "User Profile" — returns id, email, display_name, role, created_at.
+//
+// @Summary      Get current user
+// @Description  Returns the authenticated caller's profile.
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  UserResponse
+// @Failure      401  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /users/me [get]
 func (h *usersAPIHandler) Me(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
