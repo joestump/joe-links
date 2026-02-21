@@ -34,7 +34,7 @@ func newServeCmd() *cobra.Command {
 				return err
 			}
 
-			sessionManager := auth.NewSessionManager(database, cfg.DB.Driver, cfg.SessionLifetime)
+			sessionManager := auth.NewSessionManager(database, cfg.DB.Driver, cfg.SessionLifetime, !cfg.InsecureCookies)
 
 			ctx := context.Background()
 			oidcProvider, err := auth.NewProvider(ctx, cfg)
@@ -48,7 +48,7 @@ func newServeCmd() *cobra.Command {
 			linkStore := store.NewLinkStore(database, ownershipStore, tagStore)
 			tokenStore := auth.NewSQLTokenStore(database)
 
-			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail)
+			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail, !cfg.InsecureCookies)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
 			router := handler.NewRouter(handler.Deps{

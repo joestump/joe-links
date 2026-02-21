@@ -38,7 +38,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		data := notFoundPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Slug: slug}
 		if isHTMX(r) {
-			renderFragment(w, "content", data)
+			renderPageFragment(w, "404.html", "content", data)
 			return
 		}
 		render(w, "404.html", data)

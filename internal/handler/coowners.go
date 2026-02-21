@@ -111,7 +111,7 @@ func (h *LinksHandler) Detail(w http.ResponseWriter, r *http.Request) {
 		Owners:   owners,
 	}
 	if isHTMX(r) {
-		renderFragment(w, "content", data)
+		renderPageFragment(w, "links/detail.html", "content", data)
 		return
 	}
 	render(w, "links/detail.html", data)

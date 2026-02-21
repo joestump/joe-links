@@ -19,8 +19,8 @@ const (
 
 // NewSessionManager creates an SCS session manager backed by the application DB.
 // The driver parameter selects the appropriate store: "mysql", "postgres", or
-// "sqlite3" (default).
-func NewSessionManager(db *sqlx.DB, driver string, lifetime time.Duration) *scs.SessionManager {
+// "sqlite3" (default). Set secureCookies=false for local HTTP development.
+func NewSessionManager(db *sqlx.DB, driver string, lifetime time.Duration, secureCookies bool) *scs.SessionManager {
 	sm := scs.New()
 	switch driver {
 	case "mysql":
@@ -32,7 +32,7 @@ func NewSessionManager(db *sqlx.DB, driver string, lifetime time.Duration) *scs.
 	}
 	sm.Lifetime = lifetime
 	sm.Cookie.HttpOnly = true
-	sm.Cookie.Secure = true
+	sm.Cookie.Secure = secureCookies
 	sm.Cookie.SameSite = http.SameSiteLaxMode
 	return sm
 }

@@ -76,7 +76,7 @@ func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
 	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form}
 	if isHTMX(r) {
-		renderFragment(w, "content", data)
+		renderPageFragment(w, "new.html", "content", data)
 		return
 	}
 	render(w, "new.html", data)
@@ -102,7 +102,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
-			renderFragment(w, "content", data)
+			renderPageFragment(w, "new.html", "content", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -111,7 +111,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if isReservedSlug(form.Slug) {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."}
 		if isHTMX(r) {
-			renderFragment(w, "content", data)
+			renderPageFragment(w, "new.html", "content", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -122,7 +122,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
 		if isHTMX(r) {
-			renderFragment(w, "content", data)
+			renderPageFragment(w, "new.html", "content", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -180,7 +180,7 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form}
 	if isHTMX(r) {
-		renderFragment(w, "content", data)
+		renderPageFragment(w, "edit.html", "content", data)
 		return
 	}
 	render(w, "edit.html", data)
@@ -222,7 +222,7 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: "Update failed."}
 		if isHTMX(r) {
-			renderFragment(w, "content", data)
+			renderPageFragment(w, "edit.html", "content", data)
 			return
 		}
 		render(w, "edit.html", data)

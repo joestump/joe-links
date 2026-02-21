@@ -84,7 +84,7 @@ func (h *AdminHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", "text/html")
-	renderFragment(w, "user_row", target)
+	renderPageFragment(w, "admin/users.html", "user_row", target)
 }
 
 // Links renders the admin link list (all links across all users).

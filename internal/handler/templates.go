@@ -3,8 +3,12 @@
 package handler
 
 import (
+	"fmt"
 	"html/template"
+	"io/fs"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
@@ -32,21 +36,64 @@ func themeFromRequest(r *http.Request) string {
 	return ""
 }
 
-var templates *template.Template
+// pageCache maps a render key (e.g. "dashboard.html", "tags/index.html") to a
+// compiled template set containing base.html + partials + that one page file.
+// Each page gets its own set so {{define "content"}} blocks don't collide.
+var (
+	pageCache    map[string]*template.Template
+	fragmentTmpl *template.Template
+)
 
 func init() {
-	var err error
-	templates, err = template.New("").ParseFS(web.TemplateFS,
-		"templates/base.html",
-		"templates/partials/*.html",
-		"templates/pages/*.html",
-		"templates/pages/links/*.html",
-		"templates/pages/admin/*.html",
-		"templates/pages/tags/*.html",
-		"templates/pages/settings/*.html",
-	)
+	partials, err := fs.Glob(web.TemplateFS, "templates/partials/*.html")
 	if err != nil {
-		panic("failed to parse templates: " + err.Error())
+		panic("glob partials: " + err.Error())
+	}
+
+	// Standalone set for global HTMX fragment rendering (partials only).
+	fragmentTmpl = template.Must(template.New("").ParseFS(web.TemplateFS, partials...))
+
+	// Count how many page files share each basename to detect collisions.
+	baseCount := map[string]int{}
+	_ = fs.WalkDir(web.TemplateFS, "templates/pages", func(p string, d fs.DirEntry, e error) error {
+		if e != nil || d.IsDir() || !strings.HasSuffix(p, ".html") {
+			return e
+		}
+		baseCount[filepath.Base(p)]++
+		return nil
+	})
+
+	// Build one template set per page file.
+	pageCache = make(map[string]*template.Template)
+	err = fs.WalkDir(web.TemplateFS, "templates/pages", func(p string, d fs.DirEntry, e error) error {
+		if e != nil || d.IsDir() || !strings.HasSuffix(p, ".html") {
+			return e
+		}
+
+		files := make([]string, 0, 2+len(partials))
+		files = append(files, "templates/base.html")
+		files = append(files, partials...)
+		files = append(files, p)
+
+		t, err := template.New("").ParseFS(web.TemplateFS, files...)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", p, err)
+		}
+
+		// Primary key: path relative to "templates/pages/" (always unambiguous).
+		rel, _ := strings.CutPrefix(p, "templates/pages/")
+		pageCache[rel] = t
+
+		// Alias under bare basename when it is unique across all page files.
+		base := filepath.Base(p)
+		if baseCount[base] == 1 {
+			pageCache[base] = t
+		}
+
+		return nil
+	})
+	if err != nil {
+		panic("build page cache: " + err.Error())
 	}
 }
 
@@ -61,19 +108,40 @@ func isHTMX(r *http.Request) bool {
 	return r.Header.Get("HX-Request") == "true"
 }
 
-// render executes a full-page template (base layout + named page block).
+// render executes a full-page template (base layout + named page).
+// tmpl is the render key, e.g. "dashboard.html" or "tags/index.html".
 func render(w http.ResponseWriter, tmpl string, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := templates.ExecuteTemplate(w, tmpl, data); err != nil {
+	t, ok := pageCache[tmpl]
+	if !ok {
+		http.Error(w, "template not found: "+tmpl, http.StatusInternalServerError)
+		return
+	}
+	if err := t.ExecuteTemplate(w, "base", data); err != nil {
 		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)
 	}
 }
 
-// renderFragment executes a named template block without the base layout,
-// returning only the HTML fragment for HTMX target swapping.
+// renderFragment executes a named template from the global partials set.
+// Use for standalone HTMX partials (link_list, token_list, owners_list, etc.).
 func renderFragment(w http.ResponseWriter, tmpl string, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := templates.ExecuteTemplate(w, tmpl, data); err != nil {
+	if err := fragmentTmpl.ExecuteTemplate(w, tmpl, data); err != nil {
+		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// renderPageFragment executes a named template from a specific page's template set.
+// Use for HTMX partial renders that need a page-specific block (e.g. "content")
+// or a page-local named template (e.g. "user_row" in admin/users.html).
+func renderPageFragment(w http.ResponseWriter, page, tmpl string, data any) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	t, ok := pageCache[page]
+	if !ok {
+		http.Error(w, "template not found: "+page, http.StatusInternalServerError)
+		return
+	}
+	if err := t.ExecuteTemplate(w, tmpl, data); err != nil {
 		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)
 	}
 }

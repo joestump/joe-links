@@ -25,6 +25,7 @@ type Config struct {
 	}
 	AdminEmail      string
 	SessionLifetime time.Duration
+	InsecureCookies bool
 }
 
 // Load reads config from environment (JOE_ prefix) and optional joe-links.yaml.
@@ -50,6 +51,7 @@ func Load() (*Config, error) {
 	cfg.OIDC.ClientSecret = v.GetString("oidc.client_secret")
 	cfg.OIDC.RedirectURL = v.GetString("oidc.redirect_url")
 	cfg.AdminEmail = v.GetString("admin_email")
+	cfg.InsecureCookies = v.GetBool("insecure_cookies")
 
 	lifetime, err := time.ParseDuration(v.GetString("session.lifetime"))
 	if err != nil {

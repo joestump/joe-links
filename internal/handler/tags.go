@@ -44,7 +44,7 @@ func (h *TagsHandler) Index(w http.ResponseWriter, r *http.Request) {
 		Tags:     tags,
 	}
 	if isHTMX(r) {
-		renderFragment(w, "content", data)
+		renderPageFragment(w, "tags/index.html", "content", data)
 		return
 	}
 	render(w, "tags/index.html", data)
@@ -67,7 +67,7 @@ func (h *TagsHandler) Detail(w http.ResponseWriter, r *http.Request) {
 		Links:    links,
 	}
 	if isHTMX(r) {
-		renderFragment(w, "content", data)
+		renderPageFragment(w, "tags/detail.html", "content", data)
 		return
 	}
 	render(w, "tags/detail.html", data)

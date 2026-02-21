@@ -17,15 +17,17 @@ const (
 
 // Handlers provides HTTP handlers for the OIDC authentication flow.
 type Handlers struct {
-	provider   *Provider
-	sessions   *scs.SessionManager
-	users      *store.UserStore
-	adminEmail string
+	provider       *Provider
+	sessions       *scs.SessionManager
+	users          *store.UserStore
+	adminEmail     string
+	secureCookies  bool
 }
 
 // NewHandlers creates a new Handlers with the given dependencies.
-func NewHandlers(p *Provider, sm *scs.SessionManager, us *store.UserStore, adminEmail string) *Handlers {
-	return &Handlers{provider: p, sessions: sm, users: us, adminEmail: adminEmail}
+// Set secureCookies=false for local HTTP development.
+func NewHandlers(p *Provider, sm *scs.SessionManager, us *store.UserStore, adminEmail string, secureCookies bool) *Handlers {
+	return &Handlers{provider: p, sessions: sm, users: us, adminEmail: adminEmail, secureCookies: secureCookies}
 }
 
 // Login initiates the OIDC authorization code flow with PKCE.
@@ -42,15 +44,15 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store state and verifier in short-lived cookies
-	setPreAuthCookie(w, cookieState, state)
-	setPreAuthCookie(w, cookieCodeVerifier, verifier)
+	h.setPreAuthCookie(w, cookieState, state)
+	h.setPreAuthCookie(w, cookieCodeVerifier, verifier)
 
 	// Preserve the redirect URL
 	redirect := r.URL.Query().Get("redirect")
 	if redirect == "" {
 		redirect = "/dashboard"
 	}
-	setPreAuthCookie(w, cookieRedirect, redirect)
+	h.setPreAuthCookie(w, cookieRedirect, redirect)
 
 	http.Redirect(w, r, h.provider.AuthCodeURL(state, challenge), http.StatusFound)
 }
@@ -128,14 +130,14 @@ func (h *Handlers) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
-func setPreAuthCookie(w http.ResponseWriter, name, value string) {
+func (h *Handlers) setPreAuthCookie(w http.ResponseWriter, name, value string) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     name,
 		Value:    value,
 		Path:     "/",
 		MaxAge:   300, // 5 minutes
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   h.secureCookies,
 		SameSite: http.SameSiteLaxMode,
 	})
 }
