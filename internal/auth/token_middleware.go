@@ -3,7 +3,6 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -73,7 +72,9 @@ func (m *BearerTokenMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		// Update last_used_at asynchronously to avoid write overhead on every read.
 		// Governing: ADR-0009 (async last_used_at)
-		go m.tokens.UpdateLastUsed(context.Background(), rec.ID)
+		go func() {
+			_ = m.tokens.UpdateLastUsed(context.Background(), rec.ID)
+		}()
 
 		// Inject user into context using the same key as session-based auth.
 		ctx := context.WithValue(r.Context(), UserContextKey, user)
@@ -81,9 +82,9 @@ func (m *BearerTokenMiddleware) Authenticate(next http.Handler) http.Handler {
 	})
 }
 
-// writeUnauthorized writes a 401 JSON response with {"error": "unauthorized"}.
+// writeUnauthorized writes a 401 JSON response.
 func writeUnauthorized(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
-	json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
+	w.Write([]byte(`{"error":"unauthorized","code":"UNAUTHORIZED"}`))
 }
