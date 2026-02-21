@@ -1,0 +1,12 @@
+{
+  "name": "joe-links",
+  "private": true,
+  "scripts": {
+    "build": "tailwindcss -i ./static/css/input.css -o ./web/static/css/app.css --minify",
+    "dev": "tailwindcss -i ./static/css/input.css -o ./web/static/css/app.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "daisyui": "^4.0.0"
+  }
+}

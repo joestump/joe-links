@@ -1,0 +1,41 @@
+{{template "base" .}}
+
+{{define "title"}}Dashboard — Joe Links{{end}}
+
+{{define "content"}}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">My Links</h1>
+    <a href="/links/new" class="btn btn-primary btn-sm">+ New link</a>
+</div>
+
+{{if .Links}}
+<div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+        <thead>
+            <tr>
+                <th>Slug</th>
+                <th>URL</th>
+                <th>Description</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="links-table">
+            {{range .Links}}
+            {{template "link_row" .}}
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<div class="hero py-16">
+    <div class="hero-content text-center">
+        <div>
+            <h2 class="text-xl font-semibold mb-2">No links yet</h2>
+            <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
+            <a href="/links/new" class="btn btn-primary">Create a link</a>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}

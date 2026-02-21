@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "title" .}}Joe Links{{end}}</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="https://unpkg.com/htmx.org@2.0.0" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+</head>
+<body class="min-h-screen bg-base-100">
+
+<nav class="navbar bg-base-200 shadow-sm px-4">
+    <div class="navbar-start">
+        <a href="/dashboard" class="btn btn-ghost text-xl font-bold">
+            Joe Links
+        </a>
+    </div>
+    <div class="navbar-end gap-2">
+        {{if .User}}
+        <span class="text-sm text-base-content/70">{{.User.DisplayName}}</span>
+        <form method="POST" action="/auth/logout">
+            <button class="btn btn-sm btn-ghost">Sign out</button>
+        </form>
+        {{else}}
+        <a href="/auth/login" class="btn btn-sm btn-primary">Sign in</a>
+        {{end}}
+    </div>
+</nav>
+
+{{if .Flash}}
+<div class="toast toast-top toast-end z-50">
+    <div class="alert alert-{{.Flash.Type}}">
+        <span>{{.Flash.Message}}</span>
+    </div>
+</div>
+{{end}}
+
+<main class="container mx-auto px-4 py-8 max-w-4xl">
+    {{block "content" .}}{{end}}
+</main>
+
+</body>
+</html>

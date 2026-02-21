@@ -1,0 +1,48 @@
+{{template "base" .}}
+
+{{define "title"}}Edit Link — Joe Links{{end}}
+
+{{define "content"}}
+<div class="max-w-lg mx-auto">
+    <div class="card bg-base-200 shadow">
+        <div class="card-body">
+            <h2 class="card-title">Edit <span class="font-mono">{{.Link.Slug}}</span></h2>
+
+            {{if .Error}}
+            <div class="alert alert-error mb-4">
+                <span>{{.Error}}</span>
+            </div>
+            {{end}}
+
+            <form hx-put="/links/{{.Link.ID}}" hx-target="body" hx-push-url="/dashboard">
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Slug</span></label>
+                    <label class="input input-bordered flex items-center gap-2">
+                        <span class="text-base-content/50 font-mono">go/</span>
+                        <input type="text" name="slug" class="grow font-mono"
+                            pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
+                            required value="{{.Link.Slug}}">
+                    </label>
+                </div>
+
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Destination URL</span></label>
+                    <input type="url" name="url" class="input input-bordered"
+                        required value="{{.Link.URL}}">
+                </div>
+
+                <div class="form-control mb-6">
+                    <label class="label"><span class="label-text">Description</span></label>
+                    <input type="text" name="description" class="input input-bordered"
+                        value="{{.Link.Description}}">
+                </div>
+
+                <div class="card-actions justify-end">
+                    <a href="/dashboard" class="btn btn-ghost">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{end}}

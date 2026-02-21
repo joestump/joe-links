@@ -1,0 +1,7 @@
+bin/
+node_modules/
+*.db
+*.sqlite
+joe-links.yaml
+.env
+static/css/app.css

@@ -1,0 +1,22 @@
+{{template "base" .}}
+
+{{define "title"}}Not Found — Joe Links{{end}}
+
+{{define "content"}}
+<div class="hero py-24">
+    <div class="hero-content text-center">
+        <div>
+            <h1 class="text-5xl font-bold mb-4">404</h1>
+            <h2 class="text-2xl font-semibold mb-2">Link not found: <span class="font-mono">{{.Slug}}</span></h2>
+            <p class="text-base-content/60 mb-6">
+                There's no short link for <span class="font-mono font-semibold">{{.Slug}}</span> yet.
+            </p>
+            {{if .User}}
+            <a href="/links/new?slug={{.Slug}}" class="btn btn-primary">Create this link</a>
+            {{else}}
+            <a href="/auth/login" class="btn btn-primary">Sign in to create links</a>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}

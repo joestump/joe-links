@@ -1,0 +1,45 @@
+// Governing: SPEC-0001 REQ "Short Link Management", ADR-0001
+package handler
+
+import (
+	"net/http"
+
+	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/store"
+)
+
+// DashboardPage is the template data for the dashboard view.
+type DashboardPage struct {
+	User  *store.User
+	Links []*store.Link
+	Flash *Flash
+}
+
+// DashboardHandler serves the authenticated link management dashboard.
+type DashboardHandler struct {
+	links *store.LinkStore
+}
+
+// NewDashboardHandler creates a new DashboardHandler.
+func NewDashboardHandler(ls *store.LinkStore) *DashboardHandler {
+	return &DashboardHandler{links: ls}
+}
+
+// Show renders the dashboard with the user's links (or all links for admins).
+func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+
+	var links []*store.Link
+	var err error
+	if user.IsAdmin() {
+		links, err = h.links.ListAll(r.Context())
+	} else {
+		links, err = h.links.ListByOwner(r.Context(), user.ID)
+	}
+	if err != nil {
+		http.Error(w, "could not load links", http.StatusInternalServerError)
+		return
+	}
+
+	render(w, "dashboard.html", DashboardPage{User: user, Links: links})
+}
