@@ -28,11 +28,12 @@ type LinkFormPage struct {
 // LinksHandler provides HTTP handlers for link CRUD operations.
 type LinksHandler struct {
 	links *store.LinkStore
+	owns  *store.OwnershipStore
 }
 
 // NewLinksHandler creates a new LinksHandler.
-func NewLinksHandler(ls *store.LinkStore) *LinksHandler {
-	return &LinksHandler{links: ls}
+func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore) *LinksHandler {
+	return &LinksHandler{links: ls, owns: os}
 }
 
 // New renders the create-link form.
@@ -61,7 +62,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Description)
+	_, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, "", form.Description)
 	if err != nil {
 		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: "That slug is already taken. Choose a different one."})
 		return
@@ -80,7 +81,10 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if link.OwnerID != user.ID && !user.IsAdmin() {
+
+	// Governing: SPEC-0002 REQ "Authorization Based on Ownership"
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
@@ -98,7 +102,10 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if link.OwnerID != user.ID && !user.IsAdmin() {
+
+	// Governing: SPEC-0002 REQ "Authorization Based on Ownership"
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
@@ -119,7 +126,7 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.links.Update(r.Context(), id, form.Slug, form.URL, form.Description)
+	_, err = h.links.Update(r.Context(), id, form.Slug, form.URL, "", form.Description)
 	if err != nil {
 		render(w, "edit.html", LinkFormPage{User: user, Link: link, Form: form, Error: "That slug is already taken."})
 		return
@@ -138,7 +145,10 @@ func (h *LinksHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	if link.OwnerID != user.ID && !user.IsAdmin() {
+
+	// Governing: SPEC-0002 REQ "Authorization Based on Ownership"
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}

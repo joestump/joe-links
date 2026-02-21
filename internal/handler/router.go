@@ -19,6 +19,7 @@ type Deps struct {
 	AuthHandlers   *auth.Handlers
 	AuthMiddleware *auth.Middleware
 	LinkStore      *store.LinkStore
+	OwnershipStore *store.OwnershipStore
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
@@ -46,7 +47,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Authenticated routes
 	dashboard := NewDashboardHandler(deps.LinkStore)
-	links := NewLinksHandler(deps.LinkStore)
+	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore)
 
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
