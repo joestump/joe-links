@@ -1,3 +1,4 @@
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions", REQ "DaisyUI and Tailwind CSS", ADR-0001
 package handler
 
 import (
@@ -28,7 +29,22 @@ type Flash struct {
 	Message string
 }
 
+// isHTMX returns true when the request was sent by HTMX.
+func isHTMX(r *http.Request) bool {
+	return r.Header.Get("HX-Request") == "true"
+}
+
+// render executes a full-page template (base layout + named page block).
 func render(w http.ResponseWriter, tmpl string, data any) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := templates.ExecuteTemplate(w, tmpl, data); err != nil {
+		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)
+	}
+}
+
+// renderFragment executes a named template block without the base layout,
+// returning only the HTML fragment for HTMX target swapping.
+func renderFragment(w http.ResponseWriter, tmpl string, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := templates.ExecuteTemplate(w, tmpl, data); err != nil {
 		http.Error(w, "template error: "+err.Error(), http.StatusInternalServerError)

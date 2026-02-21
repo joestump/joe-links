@@ -1,4 +1,4 @@
-// Governing: SPEC-0001 REQ "Short Link Resolution", ADR-0001
+// Governing: SPEC-0001 REQ "Short Link Resolution", REQ "HTMX Hypermedia Interactions", ADR-0001
 package handler
 
 import (
@@ -26,13 +26,24 @@ type notFoundPage struct {
 }
 
 // Resolve looks up a slug and redirects to the target URL, or renders a 404 page.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 	link, err := h.links.GetBySlug(r.Context(), slug)
 	if err != nil {
 		user := auth.UserFromContext(r.Context())
 		w.WriteHeader(http.StatusNotFound)
-		render(w, "404.html", notFoundPage{User: user, Slug: slug})
+		data := notFoundPage{User: user, Slug: slug}
+		if isHTMX(r) {
+			renderFragment(w, "content", data)
+			return
+		}
+		render(w, "404.html", data)
+		return
+	}
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", link.URL)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 	http.Redirect(w, r, link.URL, http.StatusFound)
