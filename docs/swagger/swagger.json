@@ -1,0 +1,19 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Self-hosted go-links service. Authenticate with a Personal Access Token.",
+        "title": "joe-links API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {},
+    "securityDefinitions": {
+        "BearerToken": {
+            "description": "Type \"Bearer\" followed by a space and your API token. Example: \"Bearer jl_xxx\"",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

@@ -1,4 +1,4 @@
-.PHONY: build run migrate css clean tidy
+.PHONY: build run migrate css clean tidy swagger
 
 BINARY := joe-links
 
@@ -19,5 +19,8 @@ clean:
 
 tidy:
 	go mod tidy
+
+swagger:
+	swag init -g internal/api/main_annotations.go -o docs/swagger --outputTypes json,yaml,go --parseDependency --parseInternal
 
 .DEFAULT_GOAL := build
