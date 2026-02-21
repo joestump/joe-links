@@ -122,6 +122,66 @@ func (s *LinkStore) ListAll(ctx context.Context) ([]*Link, error) {
 	return links, nil
 }
 
+// SearchByOwner returns links owned by userID whose slug, url, or description
+// contain the search term (case-insensitive LIKE). Returns all owner links if q is empty.
+// Governing: SPEC-0004 REQ "User Dashboard" — HTMX debounced search
+func (s *LinkStore) SearchByOwner(ctx context.Context, ownerID, q string) ([]*Link, error) {
+	if q == "" {
+		return s.ListByOwner(ctx, ownerID)
+	}
+	var links []*Link
+	pattern := "%" + q + "%"
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT l.* FROM links l
+		INNER JOIN link_owners lo ON lo.link_id = l.id
+		WHERE lo.user_id = ?
+		  AND (l.slug LIKE ? OR l.url LIKE ? OR l.description LIKE ?)
+		ORDER BY l.slug ASC
+	`, ownerID, pattern, pattern, pattern)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// SearchAll returns all links whose slug, url, or description contain the
+// search term (case-insensitive LIKE). Returns all links if q is empty.
+// Governing: SPEC-0004 REQ "User Dashboard" — HTMX debounced search (admin view)
+func (s *LinkStore) SearchAll(ctx context.Context, q string) ([]*Link, error) {
+	if q == "" {
+		return s.ListAll(ctx)
+	}
+	var links []*Link
+	pattern := "%" + q + "%"
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT * FROM links
+		WHERE slug LIKE ? OR url LIKE ? OR description LIKE ?
+		ORDER BY slug ASC
+	`, pattern, pattern, pattern)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// ListByOwnerAndTag returns links owned by userID that have the given tag slug.
+// Governing: SPEC-0004 REQ "User Dashboard" — tag filter
+func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug string) ([]*Link, error) {
+	var links []*Link
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT l.* FROM links l
+		INNER JOIN link_owners lo ON lo.link_id = l.id
+		INNER JOIN link_tags lt ON lt.link_id = l.id
+		INNER JOIN tags t ON t.id = lt.tag_id
+		WHERE lo.user_id = ? AND t.slug = ?
+		ORDER BY l.slug ASC
+	`, ownerID, tagSlug)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
 // Update modifies an existing link's url, title, and description.
 // Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
 func (s *LinkStore) Update(ctx context.Context, id, url, title, description string) (*Link, error) {

@@ -1,0 +1,44 @@
+{{define "link_list"}}
+{{if .Links}}
+<div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+        <thead>
+            <tr>
+                <th>Slug</th>
+                <th>URL</th>
+                <th>Description</th>
+                <th>Created</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="links-table">
+            {{range .Links}}
+            {{template "link_row" .}}
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+{{if or $.Query $.Tag}}
+<div class="hero py-16">
+    <div class="hero-content text-center">
+        <div>
+            <h2 class="text-xl font-semibold mb-2">No matching links</h2>
+            <p class="text-base-content/60 mb-4">Try a different search or clear filters.</p>
+            <a href="/dashboard" class="btn btn-ghost">Clear filters</a>
+        </div>
+    </div>
+</div>
+{{else}}
+<div class="hero py-16">
+    <div class="hero-content text-center">
+        <div>
+            <h2 class="text-xl font-semibold mb-2">No links yet</h2>
+            <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
+            <a href="/dashboard/links/new" class="btn btn-primary">Create a link</a>
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
+{{end}}

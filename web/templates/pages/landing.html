@@ -1,12 +1,18 @@
 {{template "base" .}}
 {{define "title"}}Joe Links — Short links for teams{{end}}
 {{define "content"}}
+<!-- Governing: SPEC-0004 REQ "Landing Page" — hero + sign-in CTA for unauthenticated users -->
 <div class="hero min-h-[60vh]">
     <div class="hero-content text-center">
-        <div class="max-w-md">
+        <div class="max-w-lg">
             <h1 class="text-5xl font-bold">Joe Links</h1>
-            <p class="py-6">Self-hosted go links — short, memorable slugs that redirect to long URLs. Share <code>/jira</code> instead of that 200-character Jira URL.</p>
-            <a href="/auth/login" class="btn btn-primary">Sign in to get started</a>
+            <p class="py-6 text-lg text-base-content/80">
+                Self-hosted go links — short, memorable slugs that redirect to long URLs.
+                Share <code class="bg-base-200 px-2 py-1 rounded font-mono">/jira</code> instead of that 200-character Jira URL.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="/auth/login" class="btn btn-primary btn-lg">Sign in to get started</a>
+            </div>
         </div>
     </div>
 </div>

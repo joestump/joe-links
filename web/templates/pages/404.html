@@ -3,6 +3,7 @@
 {{define "title"}}Not Found — Joe Links{{end}}
 
 {{define "content"}}
+<!-- Governing: SPEC-0004 REQ "Slug Resolver and 404 Page" -->
 <div class="hero py-24">
     <div class="hero-content text-center">
         <div>
@@ -14,7 +15,7 @@
             {{if .User}}
             <a href="/dashboard/links/new?slug={{.Slug}}" class="btn btn-primary">Create this link</a>
             {{else}}
-            <a href="/auth/login" class="btn btn-primary">Sign in to create links</a>
+            <a href="/auth/login?redirect=/dashboard/links/new%3Fslug%3D{{.Slug}}" class="btn btn-primary">Sign in to create this link</a>
             {{end}}
         </div>
     </div>
