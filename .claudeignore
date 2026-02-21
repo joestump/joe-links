@@ -1,0 +1,15 @@
+# Ignore compiled output and generated files
+bin/
+node_modules/
+static/css/app.css
+
+# Ignore database files
+*.db
+*.sqlite
+
+# Ignore secrets and local config
+.env
+joe-links.yaml
+
+# Ignore worktrees created by /design:work
+.claude/worktrees/

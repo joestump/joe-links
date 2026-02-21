@@ -5,3 +5,4 @@ node_modules/
 joe-links.yaml
 .env
 static/css/app.css
+.claude/worktrees/
