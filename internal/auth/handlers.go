@@ -135,6 +135,7 @@ func setPreAuthCookie(w http.ResponseWriter, name, value string) {
 		Path:     "/",
 		MaxAge:   300, // 5 minutes
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

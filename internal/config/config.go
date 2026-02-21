@@ -1,4 +1,4 @@
-// Governing: SPEC-0001 REQ "CLI Entrypoint", ADR-0004
+// Governing: SPEC-0001 REQ "CLI Entrypoint", "OIDC-Only Authentication", "Server-Side Sessions", ADR-0003, ADR-0004
 package config
 
 import (
