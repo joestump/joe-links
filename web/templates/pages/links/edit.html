@@ -3,6 +3,7 @@
 {{define "title"}}Edit Link — Joe Links{{end}}
 
 {{define "content"}}
+<!-- Governing: SPEC-0004 REQ "Edit Link Form" -->
 <div class="max-w-lg mx-auto">
     <div class="card bg-base-200 shadow">
         <div class="card-body">
@@ -14,7 +15,7 @@
             </div>
             {{end}}
 
-            <form hx-put="/dashboard/links/{{.Link.ID}}" hx-target="body" hx-push-url="/dashboard">
+            <form hx-put="/dashboard/links/{{.Link.ID}}" hx-target="body">
                 <!-- Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation. -->
                 <div class="form-control mb-4">
                     <label class="label"><span class="label-text">Slug</span></label>
@@ -25,19 +26,35 @@
                 </div>
 
                 <div class="form-control mb-4">
-                    <label class="label"><span class="label-text">Destination URL</span></label>
+                    <label class="label"><span class="label-text">Destination URL <span class="text-error">*</span></span></label>
                     <input type="url" name="url" class="input input-bordered"
-                        required value="{{.Link.URL}}">
+                        required value="{{if .Form.URL}}{{.Form.URL}}{{else}}{{.Link.URL}}{{end}}">
+                </div>
+
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Title</span></label>
+                    <input type="text" name="title" class="input input-bordered"
+                        value="{{if .Form.Title}}{{.Form.Title}}{{else}}{{.Link.Title}}{{end}}">
+                </div>
+
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Description</span></label>
+                    <input type="text" name="description" class="input input-bordered"
+                        value="{{if .Form.Description}}{{.Form.Description}}{{else}}{{.Link.Description}}{{end}}">
                 </div>
 
                 <div class="form-control mb-6">
-                    <label class="label"><span class="label-text">Description</span></label>
-                    <input type="text" name="description" class="input input-bordered"
-                        value="{{.Link.Description}}">
+                    <label class="label">
+                        <span class="label-text">Tags</span>
+                        <span class="label-text-alt text-base-content/50">comma-separated</span>
+                    </label>
+                    <input type="text" name="tags" class="input input-bordered"
+                        placeholder="engineering, tools"
+                        value="{{.Form.Tags}}">
                 </div>
 
                 <div class="card-actions justify-end">
-                    <a href="/dashboard" class="btn btn-ghost">Cancel</a>
+                    <a href="/dashboard/links/{{.Link.ID}}" class="btn btn-ghost">Cancel</a>
                     <button type="submit" class="btn btn-primary">Save changes</button>
                 </div>
             </form>

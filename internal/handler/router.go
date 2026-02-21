@@ -23,6 +23,7 @@ type Deps struct {
 	LinkStore      *store.LinkStore
 	OwnershipStore *store.OwnershipStore
 	TagStore       *store.TagStore
+	UserStore      *store.UserStore
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
@@ -64,7 +65,7 @@ func NewRouter(deps Deps) http.Handler {
 	// Authenticated routes
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — dashboard, link, and tag routes
 	dashboard := NewDashboardHandler(deps.LinkStore, deps.TagStore)
-	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore)
+	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore)
 	tags := NewTagsHandler(deps.TagStore)
 
 	r.Group(func(r chi.Router) {

@@ -1,16 +1,91 @@
 {{template "base" .}}
-{{define "title"}}Link — Joe Links{{end}}
+{{define "title"}}{{if .Link}}{{.Link.Slug}}{{end}} — Joe Links{{end}}
 {{define "content"}}
-<div class="card bg-base-200">
-    <div class="card-body">
-        {{if .Link}}
-        <h2 class="card-title">{{.Link.Slug}}</h2>
-        <p><a href="{{.Link.URL}}" class="link">{{.Link.URL}}</a></p>
-        {{if .Link.Description}}<p class="text-base-content/70">{{.Link.Description}}</p>{{end}}
-        <div class="card-actions justify-end">
+<!-- Governing: SPEC-0004 REQ "Link Detail View" -->
+{{if .Link}}
+<div class="mb-6">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold font-mono">{{.Link.Slug}}</h1>
+        <div class="flex gap-2">
             <a href="/dashboard/links/{{.Link.ID}}/edit" class="btn btn-sm btn-primary">Edit</a>
+            <!-- Governing: SPEC-0004 REQ "Delete Link" — DaisyUI confirm modal (inline) -->
+            <button class="btn btn-sm btn-error btn-outline"
+                    onclick="document.getElementById('confirm-delete-modal').showModal()">Delete</button>
         </div>
-        {{end}}
+    </div>
+
+    <div class="card bg-base-200 shadow">
+        <div class="card-body">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-base-content/60 text-sm">Destination:</span>
+                <a href="{{.Link.URL}}" class="link link-primary break-all" target="_blank">{{.Link.URL}}</a>
+                <!-- Governing: SPEC-0004 REQ "Link Detail View" — copy button -->
+                <button class="btn btn-xs btn-ghost"
+                        onclick="navigator.clipboard.writeText(window.location.origin+'/{{.Link.Slug}}').then(function(){var t=document.getElementById('toast-area');t.innerHTML='<div class=&quot;alert alert-success&quot;><span>Link copied!</span></div>';setTimeout(function(){t.innerHTML=''},3000)})">
+                    Copy go-link
+                </button>
+            </div>
+
+            {{if .Link.Title}}
+            <div class="mb-2">
+                <span class="text-base-content/60 text-sm">Title:</span>
+                <span>{{.Link.Title}}</span>
+            </div>
+            {{end}}
+
+            {{if .Link.Description}}
+            <div class="mb-2">
+                <span class="text-base-content/60 text-sm">Description:</span>
+                <span class="text-base-content/80">{{.Link.Description}}</span>
+            </div>
+            {{end}}
+
+            {{if .Tags}}
+            <div class="mb-2">
+                <span class="text-base-content/60 text-sm">Tags:</span>
+                <div class="flex flex-wrap gap-1 mt-1">
+                    {{range .Tags}}
+                    <a href="/dashboard/tags/{{.Slug}}" class="badge badge-outline">{{.Name}}</a>
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            <div class="text-xs text-base-content/50 mt-4">
+                Created {{.Link.CreatedAt.Format "Jan 2, 2006 3:04 PM"}} &middot;
+                Updated {{.Link.UpdatedAt.Format "Jan 2, 2006 3:04 PM"}}
+            </div>
+        </div>
     </div>
 </div>
+
+<!-- Governing: SPEC-0004 REQ "Co-Owner Management" — owners section -->
+<div class="card bg-base-200 shadow">
+    <div class="card-body">
+        <h2 class="card-title text-lg">Owners</h2>
+        {{template "owners_list" .}}
+    </div>
+</div>
+
+<!-- Governing: SPEC-0004 REQ "Delete Link" — confirm modal using DaisyUI dialog -->
+<dialog id="confirm-delete-modal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Delete link?</h3>
+        <p class="py-4">Are you sure you want to delete <span class="font-mono font-bold">{{.Link.Slug}}</span>? This cannot be undone.</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn btn-ghost">Cancel</button>
+            </form>
+            <button class="btn btn-error"
+                    hx-delete="/dashboard/links/{{.Link.ID}}"
+                    hx-target="#link-{{.Link.ID}}"
+                    hx-swap="outerHTML"
+                    onclick="document.getElementById('confirm-delete-modal').close(); window.location.href='/dashboard';">
+                Delete
+            </button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+{{end}}
 {{end}}
