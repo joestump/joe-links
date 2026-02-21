@@ -3,11 +3,28 @@ package handler
 
 import (
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/store"
 )
+
+var slugRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
+
+// Governing: SPEC-0001 REQ "Short Link Resolution" — reserved prefixes MUST NOT be valid slugs.
+var reservedPrefixes = []string{"auth", "static", "dashboard", "admin"}
+
+// isReservedSlug returns true if the slug matches or starts with a reserved prefix.
+func isReservedSlug(slug string) bool {
+	for _, prefix := range reservedPrefixes {
+		if slug == prefix || strings.HasPrefix(slug, prefix+"-") {
+			return true
+		}
+	}
+	return false
+}
 
 // LinkForm holds form input values for creating or editing a link.
 type LinkForm struct {
@@ -71,6 +88,10 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		render(w, "new.html", data)
+		return
+	}
+	if isReservedSlug(form.Slug) {
+		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."})
 		return
 	}
 
@@ -144,25 +165,16 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
 	form := LinkForm{
-		Slug:        r.FormValue("slug"),
 		URL:         r.FormValue("url"),
 		Description: r.FormValue("description"),
 	}
 
-	if err := store.ValidateSlugFormat(form.Slug); err != nil {
-		data := LinkFormPage{User: user, Link: link, Form: form, Error: err.Error()}
-		if isHTMX(r) {
-			renderFragment(w, "content", data)
-			return
-		}
-		render(w, "edit.html", data)
-		return
-	}
-
-	_, err = h.links.Update(r.Context(), id, form.Slug, form.URL, "", form.Description)
+	// Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable, not updated here.
+	_, err = h.links.Update(r.Context(), id, form.URL, "", form.Description)
 	if err != nil {
-		data := LinkFormPage{User: user, Link: link, Form: form, Error: "That slug is already taken."}
+		data := LinkFormPage{User: user, Link: link, Form: form, Error: "Update failed."}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return

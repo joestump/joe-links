@@ -122,16 +122,14 @@ func (s *LinkStore) ListAll(ctx context.Context) ([]*Link, error) {
 	return links, nil
 }
 
-// Update modifies an existing link's slug, url, title, and description.
-func (s *LinkStore) Update(ctx context.Context, id, slug, url, title, description string) (*Link, error) {
+// Update modifies an existing link's url, title, and description.
+// Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
+func (s *LinkStore) Update(ctx context.Context, id, url, title, description string) (*Link, error) {
 	now := time.Now().UTC()
 	_, err := s.db.ExecContext(ctx, `
-		UPDATE links SET slug = ?, url = ?, title = ?, description = ?, updated_at = ? WHERE id = ?
-	`, slug, url, title, description, now, id)
+		UPDATE links SET url = ?, title = ?, description = ?, updated_at = ? WHERE id = ?
+	`, url, title, description, now, id)
 	if err != nil {
-		if isUniqueConstraintError(err) {
-			return nil, ErrSlugTaken
-		}
 		return nil, err
 	}
 	return s.GetByID(ctx, id)
