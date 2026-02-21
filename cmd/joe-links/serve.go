@@ -47,6 +47,7 @@ func newServeCmd() *cobra.Command {
 			tagStore := store.NewTagStore(database)
 			linkStore := store.NewLinkStore(database, ownershipStore, tagStore)
 			tokenStore := auth.NewSQLTokenStore(database)
+			keywordStore := store.NewKeywordStore(database)
 
 			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail, !cfg.InsecureCookies)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
@@ -60,6 +61,7 @@ func newServeCmd() *cobra.Command {
 				TagStore:       tagStore,
 				UserStore:      userStore,
 				TokenStore:     tokenStore,
+				KeywordStore:   keywordStore,
 			})
 
 			log.Printf("listening on %s", cfg.HTTP.Addr)

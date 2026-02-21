@@ -30,6 +30,7 @@ type Deps struct {
 	TagStore       *store.TagStore
 	UserStore      *store.UserStore
 	TokenStore     auth.TokenStore
+	KeywordStore   *store.KeywordStore
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
@@ -128,6 +129,7 @@ func NewRouter(deps Deps) http.Handler {
 		OwnershipStore:   deps.OwnershipStore,
 		TagStore:         deps.TagStore,
 		UserStore:        deps.UserStore,
+		KeywordStore:     deps.KeywordStore,
 	})
 	r.Mount("/api/v1", apiRouter)
 
