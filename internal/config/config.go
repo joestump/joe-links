@@ -1,3 +1,4 @@
+// Governing: SPEC-0001 REQ "CLI Entrypoint", ADR-0004
 package config
 
 import (
