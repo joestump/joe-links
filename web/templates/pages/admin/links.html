@@ -1,6 +1,45 @@
 {{template "base" .}}
+
 {{define "title"}}All Links — Admin — Joe Links{{end}}
+
 {{define "content"}}
-<h1 class="text-2xl font-bold mb-6">All Links</h1>
-<p class="text-base-content/70">Admin links view coming soon.</p>
+<!-- Governing: SPEC-0004 REQ "Admin Dashboard" -->
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">All Links</h1>
+    <div class="flex items-center gap-3">
+        <span class="text-base-content/60 text-sm">{{len .Links}} total</span>
+        <a href="/admin" class="btn btn-ghost btn-sm">← Admin</a>
+    </div>
+</div>
+
+{{if .Links}}
+<div class="overflow-x-auto">
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Slug</th>
+                <th>Destination</th>
+                <th>Description</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Links}}
+            <tr>
+                <td>
+                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
+                </td>
+                <td class="max-w-xs truncate text-sm">
+                    <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
+                </td>
+                <td class="text-sm text-base-content/70">{{.Description}}</td>
+                <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<p class="text-base-content/60 py-8 text-center">No links yet.</p>
+{{end}}
 {{end}}

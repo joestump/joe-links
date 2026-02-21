@@ -66,7 +66,7 @@ func NewRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — dashboard, link, and tag routes
 	dashboard := NewDashboardHandler(deps.LinkStore, deps.TagStore)
 	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore)
-	tags := NewTagsHandler(deps.TagStore)
+	tags := NewTagsHandler(deps.TagStore, deps.LinkStore)
 
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
@@ -91,7 +91,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Admin routes (require admin role)
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — admin group with RequireAdmin
-	admin := NewAdminHandler()
+	admin := NewAdminHandler(deps.LinkStore, deps.UserStore)
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
 		r.Use(deps.AuthMiddleware.RequireRole("admin"))

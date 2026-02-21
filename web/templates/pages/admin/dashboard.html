@@ -1,6 +1,25 @@
 {{template "base" .}}
+
 {{define "title"}}Admin — Joe Links{{end}}
+
 {{define "content"}}
+<!-- Governing: SPEC-0004 REQ "Admin Dashboard" -->
 <h1 class="text-2xl font-bold mb-6">Admin Dashboard</h1>
-<p class="text-base-content/70">Admin views coming soon.</p>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
+    <div class="stat bg-base-200 rounded-box shadow">
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value text-primary">{{.UserCount}}</div>
+        <div class="stat-actions">
+            <a href="/admin/users" class="btn btn-sm btn-ghost">Manage →</a>
+        </div>
+    </div>
+    <div class="stat bg-base-200 rounded-box shadow">
+        <div class="stat-title">Total Links</div>
+        <div class="stat-value text-primary">{{.LinkCount}}</div>
+        <div class="stat-actions">
+            <a href="/admin/links" class="btn btn-sm btn-ghost">View →</a>
+        </div>
+    </div>
+</div>
 {{end}}

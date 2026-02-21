@@ -1,6 +1,40 @@
 {{template "base" .}}
-{{define "title"}}Tag — Joe Links{{end}}
+
+{{define "title"}}{{if .Tag}}{{.Tag.Name}} — {{end}}Tags — Joe Links{{end}}
+
 {{define "content"}}
-<h1 class="text-2xl font-bold mb-6">Tag</h1>
-<p class="text-base-content/70">Tag detail coming soon.</p>
+<!-- Governing: SPEC-0004 REQ "Tag Browser" -->
+<div class="flex items-center gap-3 mb-6">
+    <a href="/dashboard/tags" class="btn btn-ghost btn-sm">← Tags</a>
+    {{if .Tag}}<h1 class="text-2xl font-bold">{{.Tag.Name}}</h1>{{end}}
+</div>
+
+{{if .Links}}
+<div class="overflow-x-auto">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Slug</th>
+                <th>Destination</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Links}}
+            <tr>
+                <td>
+                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
+                </td>
+                <td class="max-w-xs truncate text-sm">
+                    <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
+                </td>
+                <td class="text-sm text-base-content/70">{{.Description}}</td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<p class="text-base-content/60 py-8 text-center">No links tagged with "{{if .Tag}}{{.Tag.Name}}{{end}}".</p>
+{{end}}
 {{end}}
