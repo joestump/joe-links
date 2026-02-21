@@ -8,34 +8,41 @@
     <a href="/dashboard/links/new" class="btn btn-primary btn-sm">+ New link</a>
 </div>
 
-{{if .Links}}
-<div class="overflow-x-auto">
-    <table class="table table-zebra w-full">
-        <thead>
-            <tr>
-                <th>Slug</th>
-                <th>URL</th>
-                <th>Description</th>
-                <th>Created</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody id="links-table">
-            {{range .Links}}
-            {{template "link_row" .}}
-            {{end}}
-        </tbody>
-    </table>
+<!-- Governing: SPEC-0004 REQ "User Dashboard" — search input with HTMX debounce -->
+<div class="flex flex-col sm:flex-row gap-3 mb-6">
+    <input
+        type="search"
+        name="q"
+        class="input input-bordered flex-1"
+        placeholder="Search links by slug, URL, or description..."
+        value="{{.Query}}"
+        hx-get="/dashboard"
+        hx-trigger="input changed delay:400ms, search"
+        hx-target="#link-list"
+        hx-include="this"
+        hx-push-url="false"
+    >
 </div>
-{{else}}
-<div class="hero py-16">
-    <div class="hero-content text-center">
-        <div>
-            <h2 class="text-xl font-semibold mb-2">No links yet</h2>
-            <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
-            <a href="/dashboard/links/new" class="btn btn-primary">Create a link</a>
-        </div>
-    </div>
+
+<!-- Governing: SPEC-0004 REQ "User Dashboard" — tag filter chips -->
+{{if .Tags}}
+<div class="flex flex-wrap gap-2 mb-6">
+    <a href="/dashboard"
+       class="badge badge-outline {{if not .Tag}}badge-primary{{end}} cursor-pointer"
+       hx-get="/dashboard"
+       hx-target="#link-list"
+       hx-push-url="false">All</a>
+    {{range .Tags}}
+    <a href="/dashboard?tag={{.Slug}}"
+       class="badge badge-outline {{if eq $.Tag .Slug}}badge-primary{{end}} cursor-pointer"
+       hx-get="/dashboard?tag={{.Slug}}"
+       hx-target="#link-list"
+       hx-push-url="false">{{.Name}}</a>
+    {{end}}
 </div>
 {{end}}
+
+<div id="link-list">
+{{template "link_list" .}}
+</div>
 {{end}}

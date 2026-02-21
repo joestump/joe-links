@@ -1,5 +1,6 @@
 // Governing: SPEC-0001 REQ "Short Link Resolution", REQ "HTMX Hypermedia Interactions", ADR-0001
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
+// Governing: SPEC-0004 REQ "Slug Resolver and 404 Page"
 package handler
 
 import (
