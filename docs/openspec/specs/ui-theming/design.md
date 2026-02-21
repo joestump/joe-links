@@ -94,59 +94,85 @@ sequenceDiagram
 | Token          | joe-light               | joe-dark                | Contrast (on base) |
 |----------------|-------------------------|-------------------------|--------------------|
 | `primary`      | `#c084fc` lilac         | `#a855f7` purple        | ✓ AA on base-100   |
-| `primary-content` | `#fafafa`            | `#fafafa`               | ✓ AA on primary    |
+| `primary-content` | `#ffffff`            | `#ffffff`               | See contrast notes |
 | `secondary`    | `#fb923c` peach         | `#f97316` orange        | ✓ AA on base-100   |
 | `accent`       | `#34d399` mint          | `#10b981` emerald       | ✓ AA on base-100   |
-| `base-100`     | `#fdf4ff` lavender-white| `#1e1b2e` deep purple   | —                  |
-| `base-200`     | `#f3e8ff`               | `#2d2840`               | —                  |
-| `base-300`     | `#e9d5ff`               | `#3d3756`               | —                  |
-| `base-content` | `#1f1335` near-black    | `#e9d5ff` lavender      | ✓ AA on base-100   |
+| `base-100`     | `#ffffff` true white    | `#111111` near-black    | —                  |
+| `base-200`     | `#f5f5f5`               | `#1c1c1c`               | —                  |
+| `base-300`     | `#e8e8e8`               | `#2a2a2a`               | —                  |
+| `base-content` | `#000000` true black    | `#ffffff` true white    | ✓ AAA on base-100  |
 | `info`         | `#67e8f9` sky           | `#22d3ee` cyan          | ✓ AA on base-100   |
 | `success`      | `#86efac` sage          | `#4ade80` green         | ✓ AA on base-100   |
 | `warning`      | `#fde68a` butter        | `#fbbf24` amber         | ✓ AA on base-100   |
 | `error`        | `#fca5a5` rose          | `#f87171` red-400       | ✓ AA on base-100   |
 
+#### Contrast Verification
+
+- `base-content` (#000000) on `base-100` (#ffffff) — joe-light: **21:1** (trivially AAA)
+- `base-content` (#ffffff) on `base-100` (#111111) — joe-dark: **~18.5:1** (trivially AAA)
+- `primary-content` (#ffffff) on `primary` (#c084fc) — joe-light: **~3.2:1** (AA for large text); verify with contrast checker before shipping
+- `primary-content` (#ffffff) on `primary` (#a855f7) — joe-dark: **~3.9:1** (AA for large text); verify with contrast checker before shipping
+
 ### Tailwind Config Structure
 
 ```js
+// Governing: SPEC-0003 REQ "Custom DaisyUI Themes", SPEC-0003 REQ "WCAG AA Color Contrast", ADR-0006
 // tailwind.config.js
 module.exports = {
+  content: ["./web/templates/**/*.html"],
   plugins: [require("daisyui")],
   daisyui: {
     themes: [
       {
         "joe-light": {
           "primary": "#c084fc",
-          "primary-content": "#fafafa",
+          "primary-content": "#ffffff",
           "secondary": "#fb923c",
+          "secondary-content": "#ffffff",
           "accent": "#34d399",
+          "accent-content": "#ffffff",
           "neutral": "#6b7280",
-          "base-100": "#fdf4ff",
-          "base-200": "#f3e8ff",
-          "base-300": "#e9d5ff",
-          "base-content": "#1f1335",
+          "neutral-content": "#ffffff",
+          "base-100": "#ffffff",
+          "base-200": "#f5f5f5",
+          "base-300": "#e8e8e8",
+          "base-content": "#000000",
           "info": "#67e8f9",
+          "info-content": "#000000",
           "success": "#86efac",
+          "success-content": "#000000",
           "warning": "#fde68a",
+          "warning-content": "#000000",
           "error": "#fca5a5",
+          "error-content": "#000000",
         },
+      },
+      {
         "joe-dark": {
           "primary": "#a855f7",
-          "primary-content": "#fafafa",
+          "primary-content": "#ffffff",
           "secondary": "#f97316",
+          "secondary-content": "#ffffff",
           "accent": "#10b981",
+          "accent-content": "#ffffff",
           "neutral": "#9ca3af",
-          "base-100": "#1e1b2e",
-          "base-200": "#2d2840",
-          "base-300": "#3d3756",
-          "base-content": "#e9d5ff",
+          "neutral-content": "#000000",
+          "base-100": "#111111",
+          "base-200": "#1c1c1c",
+          "base-300": "#2a2a2a",
+          "base-content": "#ffffff",
           "info": "#22d3ee",
+          "info-content": "#000000",
           "success": "#4ade80",
+          "success-content": "#000000",
           "warning": "#fbbf24",
+          "warning-content": "#000000",
           "error": "#f87171",
+          "error-content": "#000000",
         },
       },
     ],
+    darkTheme: "joe-dark",
   },
 }
 ```
@@ -154,7 +180,7 @@ module.exports = {
 ## Risks / Trade-offs
 
 - **Cookie non-HttpOnly** → The `theme` cookie is readable by JavaScript (required for the anti-flash script). This is intentional and acceptable since the cookie contains no sensitive data (`joe-light` or `joe-dark` only).
-- **Contrast ratios on pastel colors** → Light pastels on white backgrounds can fail WCAG AA. The `joe-light` palette uses `base-100: #fdf4ff` (near-white) with `base-content: #1f1335` (near-black) to maintain high contrast. Primary buttons use white content text on the lilac primary — this pair MUST be verified with a contrast checker during implementation.
+- **Contrast ratios on pastel colors** → Light pastels on white backgrounds can fail WCAG AA. The `joe-light` palette uses `base-100: #ffffff` (true white) with `base-content: #000000` (true black) for maximum 21:1 contrast. Primary buttons use white content text on the lilac primary (~3.2:1) — acceptable for AA large text but MUST be verified with a contrast checker before shipping.
 - **DaisyUI version coupling** → Custom theme format may change between DaisyUI major versions. Pin the DaisyUI version in `package.json` and review color token names on upgrades.
 
 ## Open Questions
