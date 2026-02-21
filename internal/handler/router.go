@@ -1,6 +1,7 @@
 // Governing: SPEC-0001 REQ "Go HTTP Server", "Role-Based Access Control", "Short Link Resolution", ADR-0001, ADR-0003
 // Governing: SPEC-0003 REQ "HTMX Theme Endpoint", ADR-0006
 // Governing: SPEC-0004 REQ "Route Registration and Priority", "Shared Base Layout"
+// Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
 package handler
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
@@ -20,10 +22,12 @@ type Deps struct {
 	SessionManager *scs.SessionManager
 	AuthHandlers   *auth.Handlers
 	AuthMiddleware *auth.Middleware
+	BearerAuth     *auth.BearerTokenMiddleware
 	LinkStore      *store.LinkStore
 	OwnershipStore *store.OwnershipStore
 	TagStore       *store.TagStore
 	UserStore      *store.UserStore
+	TokenStore     auth.TokenStore
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
@@ -100,6 +104,18 @@ func NewRouter(deps Deps) http.Handler {
 		r.Put("/admin/users/{id}/role", admin.UpdateRole)
 		r.Get("/admin/links", admin.Links)
 	})
+
+	// API v1 sub-router — mounted before catch-all so /api/v1/* takes precedence.
+	// Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
+	apiRouter := api.NewAPIRouter(api.Deps{
+		BearerAuth:     deps.BearerAuth,
+		LinkStore:      deps.LinkStore,
+		OwnershipStore: deps.OwnershipStore,
+		TagStore:       deps.TagStore,
+		UserStore:      deps.UserStore,
+		TokenStore:     deps.TokenStore,
+	})
+	r.Mount("/api/v1", apiRouter)
 
 	// Slug resolver -- catch-all, must be last.
 	// Resolver does not require auth (links are publicly accessible).
