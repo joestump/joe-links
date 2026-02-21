@@ -113,6 +113,20 @@ func (s *TagStore) upsertTx(ctx context.Context, tx *sqlx.Tx, name string) (*Tag
 	return &Tag{ID: id, Name: strings.TrimSpace(name), Slug: slug, CreatedAt: now}, nil
 }
 
+// SearchByPrefix returns tags whose name starts with the given prefix (case-insensitive).
+// Governing: SPEC-0004 REQ "New Link Form" — tag autocomplete
+func (s *TagStore) SearchByPrefix(ctx context.Context, prefix string) ([]*Tag, error) {
+	var tags []*Tag
+	pattern := prefix + "%"
+	err := s.db.SelectContext(ctx, &tags, `
+		SELECT * FROM tags WHERE name LIKE ? ORDER BY name ASC LIMIT 10
+	`, pattern)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
 // GetBySlug returns the tag matching slug, or ErrNotFound.
 func (s *TagStore) GetBySlug(ctx context.Context, slug string) (*Tag, error) {
 	var t Tag

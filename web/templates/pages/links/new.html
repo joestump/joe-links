@@ -3,6 +3,7 @@
 {{define "title"}}New Link — Joe Links{{end}}
 
 {{define "content"}}
+<!-- Governing: SPEC-0004 REQ "New Link Form" -->
 <div class="max-w-lg mx-auto">
     <div class="card bg-base-200 shadow">
         <div class="card-body">
@@ -30,8 +31,16 @@
                             pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
                             required
                             value="{{.Form.Slug}}"
+                            hx-get="/dashboard/links/validate-slug"
+                            hx-trigger="input changed delay:300ms"
+                            hx-target="#slug-status"
+                            hx-swap="innerHTML"
+                            hx-params="slug:this.value"
+                            hx-include=""
                         >
                     </label>
+                    <!-- Governing: SPEC-0004 REQ "New Link Form" — live slug validation indicator -->
+                    <div id="slug-status" class="mt-1 min-h-[1.25rem]"></div>
                 </div>
 
                 <div class="form-control mb-4">
@@ -48,7 +57,20 @@
                     >
                 </div>
 
-                <div class="form-control mb-6">
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text">Title</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="title"
+                        class="input input-bordered"
+                        placeholder="Short descriptive title"
+                        value="{{.Form.Title}}"
+                    >
+                </div>
+
+                <div class="form-control mb-4">
                     <label class="label">
                         <span class="label-text">Description</span>
                     </label>
@@ -61,6 +83,32 @@
                     >
                 </div>
 
+                <!-- Governing: SPEC-0004 REQ "New Link Form" — tag input with autocomplete -->
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text">Tags</span>
+                        <span class="label-text-alt text-base-content/50">comma-separated</span>
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            name="tags"
+                            id="tags-input"
+                            class="input input-bordered w-full"
+                            placeholder="engineering, tools, jira"
+                            value="{{.Form.Tags}}"
+                            autocomplete="off"
+                            hx-get="/dashboard/tags/suggest"
+                            hx-trigger="input changed delay:200ms"
+                            hx-target="#tag-suggestions"
+                            hx-swap="innerHTML"
+                            hx-params="q:this.value.split(',').pop().trim()"
+                            hx-include=""
+                        >
+                        <ul id="tag-suggestions" class="menu bg-base-100 shadow-lg rounded-box absolute z-10 w-full mt-1"></ul>
+                    </div>
+                </div>
+
                 <div class="card-actions justify-end">
                     <a href="/dashboard" class="btn btn-ghost">Cancel</a>
                     <button type="submit" class="btn btn-primary">Create link</button>
@@ -69,4 +117,17 @@
         </div>
     </div>
 </div>
+
+<script>
+function addTag(name) {
+    var input = document.getElementById('tags-input');
+    var parts = input.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    // Replace the last (partial) entry with the selected tag
+    if (parts.length > 0) { parts.pop(); }
+    parts.push(name);
+    input.value = parts.join(', ') + ', ';
+    document.getElementById('tag-suggestions').innerHTML = '';
+    input.focus();
+}
+</script>
 {{end}}

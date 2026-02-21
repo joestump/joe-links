@@ -87,6 +87,24 @@ func (s *OwnershipStore) ListOwners(linkID string) ([]string, error) {
 	return owners, err
 }
 
+// OwnerInfo represents a link owner with their user details and primary status.
+type OwnerInfo struct {
+	User
+	IsPrimary bool `db:"is_primary"`
+}
+
+// ListOwnerUsers returns full user records for all owners of a link.
+func (s *OwnershipStore) ListOwnerUsers(linkID string) ([]*OwnerInfo, error) {
+	var owners []*OwnerInfo
+	err := s.db.Select(&owners, `
+		SELECT u.*, lo.is_primary FROM users u
+		INNER JOIN link_owners lo ON lo.user_id = u.id
+		WHERE lo.link_id = ?
+		ORDER BY lo.is_primary DESC, u.display_name ASC
+	`, linkID)
+	return owners, err
+}
+
 // isUniqueConstraintError checks whether err indicates a unique constraint violation.
 // Works across SQLite, PostgreSQL, and MySQL.
 func isUniqueConstraintError(err error) bool {

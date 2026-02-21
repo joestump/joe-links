@@ -71,6 +71,16 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	return &u, nil
 }
 
+// GetByEmail returns the user matching email, or ErrNotFound.
+func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
+	var u User
+	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE email = ?`, email)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
 func (s *UserStore) GetByID(ctx context.Context, id string) (*User, error) {
 	var u User
 	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE id = ?`, id)

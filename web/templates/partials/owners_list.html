@@ -1,0 +1,50 @@
+{{define "owners_list"}}
+<!-- Governing: SPEC-0004 REQ "Co-Owner Management" — owners fragment for HTMX swap -->
+<div id="owners-section" hx-swap-oob="true">
+    {{if .Error}}
+    <div class="alert alert-error mb-3 text-sm">
+        <span>{{.Error}}</span>
+    </div>
+    {{end}}
+
+    <div class="overflow-x-auto mb-4">
+        <table class="table table-sm">
+            <tbody>
+                {{range .Owners}}
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <div class="avatar placeholder">
+                                <div class="bg-neutral text-neutral-content rounded-full w-6">
+                                    <span class="text-xs">{{slice .DisplayName 0 1}}</span>
+                                </div>
+                            </div>
+                            <span>{{.DisplayName}}</span>
+                            <span class="text-xs text-base-content/50">{{.Email}}</span>
+                            {{if .IsPrimary}}<span class="badge badge-xs badge-primary">primary</span>{{end}}
+                        </div>
+                    </td>
+                    <td class="text-right">
+                        {{if not .IsPrimary}}
+                        <button class="btn btn-xs btn-ghost btn-error"
+                                hx-delete="/dashboard/links/{{$.Link.ID}}/owners/{{.ID}}"
+                                hx-target="#owners-section"
+                                hx-swap="outerHTML">Remove</button>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <form hx-post="/dashboard/links/{{.Link.ID}}/owners"
+          hx-target="#owners-section"
+          hx-swap="outerHTML"
+          class="flex gap-2">
+        <input type="email" name="email" class="input input-bordered input-sm flex-1"
+               placeholder="Add co-owner by email" required>
+        <button type="submit" class="btn btn-sm btn-primary">Add</button>
+    </form>
+</div>
+{{end}}
