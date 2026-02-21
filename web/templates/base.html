@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{block "title" .}}Joe Links{{end}}</title>
     <!-- Governing: SPEC-0003 REQ "System-Preference Default" — anti-flash inline script, must precede stylesheets -->
-    <script>(function(){var t=document.cookie.match(/theme=([^;]+)/);var theme=t?decodeURIComponent(t[1]):(window.matchMedia('(prefers-color-scheme: dark)').matches?'joe-dark':'joe-light');if(theme==='joe-light'||theme==='joe-dark'){document.documentElement.setAttribute('data-theme',theme)}})()</script>
+    <script>!function(){var c=document.cookie.match(/theme=(joe-(?:light|dark))/);document.documentElement.dataset.theme=c?c[1]:matchMedia("(prefers-color-scheme:dark)").matches?"joe-dark":"joe-light"}()</script>
     <link rel="stylesheet" href="/static/css/app.css">
     <script src="/static/js/htmx.min.js"></script>
 </head>
