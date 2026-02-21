@@ -50,6 +50,8 @@ func newServeCmd() *cobra.Command {
 			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
+			tokenStore := auth.NewSQLTokenStore(database)
+
 			router := handler.NewRouter(handler.Deps{
 				SessionManager: sessionManager,
 				AuthHandlers:   authHandlers,
@@ -58,6 +60,7 @@ func newServeCmd() *cobra.Command {
 				OwnershipStore: ownershipStore,
 				TagStore:       tagStore,
 				UserStore:      userStore,
+				TokenStore:     tokenStore,
 			})
 
 			log.Printf("listening on %s", cfg.HTTP.Addr)
