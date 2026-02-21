@@ -1,4 +1,4 @@
-// Governing: SPEC-0001 REQ "Short Link Management", ADR-0001
+// Governing: SPEC-0001 REQ "Short Link Management", REQ "HTMX Hypermedia Interactions", ADR-0001
 package handler
 
 import (
@@ -26,6 +26,7 @@ func NewDashboardHandler(ls *store.LinkStore) *DashboardHandler {
 }
 
 // Show renders the dashboard with the user's links (or all links for admins).
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 
@@ -41,5 +42,10 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render(w, "dashboard.html", DashboardPage{User: user, Links: links})
+	data := DashboardPage{User: user, Links: links}
+	if isHTMX(r) {
+		renderFragment(w, "content", data)
+		return
+	}
+	render(w, "dashboard.html", data)
 }

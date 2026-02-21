@@ -1,4 +1,4 @@
-// Governing: SPEC-0001 REQ "Short Link Management", ADR-0001
+// Governing: SPEC-0001 REQ "Short Link Management", REQ "HTMX Hypermedia Interactions", ADR-0001
 package handler
 
 import (
@@ -36,13 +36,20 @@ func NewLinksHandler(ls *store.LinkStore) *LinksHandler {
 }
 
 // New renders the create-link form.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
-	render(w, "new.html", LinkFormPage{User: user, Form: form})
+	data := LinkFormPage{User: user, Form: form}
+	if isHTMX(r) {
+		renderFragment(w, "content", data)
+		return
+	}
+	render(w, "new.html", data)
 }
 
 // Create processes the create-link form submission.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if err := r.ParseForm(); err != nil {
@@ -57,20 +64,36 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
-		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: err.Error()})
+		data := LinkFormPage{User: user, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "content", data)
+			return
+		}
+		render(w, "new.html", data)
 		return
 	}
 
 	_, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Description)
 	if err != nil {
-		render(w, "new.html", LinkFormPage{User: user, Form: form, Error: "That slug is already taken. Choose a different one."})
+		data := LinkFormPage{User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
+		if isHTMX(r) {
+			renderFragment(w, "content", data)
+			return
+		}
+		render(w, "new.html", data)
 		return
 	}
 
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/dashboard")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 // Edit renders the edit-link form.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
@@ -85,10 +108,16 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render(w, "edit.html", LinkFormPage{User: user, Link: link})
+	data := LinkFormPage{User: user, Link: link}
+	if isHTMX(r) {
+		renderFragment(w, "content", data)
+		return
+	}
+	render(w, "edit.html", data)
 }
 
 // Update processes the edit-link form submission.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
@@ -115,20 +144,36 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
-		render(w, "edit.html", LinkFormPage{User: user, Link: link, Form: form, Error: err.Error()})
+		data := LinkFormPage{User: user, Link: link, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "content", data)
+			return
+		}
+		render(w, "edit.html", data)
 		return
 	}
 
 	_, err = h.links.Update(r.Context(), id, form.Slug, form.URL, form.Description)
 	if err != nil {
-		render(w, "edit.html", LinkFormPage{User: user, Link: link, Form: form, Error: "That slug is already taken."})
+		data := LinkFormPage{User: user, Link: link, Form: form, Error: "That slug is already taken."}
+		if isHTMX(r) {
+			renderFragment(w, "content", data)
+			return
+		}
+		render(w, "edit.html", data)
 		return
 	}
 
+	if isHTMX(r) {
+		w.Header().Set("HX-Redirect", "/dashboard")
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 }
 
 // Delete removes a link. Returns 200 with empty body for HTMX row removal.
+// Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 func (h *LinksHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
