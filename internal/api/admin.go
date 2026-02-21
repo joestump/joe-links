@@ -55,6 +55,18 @@ func requireAdmin(next http.Handler) http.Handler {
 // ListUsers returns all users in the system.
 // GET /api/v1/admin/users
 // Governing: SPEC-0005 REQ "Admin Endpoints"
+//
+// @Summary      List all users (admin)
+// @Description  Returns all users in the system. Requires admin role.
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  UserListResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /admin/users [get]
 func (h *adminAPIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := h.users.ListAll(r.Context())
 	if err != nil {
@@ -79,6 +91,22 @@ func (h *adminAPIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 // UpdateRole changes a user's role. Accepts only "user" and "admin".
 // PUT /api/v1/admin/users/{id}/role
 // Governing: SPEC-0005 REQ "Admin Endpoints" — valid roles: "user", "admin".
+//
+// @Summary      Update user role (admin)
+// @Description  Changes a user's role. Valid values: "user", "admin". Requires admin role.
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string             true  "User ID"
+// @Param        body  body      UpdateRoleRequest  true  "New role"
+// @Success      200   {object}  UserResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      403   {object}  ErrorResponse
+// @Failure      404   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /admin/users/{id}/role [put]
 func (h *adminAPIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 
@@ -115,6 +143,18 @@ func (h *adminAPIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // ListLinks returns all links system-wide (admin-only explicit route).
 // GET /api/v1/admin/links
 // Governing: SPEC-0005 REQ "Admin Endpoints"
+//
+// @Summary      List all links (admin)
+// @Description  Returns all links system-wide with owners and tags. Requires admin role.
+// @Tags         Admin
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  LinkListResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /admin/links [get]
 func (h *adminAPIHandler) ListLinks(w http.ResponseWriter, r *http.Request) {
 	links, err := h.links.ListAll(r.Context())
 	if err != nil {

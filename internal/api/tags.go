@@ -28,6 +28,17 @@ func registerTagRoutes(r chi.Router, tags *store.TagStore, links *store.LinkStor
 // List returns all tags with link_count >= 1.
 // GET /api/v1/tags
 // Governing: SPEC-0005 REQ "Tags" — tags with link_count = 0 MUST NOT appear.
+//
+// @Summary      List tags
+// @Description  Returns all tags that have at least one associated link.
+// @Tags         Tags
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  TagListResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /tags [get]
 func (h *tagsAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -56,6 +67,19 @@ func (h *tagsAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 // ListLinks returns links tagged with the given slug.
 // GET /api/v1/tags/{slug}/links
 // Governing: SPEC-0005 REQ "Tags" — admin sees all links; non-admin sees only owned links.
+//
+// @Summary      List links by tag
+// @Description  Returns links with the given tag. Admins see all; non-admins see only owned links.
+// @Tags         Tags
+// @Accept       json
+// @Produce      json
+// @Param        slug  path      string  true  "Tag slug"
+// @Success      200   {object}  LinkListResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      404   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /tags/{slug}/links [get]
 func (h *tagsAPIHandler) ListLinks(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {

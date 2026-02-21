@@ -38,6 +38,17 @@ func registerLinkRoutes(r chi.Router, links *store.LinkStore, ownership *store.O
 // List returns owned links for regular users, or all links for admins.
 // GET /api/v1/links
 // Governing: SPEC-0005 REQ "Links Collection"
+//
+// @Summary      List links
+// @Description  Returns links owned by the caller. Admins see all links.
+// @Tags         Links
+// @Accept       json
+// @Produce      json
+// @Success      200  {object}  LinkListResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links [get]
 func (h *linksAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -74,6 +85,20 @@ func (h *linksAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 // Create creates a new link with the authenticated user as primary owner.
 // POST /api/v1/links
 // Governing: SPEC-0005 REQ "Links Collection"
+//
+// @Summary      Create a link
+// @Description  Creates a new short link. The caller becomes the primary owner.
+// @Tags         Links
+// @Accept       json
+// @Produce      json
+// @Param        body  body      CreateLinkRequest  true  "Link to create"
+// @Success      201   {object}  LinkResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      409   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links [post]
 func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -137,6 +162,20 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 // Get returns a single link by ID. Owners and admins only.
 // GET /api/v1/links/{id}
 // Governing: SPEC-0005 REQ "Link Resource"
+//
+// @Summary      Get a link
+// @Description  Returns a single link by ID. Only owners and admins may access.
+// @Tags         Links
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Link ID"
+// @Success      200  {object}  LinkResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id} [get]
 func (h *linksAPIHandler) Get(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -179,6 +218,22 @@ func (h *linksAPIHandler) Get(w http.ResponseWriter, r *http.Request) {
 // Update modifies a link's url, title, description, and tags. Slug is immutable and ignored.
 // PUT /api/v1/links/{id}
 // Governing: SPEC-0005 REQ "Link Resource" — slug field MUST be ignored (immutable)
+//
+// @Summary      Update a link
+// @Description  Updates url, title, description, and tags. Slug is immutable and ignored.
+// @Tags         Links
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string             true  "Link ID"
+// @Param        body  body      UpdateLinkRequest  true  "Fields to update"
+// @Success      200   {object}  LinkResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      403   {object}  ErrorResponse
+// @Failure      404   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id} [put]
 func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -244,6 +299,20 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 // Delete removes a link. Owners and admins only.
 // DELETE /api/v1/links/{id}
 // Governing: SPEC-0005 REQ "Link Resource"
+//
+// @Summary      Delete a link
+// @Description  Deletes a link by ID. Only owners and admins may delete.
+// @Tags         Links
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Link ID"
+// @Success      204  "No Content"
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id} [delete]
 func (h *linksAPIHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -285,6 +354,20 @@ func (h *linksAPIHandler) Delete(w http.ResponseWriter, r *http.Request) {
 // ListOwners returns all owners of a link.
 // GET /api/v1/links/{id}/owners
 // Governing: SPEC-0005 REQ "Co-Owner Management"
+//
+// @Summary      List link owners
+// @Description  Returns all owners of a link. Only owners and admins may access.
+// @Tags         Owners
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Link ID"
+// @Success      200  {array}   OwnerResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id}/owners [get]
 func (h *linksAPIHandler) ListOwners(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -336,6 +419,23 @@ func (h *linksAPIHandler) ListOwners(w http.ResponseWriter, r *http.Request) {
 // AddOwner adds a co-owner to a link by email. Owners and admins only.
 // POST /api/v1/links/{id}/owners
 // Governing: SPEC-0005 REQ "Co-Owner Management"
+//
+// @Summary      Add a co-owner
+// @Description  Adds a co-owner to a link by email address. Only owners and admins may add.
+// @Tags         Owners
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string           true  "Link ID"
+// @Param        body  body      AddOwnerRequest  true  "Co-owner to add"
+// @Success      201   {object}  OwnerResponse
+// @Failure      400   {object}  ErrorResponse
+// @Failure      401   {object}  ErrorResponse
+// @Failure      403   {object}  ErrorResponse
+// @Failure      404   {object}  ErrorResponse
+// @Failure      409   {object}  ErrorResponse
+// @Failure      500   {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id}/owners [post]
 func (h *linksAPIHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
@@ -405,6 +505,22 @@ func (h *linksAPIHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 // RemoveOwner removes a co-owner from a link. Primary owner cannot be removed.
 // DELETE /api/v1/links/{id}/owners/{uid}
 // Governing: SPEC-0005 REQ "Co-Owner Management" — primary owner MUST be protected
+//
+// @Summary      Remove a co-owner
+// @Description  Removes a co-owner from a link. The primary owner cannot be removed.
+// @Tags         Owners
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "Link ID"
+// @Param        uid  path      string  true  "User ID of the owner to remove"
+// @Success      204  "No Content"
+// @Failure      400  {object}  ErrorResponse
+// @Failure      401  {object}  ErrorResponse
+// @Failure      403  {object}  ErrorResponse
+// @Failure      404  {object}  ErrorResponse
+// @Failure      500  {object}  ErrorResponse
+// @Security     BearerToken
+// @Router       /links/{id}/owners/{uid} [delete]
 func (h *linksAPIHandler) RemoveOwner(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
