@@ -1,8 +1,20 @@
 bin/
 node_modules/
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 joe-links.yaml
 .env
 static/css/app.css
-.claude/worktrees/
+
+# Claude Code internals
+.claude/
+
+# Docusaurus generated output (rebuilt by npm run build-content)
+docs-generated/
+
+# Docusaurus build artifacts
+docs-site/node_modules/
+docs-site/build/
+docs-site/.docusaurus/

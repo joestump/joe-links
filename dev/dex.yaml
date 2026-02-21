@@ -1,0 +1,29 @@
+issuer: http://localhost:5556/dex
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+oauth2:
+  skipApprovalScreen: true
+
+# Enable local username/password login (dev only — not suitable for production).
+enablePasswordDB: true
+
+staticPasswords:
+  # Password: "password" (bcrypt hash)
+  # To generate your own: docker run --rm httpd:2.4 htpasswd -bnBC 10 "" yourpassword | tr -d ':\n'
+  - email: "admin@example.com"
+    hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    username: "admin"
+    userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+
+staticClients:
+  - id: joe-links-dev
+    redirectURIs:
+      - "http://localhost:8080/auth/callback"
+      - "http://go:8080/auth/callback"
+    name: "joe-links (dev)"
+    secret: "dev-secret-not-for-production"

@@ -1,0 +1,33 @@
+# Copy this to joe-links.yaml and fill in your values.
+# joe-links.yaml is gitignored.
+
+http:
+  addr: ":8080"
+
+db:
+  driver: sqlite3
+  dsn: ./joe-links.db
+
+# --- Local dev with Dex (docker compose -f docker-compose.dev.yml up -d) ---
+oidc:
+  issuer: http://localhost:5556/dex
+  client_id: joe-links-dev
+  client_secret: dev-secret-not-for-production
+  redirect_url: http://localhost:8080/auth/callback
+
+# Your email must match a staticPasswords entry in dev/dex.yaml to get admin role.
+admin_email: admin@example.com
+
+# Disable Secure flag on cookies so sessions work over plain HTTP locally.
+insecure_cookies: true
+
+session_lifetime: 720h
+
+# --- Production (Google OIDC) ---
+# oidc:
+#   issuer: https://accounts.google.com
+#   client_id: YOUR_GOOGLE_CLIENT_ID
+#   client_secret: YOUR_GOOGLE_CLIENT_SECRET
+#   redirect_url: https://go.example.com/auth/callback
+# admin_email: you@example.com
+# insecure_cookies: false

@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    ports:
+      - "${JOE_HTTP_ADDR:-8080}:8080"
+    env_file: .env
+    volumes:
+      - joe-data:/data
+    restart: unless-stopped
+
+  postgres:
+    profiles: [postgres]
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: joe_links
+      POSTGRES_USER: joe
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  joe-data:
+  pg-data:
