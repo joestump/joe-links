@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "Short Link Management", REQ "HTMX Hypermedia Interactions", ADR-0001
+// Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 package handler
 
 import (
@@ -10,6 +11,7 @@ import (
 
 // DashboardPage is the template data for the dashboard view.
 type DashboardPage struct {
+	BasePage
 	User  *store.User
 	Links []*store.Link
 	Flash *Flash
@@ -42,7 +44,7 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := DashboardPage{User: user, Links: links}
+	data := DashboardPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Links: links}
 	if isHTMX(r) {
 		renderFragment(w, "content", data)
 		return

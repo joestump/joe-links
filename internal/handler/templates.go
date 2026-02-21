@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions", REQ "DaisyUI and Tailwind CSS", ADR-0001
+// Governing: SPEC-0003 REQ "System-Preference Default", SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 package handler
 
 import (
@@ -7,6 +8,26 @@ import (
 
 	"github.com/joestump/joe-links/web"
 )
+
+// BasePage carries layout-level data available to every template.
+// Governing: SPEC-0003 REQ "Theme Persistence via Cookie"
+type BasePage struct {
+	Theme string // "joe-light", "joe-dark", or "" (let inline script decide)
+}
+
+// themeFromRequest reads the "theme" cookie. Returns "" if absent or invalid,
+// so the server omits data-theme and lets the anti-flash inline script handle it.
+// Governing: SPEC-0003 REQ "Theme Persistence via Cookie"
+func themeFromRequest(r *http.Request) string {
+	c, err := r.Cookie("theme")
+	if err != nil {
+		return ""
+	}
+	if c.Value == "joe-light" || c.Value == "joe-dark" {
+		return c.Value
+	}
+	return ""
+}
 
 var templates *template.Template
 
