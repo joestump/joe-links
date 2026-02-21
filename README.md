@@ -1,0 +1,137 @@
+# joe-links
+
+[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?logo=go&logoColor=white)](https://go.dev/)
+[![HTMX](https://img.shields.io/badge/HTMX-2.x-3366CC?logo=htmx&logoColor=white)](https://htmx.org/)
+[![DaisyUI](https://img.shields.io/badge/DaisyUI-4.x-5A0EF8?logo=daisyui&logoColor=white)](https://daisyui.com/)
+[![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+
+A self-hosted "go links" service. Type `go/slack` in your browser and get redirected to your team's Slack workspace. Type `go/hr` and land on the HR portal. joe-links turns short, memorable slugs into instant redirects to any URL -- no browser extension required, just a single DNS entry and a search engine shortcut.
+
+## Features
+
+- **Short memorable slugs** -- `[a-z0-9][a-z0-9-]*[a-z0-9]`, min 2 characters, globally unique
+- **OIDC authentication** -- sign in with Google, Okta, Authentik, Keycloak, or any OpenID Connect provider
+- **Co-ownership** -- multiple users can manage the same link
+- **REST API with Personal Access Tokens** -- automate link management from scripts and CI
+- **OpenAPI / Swagger UI** -- interactive API docs at `/api/docs/`
+- **Dark / light / system theme** -- automatic theme switching via DaisyUI
+- **Multi-database support** -- SQLite (zero config), PostgreSQL, or MySQL
+- **Single binary** -- one `joe-links` binary with embedded templates and static assets
+
+## Quick Start (Docker)
+
+```bash
+cp .env.example .env
+# Edit .env with your OIDC provider details
+docker compose up -d
+# Visit http://localhost:8080
+```
+
+## Configuration
+
+All configuration uses environment variables prefixed with `JOE_`. You can also use a `joe-links.yaml` config file.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `JOE_HTTP_ADDR` | `:8080` | HTTP bind address |
+| `JOE_DB_DRIVER` | -- | Database driver: `sqlite3`, `mysql`, or `postgres` |
+| `JOE_DB_DSN` | -- | Database connection string |
+| `JOE_OIDC_ISSUER` | -- | OIDC provider discovery URL |
+| `JOE_OIDC_CLIENT_ID` | -- | OAuth2 client ID |
+| `JOE_OIDC_CLIENT_SECRET` | -- | OAuth2 client secret |
+| `JOE_OIDC_REDIRECT_URL` | -- | OAuth2 callback URL (e.g. `https://go.example.com/auth/callback`) |
+| `JOE_ADMIN_EMAIL` | -- | Email address granted `admin` role on first login |
+| `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (Go duration, default 30 days) |
+| `JOE_INSECURE_COOKIES` | `false` | Disable `Secure` flag on cookies (for local HTTP dev) |
+
+### DSN Examples
+
+| Driver | DSN |
+|--------|-----|
+| SQLite | `./joe-links.db` |
+| PostgreSQL | `postgres://user:pass@localhost:5432/joelinks?sslmode=disable` |
+| MySQL | `user:pass@tcp(localhost:3306)/joelinks?parseTime=true` |
+
+## Slug Format
+
+Slugs must match the pattern `[a-z0-9][a-z0-9-]*[a-z0-9]` (minimum 2 characters). They are globally unique and case-insensitive.
+
+**Reserved prefixes** (cannot be used as slugs): `auth`, `static`, `dashboard`, `admin`
+
+## API
+
+joe-links provides a REST API at `/api/v1`, authenticated via Bearer token (Personal Access Token).
+
+Create a PAT from the dashboard under **Settings > API Tokens**. Then use it in requests:
+
+```bash
+curl -H "Authorization: Bearer jl_your_token_here" \
+  https://go.example.com/api/v1/links
+```
+
+Interactive Swagger UI is available at `/api/docs/`.
+
+### Key Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/v1/links` | List your links (admins see all) |
+| `POST` | `/api/v1/links` | Create a new link |
+| `GET` | `/api/v1/links/{id}` | Get a link by ID |
+| `PUT` | `/api/v1/links/{id}` | Update a link |
+| `DELETE` | `/api/v1/links/{id}` | Delete a link |
+| `GET` | `/api/v1/links/{id}/owners` | List link co-owners |
+| `POST` | `/api/v1/links/{id}/owners` | Add a co-owner |
+| `DELETE` | `/api/v1/links/{id}/owners/{uid}` | Remove a co-owner |
+| `GET` | `/api/v1/tokens` | List your API tokens |
+| `POST` | `/api/v1/tokens` | Create a new token |
+| `DELETE` | `/api/v1/tokens/{id}` | Revoke a token |
+
+## Development
+
+### Prerequisites
+
+- Go 1.24+
+- Node.js (for Tailwind CSS build)
+- Docker (for local OIDC provider)
+
+### Local Development with Dex
+
+```bash
+# Start Dex OIDC provider
+docker compose -f docker-compose.dev.yml up -d
+
+# In another terminal, start the server
+JOE_OIDC_ISSUER=http://localhost:5556/dex \
+JOE_OIDC_CLIENT_ID=joe-links-dev \
+JOE_OIDC_CLIENT_SECRET=dev-secret-not-for-production \
+JOE_OIDC_REDIRECT_URL=http://localhost:8080/auth/callback \
+JOE_DB_DRIVER=sqlite3 JOE_DB_DSN=./dev.db \
+JOE_ADMIN_EMAIL=admin@example.com \
+JOE_INSECURE_COOKIES=true \
+make run
+```
+
+Or copy `joe-links.yaml.example` to `joe-links.yaml` and run:
+
+```bash
+make dev
+```
+
+### Available Make Targets
+
+| Target | Description |
+|--------|-------------|
+| `make build` | Build the binary (includes CSS) |
+| `make run` | Build CSS and start the server |
+| `make migrate` | Run database migrations |
+| `make css` | Build Tailwind CSS |
+| `make swagger` | Regenerate Swagger docs |
+| `make dev` | Start Dex + server together |
+| `make dev-stop` | Stop Dex |
+
+## License
+
+MIT

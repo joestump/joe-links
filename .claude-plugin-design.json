@@ -6,7 +6,11 @@
   },
   "projects": {
     "default_mode": "per-epic",
-    "project_ids": {},
+    "project_ids": {
+      "rest-api": 46,
+      "api-token-auth": 47,
+      "openapi-swagger-ui": 48
+    },
     "views": ["All Work", "Board", "Roadmap"],
     "columns": ["Todo", "In Progress", "In Review", "Done"],
     "iteration_weeks": 2

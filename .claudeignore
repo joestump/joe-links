@@ -13,3 +13,8 @@ joe-links.yaml
 
 # Ignore worktrees created by /design:work
 .claude/worktrees/
+
+# Docs site build artifacts
+docs-site/node_modules/
+docs-site/build/
+docs-site/.docusaurus/
