@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "Go HTTP Server", "Role-Based Access Control", "Short Link Resolution", ADR-0001, ADR-0003
+// Governing: SPEC-0003 REQ "HTMX Theme Endpoint", ADR-0006
 package handler
 
 import (
@@ -44,6 +45,11 @@ func NewRouter(deps Deps) http.Handler {
 	r.Get("/auth/login", deps.AuthHandlers.Login)
 	r.Get("/auth/callback", deps.AuthHandlers.Callback)
 	r.Post("/auth/logout", deps.AuthHandlers.Logout)
+
+	// Theme toggle — no auth required, must precede auth group.
+	// Governing: SPEC-0003 REQ "HTMX Theme Endpoint"
+	themeHandler := NewThemeHandler()
+	r.Post("/dashboard/theme", themeHandler.Toggle)
 
 	// Authenticated routes
 	dashboard := NewDashboardHandler(deps.LinkStore)

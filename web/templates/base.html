@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="/static/css/app.css">
     <script src="/static/js/htmx.min.js"></script>
 </head>
-<body class="min-h-screen bg-base-100">
+<body class="min-h-screen bg-base-100"
+      hx-on:themeChanged="document.documentElement.setAttribute('data-theme',event.detail.theme);document.getElementById('theme-toggle-icon').textContent=event.detail.theme==='joe-dark'?'☀️':'🌙'">
 
 <nav class="navbar bg-base-200 shadow-sm px-4">
     <div class="navbar-start">
@@ -18,6 +19,14 @@
         </a>
     </div>
     <div class="navbar-end gap-2">
+        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun when dark, moon when light -->
+        <button id="theme-toggle"
+                class="btn btn-ghost btn-circle"
+                hx-post="/dashboard/theme"
+                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                hx-swap="none">
+            <span id="theme-toggle-icon">{{if eq .Theme "joe-dark"}}☀️{{else}}🌙{{end}}</span>
+        </button>
         {{if .User}}
         <span class="text-sm text-base-content/70">{{.User.DisplayName}}</span>
         <form method="POST" action="/auth/logout">
