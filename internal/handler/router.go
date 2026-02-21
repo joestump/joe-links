@@ -2,6 +2,7 @@
 // Governing: SPEC-0003 REQ "HTMX Theme Endpoint", ADR-0006
 // Governing: SPEC-0004 REQ "Route Registration and Priority", "Shared Base Layout"
 // Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
+// Governing: SPEC-0007 REQ "Swagger UI Endpoint", ADR-0010
 package handler
 
 import (
@@ -15,6 +16,8 @@ import (
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
+	_ "github.com/joestump/joe-links/docs/swagger"
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 // Deps holds all dependencies required to build the HTTP router.
@@ -109,6 +112,10 @@ func NewRouter(deps Deps) http.Handler {
 		r.Put("/admin/users/{id}/role", admin.UpdateRole)
 		r.Get("/admin/links", admin.Links)
 	})
+
+	// Swagger UI — no auth required; MUST be before slug catch-all.
+	// Governing: SPEC-0007 REQ "Swagger UI Endpoint", REQ "Swagger UI Authorization"
+	r.Get("/api/docs/*", httpSwagger.WrapHandler)
 
 	// API sub-router at /api/v1 — must be before slug catch-all.
 	// Governing: SPEC-0005 REQ "API Router Mounting"
