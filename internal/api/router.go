@@ -45,6 +45,10 @@ func NewAPIRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0005 REQ "User Profile"
 	registerUserRoutes(r)
 
+	// Link and co-owner management routes.
+	// Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management"
+	registerLinkRoutes(r, deps.LinkStore, deps.OwnershipStore, deps.UserStore)
+
 	return r
 }
 
