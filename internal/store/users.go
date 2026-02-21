@@ -89,3 +89,25 @@ func (s *UserStore) GetByID(ctx context.Context, id string) (*User, error) {
 	}
 	return &u, nil
 }
+
+// ListAll returns all users ordered by display name.
+// Governing: SPEC-0004 REQ "Admin Dashboard"
+func (s *UserStore) ListAll(ctx context.Context) ([]*User, error) {
+	var users []*User
+	err := s.db.SelectContext(ctx, &users, `SELECT * FROM users ORDER BY display_name ASC`)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// UpdateRole sets the role for the given user and returns the updated record.
+// Governing: SPEC-0004 REQ "Admin Dashboard" — inline role toggle
+func (s *UserStore) UpdateRole(ctx context.Context, id, role string) (*User, error) {
+	_, err := s.db.ExecContext(ctx, `UPDATE users SET role = ?, updated_at = ? WHERE id = ?`,
+		role, time.Now().UTC(), id)
+	if err != nil {
+		return nil, err
+	}
+	return s.GetByID(ctx, id)
+}

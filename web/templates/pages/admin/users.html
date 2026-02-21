@@ -1,6 +1,66 @@
 {{template "base" .}}
+
 {{define "title"}}Users — Admin — Joe Links{{end}}
+
 {{define "content"}}
-<h1 class="text-2xl font-bold mb-6">Users</h1>
-<p class="text-base-content/70">User management coming soon.</p>
+<!-- Governing: SPEC-0004 REQ "Admin Dashboard" -->
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold">Users</h1>
+    <a href="/admin" class="btn btn-ghost btn-sm">← Admin</a>
+</div>
+
+{{if .Users}}
+<div class="overflow-x-auto">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Provider</th>
+                <th>Role</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Users}}
+            {{template "user_row" .}}
+            {{end}}
+        </tbody>
+    </table>
+</div>
+{{else}}
+<p class="text-base-content/60 py-8 text-center">No users yet.</p>
+{{end}}
+{{end}}
+
+{{define "user_row"}}
+<!-- Governing: SPEC-0004 REQ "Admin Dashboard" — user row fragment for HTMX role toggle -->
+<tr id="user-{{.ID}}">
+    <td>
+        <div class="flex items-center gap-2">
+            <div class="avatar placeholder">
+                <div class="bg-neutral text-neutral-content rounded-full w-7">
+                    <span class="text-xs">{{slice .DisplayName 0 1}}</span>
+                </div>
+            </div>
+            <span>{{.DisplayName}}</span>
+        </div>
+    </td>
+    <td class="text-sm">{{.Email}}</td>
+    <td class="text-sm text-base-content/60">{{.Provider}}</td>
+    <td>
+        <!-- Governing: SPEC-0004 REQ "Admin Dashboard" — inline role toggle via HTMX -->
+        <select class="select select-bordered select-xs"
+                hx-put="/admin/users/{{.ID}}/role"
+                hx-target="#user-{{.ID}}"
+                hx-swap="outerHTML"
+                hx-vals='js:{role: event.target.value}'
+                hx-params="none"
+                hx-trigger="change">
+            <option value="user"{{if eq .Role "user"}} selected{{end}}>user</option>
+            <option value="admin"{{if eq .Role "admin"}} selected{{end}}>admin</option>
+        </select>
+    </td>
+    <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+</tr>
 {{end}}

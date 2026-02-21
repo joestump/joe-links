@@ -140,6 +140,31 @@ func (s *TagStore) GetBySlug(ctx context.Context, slug string) (*Tag, error) {
 	return &t, nil
 }
 
+// TagWithCount is a Tag augmented with the number of links using it.
+// Governing: SPEC-0004 REQ "Tag Browser" — zero-count tags MUST NOT appear
+type TagWithCount struct {
+	Tag
+	Count int `db:"link_count"`
+}
+
+// ListWithCounts returns all tags with ≥1 link, annotated with their link count.
+// Governing: SPEC-0004 REQ "Tag Browser"
+func (s *TagStore) ListWithCounts(ctx context.Context) ([]*TagWithCount, error) {
+	var tags []*TagWithCount
+	err := s.db.SelectContext(ctx, &tags, `
+		SELECT t.*, COUNT(lt.link_id) as link_count
+		FROM tags t
+		INNER JOIN link_tags lt ON lt.tag_id = t.id
+		GROUP BY t.id
+		HAVING COUNT(lt.link_id) >= 1
+		ORDER BY t.name ASC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
+}
+
 // ListAll returns all tags ordered by name.
 func (s *TagStore) ListAll(ctx context.Context) ([]*Tag, error) {
 	var tags []*Tag
