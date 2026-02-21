@@ -41,6 +41,7 @@
             </div>
             <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                 <li><span class="text-sm font-medium">{{.User.DisplayName}}</span></li>
+                <li><a href="/dashboard/settings/tokens">API Tokens</a></li>
                 <li>
                     <form method="POST" action="/auth/logout">
                         <button type="submit">Sign out</button>

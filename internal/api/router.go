@@ -33,11 +33,9 @@ func NewAPIRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0006 REQ "No Web UI Session on API Routes"
 	r.Use(deps.BearerMiddleware.Authenticate)
 
-	// NOTE: Route handlers will be registered by subsequent stories.
-	// Placeholder to allow initial build:
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	// Token management routes.
+	// Governing: SPEC-0006 REQ "Token Management API"
+	registerTokenRoutes(r, deps.TokenStore)
 
 	return r
 }
