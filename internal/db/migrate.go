@@ -11,7 +11,7 @@ import (
 )
 
 //go:embed migrations
-var migrations embed.FS
+var Migrations embed.FS
 
 // Migrate runs all pending goose migrations from the embedded migration files.
 // It must be called before the HTTP server starts accepting requests.
@@ -25,7 +25,7 @@ func Migrate(db *sqlx.DB, driver string) error {
 		return fmt.Errorf("set goose dialect: %w", err)
 	}
 
-	sub, err := fs.Sub(migrations, "migrations")
+	sub, err := fs.Sub(Migrations, "migrations")
 	if err != nil {
 		return fmt.Errorf("sub migrations fs: %w", err)
 	}
