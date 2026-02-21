@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "Short Link Resolution", REQ "HTMX Hypermedia Interactions", ADR-0001
+// Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 package handler
 
 import (
@@ -20,6 +21,7 @@ func NewResolveHandler(ls *store.LinkStore) *ResolveHandler {
 }
 
 type notFoundPage struct {
+	BasePage
 	User  *store.User
 	Slug  string
 	Flash *Flash
@@ -33,7 +35,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		user := auth.UserFromContext(r.Context())
 		w.WriteHeader(http.StatusNotFound)
-		data := notFoundPage{User: user, Slug: slug}
+		data := notFoundPage{BasePage: BasePage{Theme: themeFromRequest(r)}, User: user, Slug: slug}
 		if isHTMX(r) {
 			renderFragment(w, "content", data)
 			return
