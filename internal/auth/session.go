@@ -32,6 +32,7 @@ func NewSessionManager(db *sqlx.DB, driver string, lifetime time.Duration) *scs.
 	}
 	sm.Lifetime = lifetime
 	sm.Cookie.HttpOnly = true
+	sm.Cookie.Secure = true
 	sm.Cookie.SameSite = http.SameSiteLaxMode
 	return sm
 }
