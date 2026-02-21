@@ -35,8 +35,6 @@
                             hx-trigger="input changed delay:300ms"
                             hx-target="#slug-status"
                             hx-swap="innerHTML"
-                            hx-params="slug:this.value"
-                            hx-include=""
                         >
                     </label>
                     <!-- Governing: SPEC-0004 REQ "New Link Form" — live slug validation indicator -->
@@ -102,8 +100,8 @@
                             hx-trigger="input changed delay:200ms"
                             hx-target="#tag-suggestions"
                             hx-swap="innerHTML"
-                            hx-params="q:this.value.split(',').pop().trim()"
-                            hx-include=""
+                            hx-vals='js:{q: event.target.value.split(",").pop().trim()}'
+                            hx-params="none"
                         >
                         <ul id="tag-suggestions" class="menu bg-base-100 shadow-lg rounded-box absolute z-10 w-full mt-1"></ul>
                     </div>

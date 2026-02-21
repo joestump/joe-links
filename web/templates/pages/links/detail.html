@@ -8,11 +8,8 @@
         <h1 class="text-2xl font-bold font-mono">{{.Link.Slug}}</h1>
         <div class="flex gap-2">
             <a href="/dashboard/links/{{.Link.ID}}/edit" class="btn btn-sm btn-primary">Edit</a>
-            <!-- Governing: SPEC-0004 REQ "Delete Link" — HTMX confirm modal via #modal target -->
+            <!-- Governing: SPEC-0004 REQ "Delete Link" — DaisyUI confirm modal (inline) -->
             <button class="btn btn-sm btn-error btn-outline"
-                    hx-get="/dashboard/links/{{.Link.ID}}/confirm-delete"
-                    hx-target="#modal"
-                    hx-swap="innerHTML"
                     onclick="document.getElementById('confirm-delete-modal').showModal()">Delete</button>
         </div>
     </div>
@@ -66,9 +63,7 @@
 <div class="card bg-base-200 shadow">
     <div class="card-body">
         <h2 class="card-title text-lg">Owners</h2>
-        <div id="owners-section">
-            {{template "owners_list" .}}
-        </div>
+        {{template "owners_list" .}}
     </div>
 </div>
 
