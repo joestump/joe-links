@@ -85,6 +85,16 @@
                     >
                 </div>
 
+                <!-- Governing: SPEC-0010 REQ "Visibility Selector in Link Forms" -->
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Visibility</span></label>
+                    <select name="visibility" class="select select-bordered">
+                        <option value="public" {{if eq .Form.Visibility "public"}}selected{{end}}>Public — anyone can access</option>
+                        <option value="private" {{if eq .Form.Visibility "private"}}selected{{end}}>Private — hidden from browsing</option>
+                        <option value="secure" {{if eq .Form.Visibility "secure"}}selected{{end}}>Secure — requires login + grant</option>
+                    </select>
+                </div>
+
                 <!-- Governing: SPEC-0004 REQ "New Link Form" — tag input with autocomplete -->
                 <div class="form-control mb-6">
                     <label class="label">

@@ -46,6 +46,16 @@
                         value="{{if .Form.Description}}{{.Form.Description}}{{else}}{{.Link.Description}}{{end}}">
                 </div>
 
+                <!-- Governing: SPEC-0010 REQ "Visibility Selector in Link Forms" -->
+                <div class="form-control mb-4">
+                    <label class="label"><span class="label-text">Visibility</span></label>
+                    <select name="visibility" class="select select-bordered">
+                        <option value="public" {{if eq .Form.Visibility "public"}}selected{{end}}>Public — anyone can access</option>
+                        <option value="private" {{if eq .Form.Visibility "private"}}selected{{end}}>Private — hidden from browsing</option>
+                        <option value="secure" {{if eq .Form.Visibility "secure"}}selected{{end}}>Secure — requires login + grant</option>
+                    </select>
+                </div>
+
                 <div class="form-control mb-6">
                     <label class="label">
                         <span class="label-text">Tags</span>

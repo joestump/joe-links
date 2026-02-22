@@ -50,7 +50,7 @@ func TestLinkStore_Create(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	link, err := ls.Create(ctx, "my-link", "https://example.com", userID, "My Link", "A test link")
+	link, err := ls.Create(ctx, "my-link", "https://example.com", userID, "My Link", "A test link", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestLinkStore_GetBySlug(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	created, err := ls.Create(ctx, "get-test", "https://example.com", userID, "", "")
+	created, err := ls.Create(ctx, "get-test", "https://example.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -100,11 +100,11 @@ func TestLinkStore_ListAll(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	_, err := ls.Create(ctx, "aaa-link", "https://a.com", userID, "", "")
+	_, err := ls.Create(ctx, "aaa-link", "https://a.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
-	_, err = ls.Create(ctx, "bbb-link", "https://b.com", userID, "", "")
+	_, err = ls.Create(ctx, "bbb-link", "https://b.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestLinkStore_ListByOwner(t *testing.T) {
 	ls, _, us, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	_, err := ls.Create(ctx, "owned-link", "https://example.com", userID, "", "")
+	_, err := ls.Create(ctx, "owned-link", "https://example.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -158,12 +158,12 @@ func TestLinkStore_Update(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	created, err := ls.Create(ctx, "update-me", "https://old.com", userID, "Old", "Old desc")
+	created, err := ls.Create(ctx, "update-me", "https://old.com", userID, "Old", "Old desc", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
 
-	updated, err := ls.Update(ctx, created.ID, "https://new.com", "New", "New desc")
+	updated, err := ls.Update(ctx, created.ID, "https://new.com", "New", "New desc", "public")
 	if err != nil {
 		t.Fatalf("Update: %v", err)
 	}
@@ -185,7 +185,7 @@ func TestLinkStore_Delete(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	created, err := ls.Create(ctx, "delete-me", "https://example.com", userID, "", "")
+	created, err := ls.Create(ctx, "delete-me", "https://example.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -205,12 +205,12 @@ func TestLinkStore_SlugUniqueness(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	_, err := ls.Create(ctx, "unique-slug", "https://a.com", userID, "", "")
+	_, err := ls.Create(ctx, "unique-slug", "https://a.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create first: %v", err)
 	}
 
-	_, err = ls.Create(ctx, "unique-slug", "https://b.com", userID, "", "")
+	_, err = ls.Create(ctx, "unique-slug", "https://b.com", userID, "", "", "")
 	if !errors.Is(err, store.ErrSlugTaken) {
 		t.Errorf("Create duplicate slug = %v, want ErrSlugTaken", err)
 	}
@@ -230,7 +230,7 @@ func TestLinkStore_SetAndListTags(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	link, err := ls.Create(ctx, "tagged-link", "https://example.com", userID, "", "")
+	link, err := ls.Create(ctx, "tagged-link", "https://example.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}
@@ -253,7 +253,7 @@ func TestLinkStore_ListByTag(t *testing.T) {
 	ls, _, _, userID := newTestEnv(t)
 	ctx := context.Background()
 
-	link, err := ls.Create(ctx, "tag-filter", "https://example.com", userID, "", "")
+	link, err := ls.Create(ctx, "tag-filter", "https://example.com", userID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create: %v", err)
 	}

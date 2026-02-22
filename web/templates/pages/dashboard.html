@@ -28,6 +28,18 @@
     >
 </div>
 
+<!-- Governing: SPEC-0010 REQ "Dashboard Visibility Filtering" — My Links / Shared with me tabs -->
+<div class="tabs tabs-boxed mb-6 w-fit">
+    <a class="tab {{if ne .Filter "shared"}}tab-active{{end}}"
+       hx-get="/dashboard"
+       hx-target="#link-list"
+       hx-push-url="false">My Links</a>
+    <a class="tab {{if eq .Filter "shared"}}tab-active{{end}}"
+       hx-get="/dashboard?filter=shared"
+       hx-target="#link-list"
+       hx-push-url="false">Shared with me</a>
+</div>
+
 <!-- Governing: SPEC-0004 REQ "User Dashboard" — tag filter chips -->
 {{if .Tags}}
 <div class="flex flex-wrap gap-2 mb-6">

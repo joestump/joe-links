@@ -36,6 +36,7 @@
 
 {{define "admin_link_row"}}
 <!-- Governing: SPEC-0011 REQ "Admin Links Screen" — read-only row with edit/delete actions -->
+<!-- Governing: SPEC-0010 REQ "Admin Visibility Override" — visibility badge -->
 <tr id="admin-link-{{.ID}}">
     <td>
         <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
@@ -47,6 +48,9 @@
     <td class="text-sm text-base-content/70">{{.Owners}}</td>
     <td class="text-sm">
         {{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}
+    </td>
+    <td class="text-sm">
+        <span class="badge badge-sm {{if eq .Visibility "secure"}}badge-error{{else if eq .Visibility "private"}}badge-warning{{else}}badge-ghost{{end}}">{{.Visibility}}</span>
     </td>
     <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
     <td class="flex gap-1 justify-end">
@@ -66,6 +70,7 @@
 
 {{define "admin_link_edit_row"}}
 <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" — inline edit form replacing read-only row -->
+<!-- Governing: SPEC-0010 REQ "Admin Visibility Override" — visibility selector in edit form -->
 <tr id="admin-link-{{.ID}}">
     <td>
         <span class="font-mono font-semibold text-base-content/50">{{.Slug}}</span>
@@ -79,10 +84,18 @@
                class="input input-bordered input-xs w-full" />
     </td>
     <td class="text-sm text-base-content/70">{{.Owners}}</td>
-    <td colspan="2">
+    <td>
         <input type="text" name="description" value="{{.Description}}" form="edit-link-{{.ID}}"
                class="input input-bordered input-xs w-full" placeholder="Description" />
     </td>
+    <td>
+        <select name="visibility" form="edit-link-{{.ID}}" class="select select-bordered select-xs w-full">
+            <option value="public" {{if eq .Visibility "public"}}selected{{end}}>public</option>
+            <option value="private" {{if eq .Visibility "private"}}selected{{end}}>private</option>
+            <option value="secure" {{if eq .Visibility "secure"}}selected{{end}}>secure</option>
+        </select>
+    </td>
+    <td></td>
     <td class="flex gap-1 justify-end">
         <form id="edit-link-{{.ID}}"
               hx-put="/admin/links/{{.ID}}"
