@@ -151,7 +151,7 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description)
+	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description, visibility)
 	if err != nil {
 		if errors.Is(err, store.ErrSlugTaken) {
 			writeError(w, http.StatusConflict, "slug already exists", "SLUG_CONFLICT")
@@ -159,15 +159,6 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
-	}
-
-	// Governing: SPEC-0010 REQ "REST API Visibility Field"
-	if visibility != "public" {
-		if err := h.links.UpdateVisibility(r.Context(), link.ID, visibility); err != nil {
-			writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
-			return
-		}
-		link.Visibility = visibility
 	}
 
 	// Set tags if provided.
@@ -318,26 +309,19 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Governing: SPEC-0010 REQ "REST API Visibility Field"
+	visibility := link.Visibility
 	if req.Visibility != "" {
 		if err := store.ValidateVisibility(req.Visibility); err != nil {
 			writeError(w, http.StatusBadRequest, err.Error(), "INVALID_VISIBILITY")
 			return
 		}
+		visibility = req.Visibility
 	}
 
-	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description)
+	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description, visibility)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
-	}
-
-	// Governing: SPEC-0010 REQ "REST API Visibility Field"
-	if req.Visibility != "" && req.Visibility != link.Visibility {
-		if err := h.links.UpdateVisibility(r.Context(), link.ID, req.Visibility); err != nil {
-			writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
-			return
-		}
-		updated.Visibility = req.Visibility
 	}
 
 	// Update tags.

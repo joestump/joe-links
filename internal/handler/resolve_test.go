@@ -34,14 +34,14 @@ func newResolveTestEnv(t *testing.T) *resolveTestEnv {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	rh := NewResolveHandler(ls, ks)
+	rh := NewResolveHandler(ls, ks, owns)
 	return &resolveTestEnv{ls: ls, ks: ks, rh: rh, userID: u.ID}
 }
 
 // seedLink creates a link with the given slug and URL.
 func (e *resolveTestEnv) seedLink(t *testing.T, slug, url string) {
 	t.Helper()
-	_, err := e.ls.Create(context.Background(), slug, url, e.userID, "", "")
+	_, err := e.ls.Create(context.Background(), slug, url, e.userID, "", "", "")
 	if err != nil {
 		t.Fatalf("seed link %q: %v", slug, err)
 	}

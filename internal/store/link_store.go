@@ -45,7 +45,11 @@ func NewLinkStore(db *sqlx.DB, owns *OwnershipStore, tags *TagStore) *LinkStore 
 }
 
 // Create inserts a new link and registers ownerID as the primary owner.
-func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description string) (*Link, error) {
+// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description, visibility string) (*Link, error) {
+	if visibility == "" {
+		visibility = "public"
+	}
 	id := uuid.New().String()
 	now := time.Now().UTC()
 
@@ -57,8 +61,8 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, 'public', ?, ?)
-	`, id, slug, url, title, description, now, now)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`, id, slug, url, title, description, visibility, now, now)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			return nil, ErrSlugTaken
@@ -193,13 +197,14 @@ func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug stri
 	return links, nil
 }
 
-// Update modifies an existing link's url, title, and description.
+// Update modifies an existing link's url, title, description, and visibility.
 // Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
-func (s *LinkStore) Update(ctx context.Context, id, url, title, description string) (*Link, error) {
+// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+func (s *LinkStore) Update(ctx context.Context, id, url, title, description, visibility string) (*Link, error) {
 	now := time.Now().UTC()
 	_, err := s.db.ExecContext(ctx, `
-		UPDATE links SET url = ?, title = ?, description = ?, updated_at = ? WHERE id = ?
-	`, url, title, description, now, id)
+		UPDATE links SET url = ?, title = ?, description = ?, visibility = ?, updated_at = ? WHERE id = ?
+	`, url, title, description, visibility, now, id)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +212,7 @@ func (s *LinkStore) Update(ctx context.Context, id, url, title, description stri
 }
 
 // UpdateVisibility sets the visibility field on a link.
-// Governing: SPEC-0010 REQ "Visibility Column on Links Table"
+// Governing: SPEC-0010 REQ "Visibility Column on Links Table", REQ "Admin Visibility Override"
 func (s *LinkStore) UpdateVisibility(ctx context.Context, id, visibility string) error {
 	now := time.Now().UTC()
 	_, err := s.db.ExecContext(ctx, `UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?`,
@@ -231,6 +236,7 @@ func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*
 	}
 	return links, nil
 }
+
 
 // Delete removes a link by ID. CASCADE deletes handle link_owners and link_tags.
 func (s *LinkStore) Delete(ctx context.Context, id string) error {
@@ -378,6 +384,22 @@ func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, err
 		WHERE t.slug = ?
 		ORDER BY l.slug ASC
 	`, tagSlug)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// ListSharedWithUser returns links shared with the given user via link_shares.
+// Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
+func (s *LinkStore) ListSharedWithUser(ctx context.Context, userID string) ([]*Link, error) {
+	var links []*Link
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT l.* FROM links l
+		INNER JOIN link_shares ls ON ls.link_id = l.id
+		WHERE ls.user_id = ?
+		ORDER BY l.slug ASC
+	`, userID)
 	if err != nil {
 		return nil, err
 	}
