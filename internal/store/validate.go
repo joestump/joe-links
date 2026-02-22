@@ -36,6 +36,7 @@ var (
 		"static":    true,
 		"dashboard": true,
 		"admin":     true,
+		"u":         true,
 	}
 )
 
