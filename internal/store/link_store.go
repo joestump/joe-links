@@ -211,15 +211,32 @@ func (s *LinkStore) Update(ctx context.Context, id, url, title, description, vis
 	return s.GetByID(ctx, id)
 }
 
-// UpdateVisibility modifies a link's visibility.
-// Governing: SPEC-0010 REQ "Admin Visibility Override"
+// UpdateVisibility sets the visibility field on a link.
+// Governing: SPEC-0010 REQ "Visibility Column on Links Table", REQ "Admin Visibility Override"
 func (s *LinkStore) UpdateVisibility(ctx context.Context, id, visibility string) error {
 	now := time.Now().UTC()
-	_, err := s.db.ExecContext(ctx, `
-		UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?
-	`, visibility, now, id)
+	_, err := s.db.ExecContext(ctx, `UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?`,
+		visibility, now, id)
 	return err
 }
+
+// ListByOwnerOrShared returns links where userID is an owner or has a share record.
+// Governing: SPEC-0010 REQ "REST API Visibility Field"
+func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*Link, error) {
+	var links []*Link
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT DISTINCT l.* FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.user_id = ?
+		LEFT JOIN link_shares ls ON ls.link_id = l.id AND ls.user_id = ?
+		WHERE lo.user_id IS NOT NULL OR ls.user_id IS NOT NULL
+		ORDER BY l.slug ASC
+	`, userID, userID)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
 
 // Delete removes a link by ID. CASCADE deletes handle link_owners and link_tags.
 func (s *LinkStore) Delete(ctx context.Context, id string) error {
