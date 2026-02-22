@@ -30,12 +30,14 @@ func isReservedSlug(slug string) bool {
 }
 
 // LinkForm holds form input values for creating or editing a link.
+// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 type LinkForm struct {
 	Slug        string
 	URL         string
 	Title       string
 	Description string
 	Tags        string // comma-separated tag names
+	Visibility  string // public, private, or secure
 }
 
 // LinkFormPage is the template data for the new/edit link forms.
@@ -50,12 +52,22 @@ type LinkFormPage struct {
 
 // LinkDetailPage is the template data for the link detail view.
 // Governing: SPEC-0004 REQ "Link Detail View"
+// Governing: SPEC-0010 REQ "Share Management Panel on Link Detail"
 type LinkDetailPage struct {
 	BasePage
 	User   *store.User
 	Link   *store.Link
 	Tags   []*store.Tag
 	Owners []*store.OwnerInfo
+	Shares []ShareUser
+}
+
+// ShareUser combines share record with user display info for templates.
+// Governing: SPEC-0010 REQ "Share Management Panel on Link Detail"
+type ShareUser struct {
+	UserID      string
+	DisplayName string
+	Email       string
 }
 
 // ConfirmDeleteData holds template data for the delete confirmation modal.
@@ -101,12 +113,30 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+	visibility := r.FormValue("visibility")
+	if visibility == "" {
+		visibility = "public"
+	}
+
 	form := LinkForm{
 		Slug:        r.FormValue("slug"),
 		URL:         r.FormValue("url"),
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
 		Tags:        r.FormValue("tags"),
+		Visibility:  visibility,
+	}
+
+	// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms" — validate visibility value
+	if err := store.ValidateVisibility(form.Visibility); err != nil {
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "new_link_modal", data)
+			return
+		}
+		render(w, "new.html", data)
+		return
 	}
 
 	// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — validation errors re-render inside modal
@@ -140,7 +170,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Title, form.Description)
+	link, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Title, form.Description, form.Visibility)
 	if err != nil {
 		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
 		if isHTMX(r) {
@@ -200,6 +230,7 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		Title:       link.Title,
 		Description: link.Description,
 		Tags:        strings.Join(tagNames, ", "),
+		Visibility:  link.Visibility,
 	}
 
 	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form}
@@ -235,11 +266,29 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
+	// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+	visibility := r.FormValue("visibility")
+	if visibility == "" {
+		visibility = link.Visibility
+	}
+
 	form := LinkForm{
 		URL:         r.FormValue("url"),
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
 		Tags:        r.FormValue("tags"),
+		Visibility:  visibility,
+	}
+
+	// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms" — validate visibility value
+	if err := store.ValidateVisibility(form.Visibility); err != nil {
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "edit_link_modal", data)
+			return
+		}
+		render(w, "edit.html", data)
+		return
 	}
 
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
@@ -253,7 +302,7 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = h.links.Update(r.Context(), id, form.URL, form.Title, form.Description)
+	_, err = h.links.Update(r.Context(), id, form.URL, form.Title, form.Description, form.Visibility)
 	if err != nil {
 		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: "Update failed."}
 		// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — re-render inside modal on error

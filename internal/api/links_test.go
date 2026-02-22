@@ -17,7 +17,7 @@ func TestLinks_List_OK(t *testing.T) {
 	token := seedToken(t, env, user.ID)
 
 	// Create a link so the list isn't empty.
-	_, err := env.LinkStore.Create(context.Background(), "test-link", "https://example.com", user.ID, "Test", "")
+	_, err := env.LinkStore.Create(context.Background(), "test-link", "https://example.com", user.ID, "Test", "", "")
 	if err != nil {
 		t.Fatalf("create link: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestLinks_Create_DuplicateSlug(t *testing.T) {
 	token := seedToken(t, env, user.ID)
 
 	// Create first link.
-	_, err := env.LinkStore.Create(context.Background(), "dup-slug", "https://a.com", user.ID, "", "")
+	_, err := env.LinkStore.Create(context.Background(), "dup-slug", "https://a.com", user.ID, "", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -123,7 +123,7 @@ func TestLinks_Get_Found(t *testing.T) {
 	user := seedUser(t, env, "alice@example.com", "user")
 	token := seedToken(t, env, user.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "get-me", "https://example.com", user.ID, "Get Me", "")
+	link, err := env.LinkStore.Create(context.Background(), "get-me", "https://example.com", user.ID, "Get Me", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -167,7 +167,7 @@ func TestLinks_Get_Forbidden_NotOwner(t *testing.T) {
 	other := seedUser(t, env, "other@example.com", "user")
 	otherToken := seedToken(t, env, other.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "private-link", "https://example.com", owner.ID, "", "")
+	link, err := env.LinkStore.Create(context.Background(), "private-link", "https://example.com", owner.ID, "", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -187,7 +187,7 @@ func TestLinks_Update_OK(t *testing.T) {
 	user := seedUser(t, env, "alice@example.com", "user")
 	token := seedToken(t, env, user.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "update-me", "https://old.com", user.ID, "Old", "Old desc")
+	link, err := env.LinkStore.Create(context.Background(), "update-me", "https://old.com", user.ID, "Old", "Old desc", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -218,7 +218,7 @@ func TestLinks_Update_Forbidden_NotOwner(t *testing.T) {
 	other := seedUser(t, env, "other@example.com", "user")
 	otherToken := seedToken(t, env, other.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "no-update", "https://example.com", owner.ID, "", "")
+	link, err := env.LinkStore.Create(context.Background(), "no-update", "https://example.com", owner.ID, "", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -240,7 +240,7 @@ func TestLinks_Delete_NoContent(t *testing.T) {
 	user := seedUser(t, env, "alice@example.com", "user")
 	token := seedToken(t, env, user.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "delete-me", "https://example.com", user.ID, "", "")
+	link, err := env.LinkStore.Create(context.Background(), "delete-me", "https://example.com", user.ID, "", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -331,7 +331,7 @@ func TestLinks_Get_VariableURL_Passthrough(t *testing.T) {
 	user := seedUser(t, env, "alice@example.com", "user")
 	token := seedToken(t, env, user.ID)
 
-	link, err := env.LinkStore.Create(context.Background(), "var-link", "https://example.com/$query/$page", user.ID, "Var Link", "")
+	link, err := env.LinkStore.Create(context.Background(), "var-link", "https://example.com/$query/$page", user.ID, "Var Link", "", "")
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}

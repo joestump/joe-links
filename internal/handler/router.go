@@ -94,6 +94,10 @@ func NewRouter(deps Deps) http.Handler {
 		r.Post("/dashboard/links/{id}/owners", links.AddOwner)
 		r.Delete("/dashboard/links/{id}/owners/{uid}", links.RemoveOwner)
 
+		// Governing: SPEC-0010 REQ "Link Share Management Endpoints"
+		r.Post("/dashboard/links/{id}/shares", links.AddShare)
+		r.Delete("/dashboard/links/{id}/shares/{uid}", links.RemoveShare)
+
 		r.Get("/dashboard/tags", tags.Index)
 		r.Get("/dashboard/tags/suggest", tags.Suggest)
 		r.Get("/dashboard/tags/{slug}", tags.Detail)

@@ -139,7 +139,7 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description)
+	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description, "")
 	if err != nil {
 		if errors.Is(err, store.ErrSlugTaken) {
 			writeError(w, http.StatusConflict, "slug already exists", "SLUG_CONFLICT")
@@ -288,7 +288,7 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description)
+	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description, link.Visibility)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
