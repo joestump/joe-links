@@ -45,7 +45,11 @@ func NewLinkStore(db *sqlx.DB, owns *OwnershipStore, tags *TagStore) *LinkStore 
 }
 
 // Create inserts a new link and registers ownerID as the primary owner.
-func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description string) (*Link, error) {
+// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description, visibility string) (*Link, error) {
+	if visibility == "" {
+		visibility = "public"
+	}
 	id := uuid.New().String()
 	now := time.Now().UTC()
 
@@ -57,8 +61,8 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, 'public', ?, ?)
-	`, id, slug, url, title, description, now, now)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`, id, slug, url, title, description, visibility, now, now)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			return nil, ErrSlugTaken
@@ -193,13 +197,14 @@ func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug stri
 	return links, nil
 }
 
-// Update modifies an existing link's url, title, and description.
+// Update modifies an existing link's url, title, description, and visibility.
 // Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
-func (s *LinkStore) Update(ctx context.Context, id, url, title, description string) (*Link, error) {
+// Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
+func (s *LinkStore) Update(ctx context.Context, id, url, title, description, visibility string) (*Link, error) {
 	now := time.Now().UTC()
 	_, err := s.db.ExecContext(ctx, `
-		UPDATE links SET url = ?, title = ?, description = ?, updated_at = ? WHERE id = ?
-	`, url, title, description, now, id)
+		UPDATE links SET url = ?, title = ?, description = ?, visibility = ?, updated_at = ? WHERE id = ?
+	`, url, title, description, visibility, now, id)
 	if err != nil {
 		return nil, err
 	}

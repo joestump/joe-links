@@ -168,7 +168,13 @@ func (h *AdminHandler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	title := r.FormValue("title")
 	description := r.FormValue("description")
 
-	_, err := h.links.Update(r.Context(), id, url, title, description)
+	// Preserve existing visibility for admin inline edits
+	existing, err := h.links.GetByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	_, err = h.links.Update(r.Context(), id, url, title, description, existing.Visibility)
 	if err != nil {
 		http.Error(w, "update failed", http.StatusInternalServerError)
 		return

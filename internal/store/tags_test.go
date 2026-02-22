@@ -121,7 +121,7 @@ func TestTagStore_ListWithCounts(t *testing.T) {
 	}
 
 	// Create a link with a tag.
-	link, err := ls.Create(ctx, "counted", "https://example.com", u.ID, "", "")
+	link, err := ls.Create(ctx, "counted", "https://example.com", u.ID, "", "", "")
 	if err != nil {
 		t.Fatalf("Create link: %v", err)
 	}

@@ -41,7 +41,7 @@ func newResolveTestEnv(t *testing.T) *resolveTestEnv {
 // seedLink creates a link with the given slug and URL.
 func (e *resolveTestEnv) seedLink(t *testing.T, slug, url string) {
 	t.Helper()
-	_, err := e.ls.Create(context.Background(), slug, url, e.userID, "", "")
+	_, err := e.ls.Create(context.Background(), slug, url, e.userID, "", "", "")
 	if err != nil {
 		t.Fatalf("seed link %q: %v", slug, err)
 	}

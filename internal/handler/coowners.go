@@ -1,4 +1,5 @@
 // Governing: SPEC-0004 REQ "Co-Owner Management", "Link Detail View", ADR-0007
+// Governing: SPEC-0010 REQ "Share Management Panel on Link Detail", "Link Share Management Endpoints"
 package handler
 
 import (
@@ -103,12 +104,30 @@ func (h *LinksHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	tags, _ := h.links.ListTags(r.Context(), link.ID)
 	owners, _ := h.owns.ListOwnerUsers(link.ID)
 
+	// Governing: SPEC-0010 REQ "Share Management Panel on Link Detail"
+	var shares []ShareUser
+	if link.Visibility == "secure" {
+		shareRecords, _ := h.links.ListShares(r.Context(), link.ID)
+		for _, sr := range shareRecords {
+			u, err := h.users.GetByID(r.Context(), sr.UserID)
+			if err != nil {
+				continue
+			}
+			shares = append(shares, ShareUser{
+				UserID:      u.ID,
+				DisplayName: u.DisplayName,
+				Email:       u.Email,
+			})
+		}
+	}
+
 	data := LinkDetailPage{
 		BasePage: newBasePage(r, user),
 		User:     user,
 		Link:     link,
 		Tags:     tags,
 		Owners:   owners,
+		Shares:   shares,
 	}
 	if isHTMX(r) {
 		renderPageFragment(w, "links/detail.html", "content", data)
@@ -155,4 +174,109 @@ type ownersFragmentData struct {
 	Link   *store.Link
 	Owners []*store.OwnerInfo
 	Error  string
+}
+
+// AddShare handles POST /dashboard/links/{id}/shares.
+// Accepts form field "email" to grant a user access to a secure link.
+// Governing: SPEC-0010 REQ "Link Share Management Endpoints"
+func (h *LinksHandler) AddShare(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	id := chi.URLParam(r, "id")
+	link, err := h.links.GetByID(r.Context(), id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	// Governing: SPEC-0010 REQ "Link Share Management Endpoints" — only owners, co-owners, and admins
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+	email := r.FormValue("email")
+	if email == "" {
+		h.renderSharesError(w, r, link, "Email is required.")
+		return
+	}
+
+	target, err := h.users.GetByEmail(r.Context(), email)
+	if err != nil {
+		h.renderSharesError(w, r, link, "No user found with that email.")
+		return
+	}
+
+	if err := h.links.AddShare(r.Context(), link.ID, target.ID, user.ID); err != nil {
+		h.renderSharesError(w, r, link, "Could not add user. They may already have access.")
+		return
+	}
+
+	h.renderSharesFragment(w, r, link)
+}
+
+// RemoveShare handles DELETE /dashboard/links/{id}/shares/{uid}.
+// Governing: SPEC-0010 REQ "Link Share Management Endpoints"
+func (h *LinksHandler) RemoveShare(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	id := chi.URLParam(r, "id")
+	link, err := h.links.GetByID(r.Context(), id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	// Governing: SPEC-0010 REQ "Link Share Management Endpoints" — only owners, co-owners, and admins
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	uid := chi.URLParam(r, "uid")
+	if err := h.links.RemoveShare(r.Context(), link.ID, uid); err != nil {
+		http.Error(w, "Could not remove user", http.StatusInternalServerError)
+		return
+	}
+
+	h.renderSharesFragment(w, r, link)
+}
+
+// sharesFragmentData holds template data for the shares panel HTMX fragment.
+type sharesFragmentData struct {
+	Link   *store.Link
+	Shares []ShareUser
+	Error  string
+}
+
+// renderSharesFragment re-renders the shares panel for HTMX swap.
+func (h *LinksHandler) renderSharesFragment(w http.ResponseWriter, r *http.Request, link *store.Link) {
+	shares := h.loadShares(r, link)
+	renderFragment(w, "shares_panel", &sharesFragmentData{Link: link, Shares: shares})
+}
+
+// renderSharesError renders shares panel with an inline validation error.
+func (h *LinksHandler) renderSharesError(w http.ResponseWriter, r *http.Request, link *store.Link, errMsg string) {
+	shares := h.loadShares(r, link)
+	renderFragment(w, "shares_panel", &sharesFragmentData{Link: link, Shares: shares, Error: errMsg})
+}
+
+// loadShares resolves share records to ShareUser display objects.
+func (h *LinksHandler) loadShares(r *http.Request, link *store.Link) []ShareUser {
+	var shares []ShareUser
+	shareRecords, _ := h.links.ListShares(r.Context(), link.ID)
+	for _, sr := range shareRecords {
+		u, err := h.users.GetByID(r.Context(), sr.UserID)
+		if err != nil {
+			continue
+		}
+		shares = append(shares, ShareUser{
+			UserID:      u.ID,
+			DisplayName: u.DisplayName,
+			Email:       u.Email,
+		})
+	}
+	return shares
 }
