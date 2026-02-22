@@ -206,6 +206,16 @@ func (s *LinkStore) Update(ctx context.Context, id, url, title, description stri
 	return s.GetByID(ctx, id)
 }
 
+// UpdateVisibility modifies a link's visibility.
+// Governing: SPEC-0010 REQ "Admin Visibility Override"
+func (s *LinkStore) UpdateVisibility(ctx context.Context, id, visibility string) error {
+	now := time.Now().UTC()
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?
+	`, visibility, now, id)
+	return err
+}
+
 // Delete removes a link by ID. CASCADE deletes handle link_owners and link_tags.
 func (s *LinkStore) Delete(ctx context.Context, id string) error {
 	_, err := s.db.ExecContext(ctx, `DELETE FROM links WHERE id = ?`, id)
@@ -352,6 +362,22 @@ func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, err
 		WHERE t.slug = ?
 		ORDER BY l.slug ASC
 	`, tagSlug)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// ListSharedWithUser returns links shared with the given user via link_shares.
+// Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
+func (s *LinkStore) ListSharedWithUser(ctx context.Context, userID string) ([]*Link, error) {
+	var links []*Link
+	err := s.db.SelectContext(ctx, &links, `
+		SELECT l.* FROM links l
+		INNER JOIN link_shares ls ON ls.link_id = l.id
+		WHERE ls.user_id = ?
+		ORDER BY l.slug ASC
+	`, userID)
 	if err != nil {
 		return nil, err
 	}

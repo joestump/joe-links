@@ -1,0 +1,19 @@
+{{template "base" .}}
+
+{{define "title"}}Forbidden — Joe Links{{end}}
+
+{{define "content"}}
+<!-- Governing: SPEC-0010 REQ "Secure Link Resolution" -->
+<div class="hero py-24">
+    <div class="hero-content text-center">
+        <div>
+            <h1 class="text-5xl font-bold mb-4">403</h1>
+            <h2 class="text-2xl font-semibold mb-2">Access denied</h2>
+            <p class="text-base-content/60 mb-6">
+                You don't have permission to access this link.
+            </p>
+            <a href="/dashboard" class="btn btn-primary">Go to dashboard</a>
+        </div>
+    </div>
+</div>
+{{end}}

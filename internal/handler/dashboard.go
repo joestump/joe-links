@@ -1,6 +1,7 @@
 // Governing: SPEC-0001 REQ "Short Link Management", REQ "HTMX Hypermedia Interactions", ADR-0001
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 // Governing: SPEC-0004 REQ "User Dashboard"
+// Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
 package handler
 
 import (
@@ -12,6 +13,7 @@ import (
 
 // DashboardPage is the template data for the dashboard view.
 // Governing: SPEC-0014 REQ "Abstract Link Widget"
+// Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
 type DashboardPage struct {
 	BasePage
 	User      *store.User
@@ -19,6 +21,7 @@ type DashboardPage struct {
 	Tags      []*store.Tag
 	Query     string // current search query
 	Tag       string // current tag filter slug
+	Filter    string // "shared" for shared-with-me view
 	Flash     *Flash
 	Keyword   string // first configured keyword (e.g. "go") for slug prefix display
 	ShowTitle bool   // show Title column
@@ -47,11 +50,15 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	query := r.URL.Query().Get("q")
 	tagSlug := r.URL.Query().Get("tag")
+	filter := r.URL.Query().Get("filter")
 
 	var links []*store.Link
 	var err error
 
 	switch {
+	// Governing: SPEC-0010 REQ "Dashboard Visibility Filtering" — "Shared with me" filter
+	case filter == "shared":
+		links, err = h.links.ListSharedWithUser(r.Context(), user.ID)
 	case tagSlug != "":
 		// Tag filter takes precedence
 		if user.IsAdmin() {
@@ -95,6 +102,7 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		Tags:     allTags,
 		Query:    query,
 		Tag:      tagSlug,
+		Filter:   filter,
 		Keyword:  keyword,
 	}
 

@@ -45,15 +45,17 @@ type AdminUsersPage struct {
 // AdminLinksPage is the template data for the admin link list.
 // Governing: SPEC-0011 REQ "Admin Links Screen"
 // Governing: SPEC-0014 REQ "Abstract Link Widget"
+// Governing: SPEC-0010 REQ "Admin Visibility Override"
 type AdminLinksPage struct {
 	BasePage
-	Links     []*store.AdminLink
-	Query     string
-	Tag       string // unused in admin, present for shared link_list partial compatibility
-	Keyword   string // first configured keyword for slug prefix display
-	ShowTitle bool   // show Title column
-	ShowOwner bool   // show Owner(s) column
-	ShowTags  bool   // show Tags column
+	Links          []*store.AdminLink
+	Query          string
+	Tag            string // unused in admin, present for shared link_list partial compatibility
+	Keyword        string // first configured keyword for slug prefix display
+	ShowTitle      bool   // show Title column
+	ShowOwner      bool   // show Owner(s) column
+	ShowTags       bool   // show Tags column
+	ShowVisibility bool   // show Visibility column
 }
 
 // Dashboard renders the admin overview with summary stats.
@@ -128,13 +130,14 @@ func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := AdminLinksPage{
-		BasePage:  newBasePage(r, user),
-		Links:     allLinks,
-		Query:     q,
-		Keyword:   keyword,
-		ShowTitle: true,
-		ShowOwner: true,
-		ShowTags:  true,
+		BasePage:       newBasePage(r, user),
+		Links:          allLinks,
+		Query:          q,
+		Keyword:        keyword,
+		ShowTitle:      true,
+		ShowOwner:      true,
+		ShowTags:       true,
+		ShowVisibility: true,
 	}
 	if isHTMX(r) {
 		renderPageFragment(w, "admin/links.html", "admin_link_list", data)
@@ -155,8 +158,9 @@ func (h *AdminHandler) EditLinkRow(w http.ResponseWriter, r *http.Request) {
 	renderPageFragment(w, "admin/links.html", "admin_link_edit_row", link)
 }
 
-// UpdateLink handles PUT /admin/links/{id} — updates url, title, description and returns the read-only row.
+// UpdateLink handles PUT /admin/links/{id} — updates url, title, description, visibility and returns the read-only row.
 // Governing: SPEC-0011 REQ "Admin Link Deletion Endpoint", ADR-0005
+// Governing: SPEC-0010 REQ "Admin Visibility Override"
 func (h *AdminHandler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if err := r.ParseForm(); err != nil {
@@ -167,11 +171,20 @@ func (h *AdminHandler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 	url := r.FormValue("url")
 	title := r.FormValue("title")
 	description := r.FormValue("description")
+	visibility := r.FormValue("visibility")
 
 	_, err := h.links.Update(r.Context(), id, url, title, description)
 	if err != nil {
 		http.Error(w, "update failed", http.StatusInternalServerError)
 		return
+	}
+
+	// Governing: SPEC-0010 REQ "Admin Visibility Override" — admin can change visibility
+	if visibility == "public" || visibility == "private" || visibility == "secure" {
+		if err := h.links.UpdateVisibility(r.Context(), id, visibility); err != nil {
+			http.Error(w, "visibility update failed", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	link, err := h.links.GetAdminLink(r.Context(), id)
