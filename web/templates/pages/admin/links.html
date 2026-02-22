@@ -3,43 +3,119 @@
 {{define "title"}}All Links — Admin — Joe Links{{end}}
 
 {{define "content"}}
-<!-- Governing: SPEC-0004 REQ "Admin Dashboard" -->
+<!-- Governing: SPEC-0011 REQ "Admin Links Screen", ADR-0007 -->
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">All Links</h1>
     <div class="flex items-center gap-3">
         <span class="text-base-content/60 text-sm">{{len .Links}} total</span>
-        <a href="/admin" class="btn btn-ghost btn-sm">← Admin</a>
+        <a href="/admin" class="btn btn-ghost btn-sm">&larr; Admin</a>
     </div>
 </div>
 
+<!-- Governing: SPEC-0011 REQ "Admin Links Screen" — HTMX search with debounce -->
+<div class="mb-4">
+    <input type="text" name="q" placeholder="Search by slug, URL, title, or owner..."
+           class="input input-bordered w-full max-w-md"
+           value="{{.Query}}"
+           hx-get="/admin/links"
+           hx-trigger="keyup changed delay:300ms"
+           hx-target="#admin-link-list"
+           hx-swap="innerHTML" />
+</div>
+
+<div id="admin-link-list">
+    {{template "admin_link_list" .}}
+</div>
+{{end}}
+
+{{define "admin_link_list"}}
 {{if .Links}}
 <div class="overflow-x-auto">
     <table class="table table-sm">
         <thead>
             <tr>
                 <th>Slug</th>
-                <th>Destination</th>
-                <th>Description</th>
+                <th>URL</th>
+                <th>Title</th>
+                <th>Owner(s)</th>
+                <th>Tags</th>
                 <th>Created</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
             {{range .Links}}
-            <tr>
-                <td>
-                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
-                </td>
-                <td class="max-w-xs truncate text-sm">
-                    <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
-                </td>
-                <td class="text-sm text-base-content/70">{{.Description}}</td>
-                <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
-            </tr>
+            {{template "admin_link_row" .}}
             {{end}}
         </tbody>
     </table>
 </div>
 {{else}}
-<p class="text-base-content/60 py-8 text-center">No links yet.</p>
+<p class="text-base-content/60 py-8 text-center">No links found.</p>
 {{end}}
+{{end}}
+
+{{define "admin_link_row"}}
+<!-- Governing: SPEC-0011 REQ "Admin Links Screen" — read-only row with edit/delete actions -->
+<tr id="admin-link-{{.ID}}">
+    <td>
+        <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
+    </td>
+    <td class="max-w-xs truncate text-sm">
+        <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
+    </td>
+    <td class="text-sm text-base-content/70">{{.Title}}</td>
+    <td class="text-sm text-base-content/70">{{.Owners}}</td>
+    <td class="text-sm">
+        {{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}
+    </td>
+    <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+    <td class="flex gap-1 justify-end">
+        <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" -->
+        <button class="btn btn-xs btn-ghost"
+                hx-get="/admin/links/{{.ID}}/edit"
+                hx-target="#admin-link-{{.ID}}"
+                hx-swap="outerHTML">Edit</button>
+        <!-- Governing: SPEC-0011 REQ "Admin Link Deletion", SPEC-0013 REQ "DaisyUI Delete Confirmation Modal" -->
+        <button class="btn btn-xs btn-error btn-ghost"
+                hx-get="/admin/links/{{.ID}}/confirm-delete"
+                hx-target="#modal"
+                hx-swap="innerHTML">Delete</button>
+    </td>
+</tr>
+{{end}}
+
+{{define "admin_link_edit_row"}}
+<!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" — inline edit form replacing read-only row -->
+<tr id="admin-link-{{.ID}}">
+    <td>
+        <span class="font-mono font-semibold text-base-content/50">{{.Slug}}</span>
+    </td>
+    <td>
+        <input type="text" name="url" value="{{.URL}}" form="edit-link-{{.ID}}"
+               class="input input-bordered input-xs w-full" required />
+    </td>
+    <td>
+        <input type="text" name="title" value="{{.Title}}" form="edit-link-{{.ID}}"
+               class="input input-bordered input-xs w-full" />
+    </td>
+    <td class="text-sm text-base-content/70">{{.Owners}}</td>
+    <td colspan="2">
+        <input type="text" name="description" value="{{.Description}}" form="edit-link-{{.ID}}"
+               class="input input-bordered input-xs w-full" placeholder="Description" />
+    </td>
+    <td class="flex gap-1 justify-end">
+        <form id="edit-link-{{.ID}}"
+              hx-put="/admin/links/{{.ID}}"
+              hx-target="#admin-link-{{.ID}}"
+              hx-swap="outerHTML">
+            <button type="submit" class="btn btn-xs btn-primary">Save</button>
+        </form>
+        <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" — cancel restores original row -->
+        <button class="btn btn-xs btn-ghost"
+                hx-get="/admin/links/{{.ID}}/row"
+                hx-target="#admin-link-{{.ID}}"
+                hx-swap="outerHTML">Cancel</button>
+    </td>
+</tr>
 {{end}}

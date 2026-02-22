@@ -4,6 +4,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -260,6 +261,75 @@ func (s *LinkStore) ListTags(ctx context.Context, linkID string) ([]*Tag, error)
 		return nil, err
 	}
 	return tags, nil
+}
+
+// AdminLink is a Link augmented with owner display names and tag names for admin views.
+// Governing: SPEC-0011 REQ "Admin Links Screen", ADR-0005
+type AdminLink struct {
+	Link
+	Owners string `db:"owners"` // comma-separated owner display names
+	Tags   string `db:"tags"`   // comma-separated tag names
+}
+
+// TagList returns tag names as a slice for template iteration.
+func (a *AdminLink) TagList() []string {
+	if a.Tags == "" {
+		return nil
+	}
+	return strings.Split(a.Tags, ",")
+}
+
+// ListAllAdmin returns all links with owner display names and tags joined, ordered by slug.
+// Supports optional search query filtering by slug, URL, title, or owner display name.
+// Governing: SPEC-0011 REQ "Admin Links Screen"
+func (s *LinkStore) ListAllAdmin(ctx context.Context, q string) ([]*AdminLink, error) {
+	query := `
+		SELECT l.*,
+			COALESCE(GROUP_CONCAT(DISTINCT u.display_name), '') AS owners,
+			COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags
+		FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id
+		LEFT JOIN users u ON u.id = lo.user_id
+		LEFT JOIN link_tags lt ON lt.link_id = l.id
+		LEFT JOIN tags t ON t.id = lt.tag_id`
+	var args []interface{}
+	if q != "" {
+		pattern := "%" + q + "%"
+		query += ` WHERE l.slug LIKE ? OR l.url LIKE ? OR l.title LIKE ? OR u.display_name LIKE ?`
+		args = append(args, pattern, pattern, pattern, pattern)
+	}
+	query += ` GROUP BY l.id ORDER BY l.slug ASC`
+
+	var links []*AdminLink
+	err := s.db.SelectContext(ctx, &links, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return links, nil
+}
+
+// GetAdminLink returns a single link with owner display names and tags joined.
+// Governing: SPEC-0011 REQ "Admin Inline Link Editing"
+func (s *LinkStore) GetAdminLink(ctx context.Context, id string) (*AdminLink, error) {
+	var link AdminLink
+	err := s.db.GetContext(ctx, &link, `
+		SELECT l.*,
+			COALESCE(GROUP_CONCAT(DISTINCT u.display_name), '') AS owners,
+			COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags
+		FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id
+		LEFT JOIN users u ON u.id = lo.user_id
+		LEFT JOIN link_tags lt ON lt.link_id = l.id
+		LEFT JOIN tags t ON t.id = lt.tag_id
+		WHERE l.id = ?
+		GROUP BY l.id`, id)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &link, nil
 }
 
 // ListByTag returns all links that have the given tag slug.
