@@ -1,15 +1,17 @@
 // Governing: SPEC-0008 REQ "Configuration", ADR-0012
 'use strict';
 
-const input    = document.getElementById('baseURL');
-const errorMsg = document.getElementById('error');
-const saveBtn  = document.getElementById('save');
-const savedMsg = document.getElementById('saved');
-const kwList   = document.getElementById('keyword-list');
+const input      = document.getElementById('baseURL');
+const apiKeyIn   = document.getElementById('apiKey');
+const errorMsg   = document.getElementById('error');
+const saveBtn    = document.getElementById('save');
+const savedMsg   = document.getElementById('saved');
+const kwList     = document.getElementById('keyword-list');
 
 // Load saved values on page open.
-chrome.storage.local.get({ baseURL: 'http://go', keywords: ['go'] }, ({ baseURL, keywords }) => {
+chrome.storage.local.get({ baseURL: 'http://go', apiKey: '', keywords: ['go'] }, ({ baseURL, apiKey, keywords }) => {
   input.value = baseURL;
+  apiKeyIn.value = apiKey;
   renderKeywords(keywords);
 });
 
@@ -54,7 +56,9 @@ saveBtn.addEventListener('click', () => {
   input.classList.remove('invalid');
   errorMsg.style.display = 'none';
 
-  chrome.storage.local.set({ baseURL: normalized }, () => {
+  const apiKey = apiKeyIn.value.trim();
+
+  chrome.storage.local.set({ baseURL: normalized, apiKey }, () => {
     input.value = normalized;
     savedMsg.style.display = 'block';
     setTimeout(() => { savedMsg.style.display = 'none'; }, 3000);

@@ -28,12 +28,15 @@ async function getKeywords() {
   return Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
 }
 
-// Governing: SPEC-0008 REQ "Keyword Host Discovery"
+// Governing: SPEC-0008 REQ "Keyword Host Discovery", REQ "API Key Authentication"
 async function refreshKeywords() {
-  const { baseURL } = await chrome.storage.local.get({ baseURL: DEFAULTS.baseURL });
+  const { baseURL, apiKey } = await chrome.storage.local.get({ baseURL: DEFAULTS.baseURL, apiKey: '' });
+  const headers = {};
+  if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
   try {
     const res = await fetch(`${baseURL}/api/v1/keywords`, {
       signal: AbortSignal.timeout(5000),
+      headers,
     });
     if (!res.ok) return;
     const data = await res.json();
@@ -48,8 +51,15 @@ async function refreshKeywords() {
   }
 }
 
-// Governing: SPEC-0008 REQ "Keyword Host Discovery" — refresh on install and periodic alarm.
-chrome.runtime.onInstalled.addListener(async () => {
+// Governing: SPEC-0008 REQ "Keyword Host Discovery", REQ "On-Install Setup"
+chrome.runtime.onInstalled.addListener(async (details) => {
+  if (details.reason === 'install') {
+    // Governing: SPEC-0008 REQ "On-Install Setup"
+    const { baseURL } = await chrome.storage.local.get({ baseURL: '' });
+    if (!baseURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+    }
+  }
   await refreshKeywords();
   chrome.alarms.create('keyword-refresh', { periodInMinutes: 60 });
 });
