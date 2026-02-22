@@ -11,6 +11,9 @@ static/css/app.css
 # Claude Code internals
 .claude/
 
+# Generated Safari extension Xcode project (run: make ext-safari)
+safari-extension/
+
 # Docusaurus generated output (rebuilt by npm run build-content)
 docs-generated/
 

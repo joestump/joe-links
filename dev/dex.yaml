@@ -23,7 +23,7 @@ staticPasswords:
 staticClients:
   - id: joe-links-dev
     redirectURIs:
-      - "http://localhost:8080/auth/callback"
-      - "http://go:8080/auth/callback"
+      - "http://localhost/auth/callback"
+      - "http://go/auth/callback"
     name: "joe-links (dev)"
     secret: "dev-secret-not-for-production"

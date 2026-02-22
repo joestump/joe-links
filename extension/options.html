@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>joe-links Settings</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 420px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 1.15rem; margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.9rem; }
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    input[type="text"].invalid { border-color: #dc2626; }
+    .hint { font-size: 0.8rem; color: #666; margin-top: 0.3rem; }
+    .error { color: #dc2626; font-size: 0.85rem; margin-top: 0.4rem; display: none; }
+    button {
+      margin-top: 1rem;
+      padding: 8px 22px;
+      font-size: 0.95rem;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #2563eb; }
+    #saved { margin-top: 0.75rem; color: #16a34a; font-size: 0.9rem; display: none; }
+
+    .keywords-section { margin-top: 2rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem; }
+    .keywords-section h2 { font-size: 0.95rem; margin-bottom: 0.5rem; }
+    #keyword-list { font-size: 0.85rem; color: #555; }
+    #keyword-list span {
+      display: inline-block;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>joe-links</h1>
+
+  <label for="baseURL">Server base URL</label>
+  <input type="text" id="baseURL" placeholder="http://go" autocomplete="off" spellcheck="false" />
+  <p class="hint">The hostname of your joe-links server. Default: <code>http://go</code></p>
+  <p class="error" id="error">Enter a valid URL, e.g. <code>http://go</code> or <code>https://links.example.com</code></p>
+
+  <button id="save">Save</button>
+  <p id="saved">Saved and refreshing keyword list…</p>
+
+  <div class="keywords-section">
+    <h2>Registered keyword hosts</h2>
+    <p class="hint">These single-word hostnames are intercepted and redirected to your server.</p>
+    <div id="keyword-list">Loading…</div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

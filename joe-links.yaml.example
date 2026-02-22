@@ -2,7 +2,7 @@
 # joe-links.yaml is gitignored.
 
 http:
-  addr: ":8080"
+  addr: ":80"
 
 db:
   driver: sqlite3
@@ -13,7 +13,7 @@ oidc:
   issuer: http://localhost:5556/dex
   client_id: joe-links-dev
   client_secret: dev-secret-not-for-production
-  redirect_url: http://localhost:8080/auth/callback
+  redirect_url: http://localhost/auth/callback
 
 # Your email must match a staticPasswords entry in dev/dex.yaml to get admin role.
 admin_email: admin@example.com
