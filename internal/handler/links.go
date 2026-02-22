@@ -17,7 +17,9 @@ import (
 var slugRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
 
 // Governing: SPEC-0001 REQ "Short Link Resolution" — reserved prefixes MUST NOT be valid slugs.
-var reservedPrefixes = []string{"auth", "static", "dashboard", "admin", "links"}
+// Governing: SPEC-0012 REQ "User Profile Route Priority" — "u" reserved for user profile pages.
+// Governing: SPEC-0012 REQ "Public Link Browser Route Priority" — "links" reserved for public link browser.
+var reservedPrefixes = []string{"auth", "static", "dashboard", "admin", "u", "links"}
 
 // isReservedSlug returns true if the slug matches or starts with a reserved prefix.
 func isReservedSlug(slug string) bool {
