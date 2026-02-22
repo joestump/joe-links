@@ -142,18 +142,18 @@ func (h *LinksHandler) ValidateSlug(w http.ResponseWriter, r *http.Request) {
 	slug := r.URL.Query().Get("slug")
 	w.Header().Set("Content-Type", "text/html")
 	if slug == "" {
-		w.Write([]byte(""))
+		_, _ = w.Write([]byte(""))
 		return
 	}
 	if err := store.ValidateSlugFormat(slug); err != nil {
-		w.Write([]byte(`<span class="text-error text-xs">` + err.Error() + `</span>`))
+		_, _ = w.Write([]byte(`<span class="text-error text-xs">` + err.Error() + `</span>`))
 		return
 	}
 	if _, err := h.links.GetBySlug(r.Context(), slug); err == nil {
-		w.Write([]byte(`<span class="text-error text-xs">Slug already taken</span>`))
+		_, _ = w.Write([]byte(`<span class="text-error text-xs">Slug already taken</span>`))
 		return
 	}
-	w.Write([]byte(`<span class="text-success text-xs">Available!</span>`))
+	_, _ = w.Write([]byte(`<span class="text-success text-xs">Available!</span>`))
 }
 
 // renderOwnersFragment re-renders the owners list for HTMX swap.

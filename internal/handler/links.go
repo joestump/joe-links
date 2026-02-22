@@ -6,15 +6,12 @@ package handler
 
 import (
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/store"
 )
-
-var slugRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
 
 // Governing: SPEC-0001 REQ "Short Link Resolution" — reserved prefixes MUST NOT be valid slugs.
 // Governing: SPEC-0012 REQ "User Profile Route Priority" — "u" reserved for user profile pages.
@@ -364,7 +361,7 @@ func (h *LinksHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Governing: SPEC-0004 REQ "Delete Link" — OOB toast on success
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`<div id="toast-area" hx-swap-oob="innerHTML:#toast-area"><div class="alert alert-success"><span>Link deleted.</span></div></div>`))
+	_, _ = w.Write([]byte(`<div id="toast-area" hx-swap-oob="innerHTML:#toast-area"><div class="alert alert-success"><span>Link deleted.</span></div></div>`))
 }
 
 // ConfirmDelete renders the delete confirmation modal for a link.

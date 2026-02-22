@@ -86,5 +86,5 @@ func (m *BearerTokenMiddleware) Authenticate(next http.Handler) http.Handler {
 func writeUnauthorized(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusUnauthorized)
-	w.Write([]byte(`{"error":"unauthorized","code":"UNAUTHORIZED"}`))
+	_, _ = w.Write([]byte(`{"error":"unauthorized","code":"UNAUTHORIZED"}`))
 }

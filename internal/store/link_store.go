@@ -57,7 +57,7 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
@@ -265,7 +265,7 @@ func (s *LinkStore) SetTags(ctx context.Context, linkID string, tagNames []strin
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	// Clear existing tags for this link.
 	_, err = tx.ExecContext(ctx, `DELETE FROM link_tags WHERE link_id = ?`, linkID)

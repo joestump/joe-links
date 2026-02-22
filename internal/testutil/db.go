@@ -24,7 +24,7 @@ func NewTestDB(t *testing.T) *sqlx.DB {
 	if err != nil {
 		t.Fatalf("open in-memory sqlite: %v", err)
 	}
-	t.Cleanup(func() { conn.Close() })
+	t.Cleanup(func() { _ = conn.Close() })
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		t.Fatalf("set goose dialect: %v", err)

@@ -9,27 +9,6 @@ import (
 	"github.com/joestump/joe-links/internal/testutil"
 )
 
-func newLinkStore(t *testing.T) *store.LinkStore {
-	t.Helper()
-	db := testutil.NewTestDB(t)
-	owns := store.NewOwnershipStore(db)
-	tags := store.NewTagStore(db)
-	return store.NewLinkStore(db, owns, tags)
-}
-
-func seedUser(t *testing.T, s *store.LinkStore) string {
-	t.Helper()
-	// We need a user for ownership. Use the DB directly via the link store's underlying DB.
-	// Instead, create a UserStore and upsert.
-	db := testutil.NewTestDB(t)
-	us := store.NewUserStore(db)
-	u, err := us.Upsert(context.Background(), "test", "sub1", "test@example.com", "Test User", "")
-	if err != nil {
-		t.Fatalf("seed user: %v", err)
-	}
-	return u.ID
-}
-
 // newTestEnv creates a full test environment sharing the same DB.
 func newTestEnv(t *testing.T) (*store.LinkStore, *store.TagStore, *store.UserStore, string) {
 	t.Helper()
@@ -176,8 +155,8 @@ func TestLinkStore_Update(t *testing.T) {
 	if updated.Description != "New desc" {
 		t.Errorf("description = %q, want %q", updated.Description, "New desc")
 	}
-	if !updated.UpdatedAt.After(created.CreatedAt) || updated.UpdatedAt.Equal(created.CreatedAt) {
-		// UpdatedAt should be >= CreatedAt (may be equal in fast tests)
+	if updated.UpdatedAt.Before(created.CreatedAt) {
+		t.Errorf("UpdatedAt %v should not be before CreatedAt %v", updated.UpdatedAt, created.CreatedAt)
 	}
 }
 

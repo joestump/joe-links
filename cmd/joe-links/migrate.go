@@ -23,7 +23,7 @@ func newMigrateCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer database.Close()
+			defer func() { _ = database.Close() }()
 
 			if err := db.Migrate(database, cfg.DB.Driver); err != nil {
 				return err
