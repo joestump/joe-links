@@ -17,22 +17,40 @@ const config: Config = {
   tagline: PROJECT_TAGLINE,
   favicon: 'img/favicon.ico',
 
-  future: {
-    v4: true,
-  },
-
   url: SITE_URL,
   baseUrl: BASE_URL,
 
   onBrokenLinks: 'warn',
-  onBrokenMarkdownLinks: 'warn',
 
   markdown: {
     format: 'detect',
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
 
-  themes: ['@docusaurus/theme-mermaid'],
+  themes: ['@docusaurus/theme-mermaid', 'docusaurus-theme-openapi-docs'],
+
+  plugins: [
+    [
+      'docusaurus-plugin-openapi-docs',
+      {
+        id: 'openapi',
+        docsPluginId: 'classic',
+        config: {
+          joelinks: {
+            specPath: '../docs/swagger/swagger.json',
+            outputDir: '../docs-generated/api',
+            sidebarOptions: {
+              groupPathsBy: 'tag',
+              categoryLinkSource: 'tag',
+            },
+          },
+        },
+      },
+    ],
+  ],
 
   i18n: {
     defaultLocale: 'en',
@@ -83,6 +101,12 @@ const config: Config = {
           label: 'Specifications',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'apiSidebar',
+          position: 'left',
+          label: 'API',
+        },
+        {
           href: GITHUB_URL,
           label: 'GitHub',
           position: 'right',
@@ -98,6 +122,10 @@ const config: Config = {
             {
               label: 'Guides',
               to: '/guides',
+            },
+            {
+              label: 'API Reference',
+              to: '/api',
             },
             {
               label: 'Architecture Decisions',

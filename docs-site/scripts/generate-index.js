@@ -113,30 +113,10 @@ title: "${safeTitle}"
 slug: /
 ---
 
-# ${projectTitle}
+import HomepageLanding from '@site/src/components/HomepageLanding';
 
-${hasGuides || adrCount > 0 || specCount > 0
-    ? 'Browse the guides, architecture decisions, and specifications for this project.'
-    : 'No architecture artifacts found yet.'}
-
-${hasGuides ? `## Guides
-
-Getting started, deployment, configuration, and API usage guides.
-
-[Browse Guides \u2192](/guides)
-` : ''}
-${adrCount > 0 ? `## Architecture Decisions
-
-This project has **${adrCount}** ADR${adrCount !== 1 ? 's' : ''} documenting key architectural choices.
-
-[Browse Architecture Decisions \u2192](/decisions)
-` : ''}
-${specCount > 0 ? `## Specifications
-
-This project has **${specCount}** specification${specCount !== 1 ? 's' : ''} defining capability requirements and design.
-
-[Browse Specifications \u2192](/specs)
-` : ''}`;
+<HomepageLanding adrCount={${adrCount}} specCount={${specCount}} hasGuides={${hasGuides}} />
+`;
 
   fs.mkdirSync(DOCS_DEST, { recursive: true });
   fs.writeFileSync(path.join(DOCS_DEST, 'index.mdx'), content);
