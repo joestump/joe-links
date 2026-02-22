@@ -1,0 +1,25 @@
+{{/* Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal" */}}
+{{define "confirm_delete"}}
+<dialog id="confirm-modal" class="modal modal-open">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Delete '{{.Name}}'?</h3>
+        <p class="py-4">This action cannot be undone.</p>
+        <div class="modal-action">
+            <button class="btn btn-ghost"
+                    onclick="document.getElementById('modal').innerHTML=''">
+                Cancel
+            </button>
+            <button class="btn btn-error"
+                    hx-delete="{{.DeleteURL}}"
+                    hx-target="{{.Target}}"
+                    hx-swap="outerHTML"
+                    onclick="document.getElementById('modal').innerHTML=''">
+                Delete
+            </button>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="document.getElementById('modal').innerHTML=''">close</button>
+    </form>
+</dialog>
+{{end}}
