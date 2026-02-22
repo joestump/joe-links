@@ -7,6 +7,7 @@ import (
 	"io/fs"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/joestump/joe-links/internal/db/migrations"
 	"github.com/pressly/goose/v3"
 )
 
@@ -24,6 +25,9 @@ func Migrate(db *sqlx.DB, driver string) error {
 	if err := goose.SetDialect(gooseDriver); err != nil {
 		return fmt.Errorf("set goose dialect: %w", err)
 	}
+
+	// Tell Go migrations which dialect to use before running goose.Up.
+	migrations.SetDialect(gooseDriver)
 
 	sub, err := fs.Sub(Migrations, "migrations")
 	if err != nil {
