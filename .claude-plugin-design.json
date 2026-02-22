@@ -9,7 +9,12 @@
     "project_ids": {
       "rest-api": 46,
       "api-token-auth": 47,
-      "openapi-swagger-ui": 48
+      "openapi-swagger-ui": 48,
+      "url-variable-substitution": 54,
+      "ui-ux-improvements": 55,
+      "admin-management": 59,
+      "user-profiles-public-browsing": 57,
+      "link-visibility": 58
     },
     "views": ["All Work", "Board", "Roadmap"],
     "columns": ["Todo", "In Progress", "In Review", "Done"],
