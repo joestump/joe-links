@@ -5,7 +5,11 @@
 {{define "content"}}
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">My Links</h1>
-    <a href="/dashboard/links/new" class="btn btn-primary btn-sm">+ New link</a>
+    <!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" -->
+    <button class="btn btn-primary btn-sm"
+            hx-get="/dashboard/links/new"
+            hx-target="#modal"
+            hx-swap="innerHTML">+ New link</button>
 </div>
 
 <!-- Governing: SPEC-0004 REQ "User Dashboard" — search input with HTMX debounce -->
@@ -42,7 +46,12 @@
 </div>
 {{end}}
 
-<div id="link-list">
+<!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — refresh on linkCreated/linkUpdated events -->
+<div id="link-list"
+     hx-get="/dashboard"
+     hx-trigger="linkCreated from:body, linkUpdated from:body"
+     hx-target="#link-list"
+     hx-swap="innerHTML">
 {{template "link_list" .}}
 </div>
 {{end}}

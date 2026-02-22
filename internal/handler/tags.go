@@ -40,7 +40,7 @@ func (h *TagsHandler) Index(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	tags, _ := h.tags.ListWithCounts(r.Context())
 	data := TagIndexPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Tags:     tags,
 	}
 	if isHTMX(r) {
@@ -62,7 +62,7 @@ func (h *TagsHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	}
 	links, _ := h.links.ListByTag(r.Context(), slug)
 	data := TagDetailPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Tag:      tag,
 		Links:    links,
 	}

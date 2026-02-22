@@ -134,7 +134,7 @@ func (h *ResolveHandler) redirect(w http.ResponseWriter, r *http.Request, target
 func (h *ResolveHandler) render404(w http.ResponseWriter, r *http.Request, slug string) {
 	user := auth.UserFromContext(r.Context())
 	w.WriteHeader(http.StatusNotFound)
-	data := notFoundPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Slug: slug}
+	data := notFoundPage{BasePage: newBasePage(r, user), User: user, Slug: slug}
 	if isHTMX(r) {
 		renderPageFragment(w, "404.html", "content", data)
 		return

@@ -1,4 +1,5 @@
 // Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management", ADR-0008
+// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 package api
 
 import (
@@ -129,6 +130,12 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeError(w, http.StatusBadRequest, "slug must match [a-z0-9][a-z0-9-]*[a-z0-9]", "INVALID_SLUG")
+		return
+	}
+
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	if err := store.ValidateURLVariables(req.URL); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_URL")
 		return
 	}
 
@@ -272,6 +279,12 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	if req.URL == "" {
 		writeError(w, http.StatusBadRequest, "url is required", "BAD_REQUEST")
+		return
+	}
+
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	if err := store.ValidateURLVariables(req.URL); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_URL")
 		return
 	}
 

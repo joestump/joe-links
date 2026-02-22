@@ -49,11 +49,11 @@
         <td class="text-sm font-mono">{{.URLTemplate}}</td>
         <td class="text-sm text-base-content/70">{{.Description}}</td>
         <td>
+            <!-- Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal" -->
             <button class="btn btn-ghost btn-xs text-error"
-                    hx-delete="/admin/keywords/{{.ID}}"
-                    hx-target="#keyword-{{.ID}}"
-                    hx-swap="outerHTML"
-                    hx-confirm="Delete keyword '{{.Keyword}}'?">Delete</button>
+                    hx-get="/admin/keywords/{{.ID}}/confirm-delete"
+                    hx-target="#modal"
+                    hx-swap="innerHTML">Delete</button>
         </td>
     </tr>
     {{else}}

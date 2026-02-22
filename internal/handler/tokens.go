@@ -43,7 +43,7 @@ func (h *TokensHandler) Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 	}
@@ -98,7 +98,7 @@ func (h *TokensHandler) Create(w http.ResponseWriter, r *http.Request) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		NewToken: plaintext,
@@ -132,7 +132,7 @@ func (h *TokensHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		Flash:    &Flash{Type: "success", Message: "Token revoked."},
@@ -145,10 +145,39 @@ func (h *TokensHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 	render(w, "tokens.html", data)
 }
 
+// ConfirmRevoke renders the delete confirmation modal for a token.
+// GET /dashboard/settings/tokens/{id}/confirm-revoke
+// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+func (h *TokensHandler) ConfirmRevoke(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	tokenID := chi.URLParam(r, "id")
+
+	// Verify the token belongs to this user by listing their tokens
+	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
+	var tokenName string
+	for _, rec := range records {
+		if rec.ID == tokenID {
+			tokenName = rec.Name
+			break
+		}
+	}
+	if tokenName == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := ConfirmDeleteData{
+		Name:      tokenName,
+		DeleteURL: "/dashboard/settings/tokens/" + tokenID,
+		Target:    "#token-content",
+	}
+	renderFragment(w, "confirm_delete", data)
+}
+
 func (h *TokensHandler) renderWithError(w http.ResponseWriter, r *http.Request, user *store.User, errMsg string) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		Error:    errMsg,

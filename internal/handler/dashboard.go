@@ -77,7 +77,7 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	allTags, _ := h.tags.ListAll(r.Context())
 
 	data := DashboardPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Links:    links,
 		Tags:     allTags,

@@ -87,6 +87,8 @@ func NewRouter(deps Deps) http.Handler {
 		r.Post("/dashboard/links", links.Create)
 		r.Get("/dashboard/links/{id}", links.Detail)
 		r.Get("/dashboard/links/{id}/edit", links.Edit)
+		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+		r.Get("/dashboard/links/{id}/confirm-delete", links.ConfirmDelete)
 		r.Put("/dashboard/links/{id}", links.Update)
 		r.Delete("/dashboard/links/{id}", links.Delete)
 		r.Post("/dashboard/links/{id}/owners", links.AddOwner)
@@ -99,6 +101,8 @@ func NewRouter(deps Deps) http.Handler {
 		// Governing: SPEC-0006 REQ "Token Management Web UI"
 		r.Get("/dashboard/settings/tokens", tokensWeb.Index)
 		r.Post("/dashboard/settings/tokens", tokensWeb.Create)
+		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+		r.Get("/dashboard/settings/tokens/{id}/confirm-revoke", tokensWeb.ConfirmRevoke)
 		r.Delete("/dashboard/settings/tokens/{id}", tokensWeb.Revoke)
 	})
 
@@ -111,12 +115,16 @@ func NewRouter(deps Deps) http.Handler {
 		r.Use(deps.AuthMiddleware.RequireRole("admin"))
 		r.Get("/admin", admin.Dashboard)
 		r.Get("/admin/users", admin.Users)
+		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+		r.Get("/admin/users/{id}/confirm-delete", admin.ConfirmDeleteUser)
 		r.Put("/admin/users/{id}/role", admin.UpdateRole)
 		r.Get("/admin/links", admin.Links)
 
 		// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
 		r.Get("/admin/keywords", keywordsHandler.Index)
 		r.Post("/admin/keywords", keywordsHandler.Create)
+		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+		r.Get("/admin/keywords/{id}/confirm-delete", keywordsHandler.ConfirmDelete)
 		r.Delete("/admin/keywords/{id}", keywordsHandler.Delete)
 	})
 
