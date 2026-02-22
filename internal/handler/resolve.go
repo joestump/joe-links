@@ -2,6 +2,7 @@
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 // Governing: SPEC-0004 REQ "Slug Resolver and 404 Page"
 // Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", REQ "Variable Substitution and Redirect", ADR-0013
+// Governing: SPEC-0010 REQ "Secure Link Resolution", REQ "Public Link Resolution", REQ "Private Link Resolution", ADR-0014
 package handler
 
 import (
@@ -20,13 +21,14 @@ var varPlaceholderRe = regexp.MustCompile(`\$[a-z][a-z0-9_]*`)
 
 // ResolveHandler handles short link slug resolution and redirection.
 type ResolveHandler struct {
-	links    *store.LinkStore
-	keywords *store.KeywordStore
+	links      *store.LinkStore
+	keywords   *store.KeywordStore
+	ownership  *store.OwnershipStore
 }
 
 // NewResolveHandler creates a new ResolveHandler.
-func NewResolveHandler(ls *store.LinkStore, ks *store.KeywordStore) *ResolveHandler {
-	return &ResolveHandler{links: ls, keywords: ks}
+func NewResolveHandler(ls *store.LinkStore, ks *store.KeywordStore, os *store.OwnershipStore) *ResolveHandler {
+	return &ResolveHandler{links: ls, keywords: ks, ownership: os}
 }
 
 type notFoundPage struct {
@@ -63,6 +65,10 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	// Governing: SPEC-0009 REQ "Multi-Segment Path Resolution" — exact match wins
 	link, err := h.links.GetBySlug(r.Context(), fullPath)
 	if err == nil {
+		// Governing: SPEC-0010 REQ "Secure Link Resolution", REQ "Public Link Resolution", REQ "Private Link Resolution"
+		if !h.checkVisibility(w, r, link) {
+			return
+		}
 		h.redirect(w, r, link.URL)
 		return
 	}
@@ -79,6 +85,11 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 			}
 
 			remaining := segments[i:]
+
+			// Governing: SPEC-0010 REQ "Secure Link Resolution"
+			if !h.checkVisibility(w, r, link) {
+				return
+			}
 
 			// Check if URL contains $varname placeholders.
 			// Governing: SPEC-0009 REQ "Variable Substitution and Redirect", ADR-0013
@@ -118,6 +129,60 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 
 	// No match found → 404.
 	h.render404(w, r, fullPath)
+}
+
+// checkVisibility enforces visibility rules for a link.
+// Returns true if the request is allowed to proceed to redirect.
+// Returns false if it has already written a response (login redirect or 403).
+// Governing: SPEC-0010 REQ "Secure Link Resolution", REQ "Public Link Resolution", REQ "Private Link Resolution", REQ "Admin Visibility Override"
+func (h *ResolveHandler) checkVisibility(w http.ResponseWriter, r *http.Request, link *store.Link) bool {
+	switch link.Visibility {
+	case "public", "private":
+		// Governing: SPEC-0010 REQ "Public Link Resolution" — 302 for anyone
+		// Governing: SPEC-0010 REQ "Private Link Resolution" — 302 for anyone who knows the slug
+		return true
+	case "secure":
+		user := auth.UserFromContext(r.Context())
+		if user == nil {
+			// Governing: SPEC-0010 REQ "Secure Link Resolution" — redirect to login with return URL
+			returnURL := r.URL.RequestURI()
+			http.Redirect(w, r, "/auth/login?redirect="+url.QueryEscape(returnURL), http.StatusFound)
+			return false
+		}
+		// Governing: SPEC-0010 REQ "Admin Visibility Override" — admins always authorized
+		if user.IsAdmin() {
+			return true
+		}
+		// Check if user is an owner/co-owner
+		isOwner, err := h.ownership.IsOwner(link.ID, user.ID)
+		if err == nil && isOwner {
+			return true
+		}
+		// Check link_shares
+		hasShare, err := h.links.HasShare(r.Context(), link.ID, user.ID)
+		if err == nil && hasShare {
+			return true
+		}
+		// Not authorized
+		h.render403(w, r)
+		return false
+	default:
+		// Unknown visibility — treat as public
+		return true
+	}
+}
+
+// render403 renders a 403 Forbidden page.
+// Governing: SPEC-0010 REQ "Secure Link Resolution"
+func (h *ResolveHandler) render403(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	w.WriteHeader(http.StatusForbidden)
+	data := notFoundPage{BasePage: newBasePage(r, user), User: user, Slug: ""}
+	if isHTMX(r) {
+		renderPageFragment(w, "403.html", "content", data)
+		return
+	}
+	render(w, "403.html", data)
 }
 
 // redirect issues a 302 redirect, handling HTMX requests with HX-Redirect header.
