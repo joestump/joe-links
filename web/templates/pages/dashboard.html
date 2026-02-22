@@ -6,10 +6,15 @@
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">My Links</h1>
     <!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" -->
-    <button class="btn btn-primary btn-sm"
+    <button class="btn btn-primary btn-sm gap-1.5"
             hx-get="/dashboard/links/new"
             hx-target="#modal"
-            hx-swap="innerHTML">+ New link</button>
+            hx-swap="innerHTML">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+        New link
+    </button>
 </div>
 
 <!-- Governing: SPEC-0004 REQ "User Dashboard" — search input with HTMX debounce -->
@@ -46,7 +51,7 @@
 </div>
 {{end}}
 
-<!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — refresh on linkCreated/linkUpdated events -->
+<!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — refresh on linkCreated/linkUpdated -->
 <div id="link-list"
      hx-get="/dashboard"
      hx-trigger="linkCreated from:body, linkUpdated from:body"
