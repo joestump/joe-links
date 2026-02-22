@@ -388,6 +388,77 @@ func (s *LinkStore) RemoveShare(ctx context.Context, linkID, userID string) erro
 	return err
 }
 
+// PublicLink is a Link augmented with owner and tag info for public display.
+// Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})"
+type PublicLink struct {
+	ID                   string    `db:"id"`
+	Slug                 string    `db:"slug"`
+	URL                  string    `db:"url"`
+	Title                string    `db:"title"`
+	Description          string    `db:"description"`
+	Visibility           string    `db:"visibility"`
+	CreatedAt            time.Time `db:"created_at"`
+	OwnerDisplayName     string    `db:"owner_display_name"`
+	OwnerDisplayNameSlug string    `db:"owner_display_name_slug"`
+	TagList              string    `db:"tag_list"`
+}
+
+// Tags returns tag names as a slice for template iteration.
+func (p *PublicLink) Tags() []string {
+	if p.TagList == "" {
+		return nil
+	}
+	return strings.Split(p.TagList, ",")
+}
+
+// Excerpt returns the description truncated to maxLen characters.
+func (p *PublicLink) Excerpt(maxLen int) string {
+	if len(p.Description) <= maxLen {
+		return p.Description
+	}
+	return p.Description[:maxLen] + "..."
+}
+
+// ListPublicByOwner returns public links owned by userID with owner and tag info, paginated.
+// Returns the links, total count, and any error.
+// Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})"
+func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, perPage int) ([]PublicLink, int, error) {
+	// Count total matching links
+	var total int
+	err := s.db.GetContext(ctx, &total, `
+		SELECT COUNT(DISTINCT l.id) FROM links l
+		JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
+		WHERE l.visibility = 'public' AND lo.user_id = ?
+	`, userID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	offset := (page - 1) * perPage
+	var links []PublicLink
+	err = s.db.SelectContext(ctx, &links, `
+		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
+		       u.display_name AS owner_display_name,
+		       u.display_name_slug AS owner_display_name_slug,
+		       COALESCE(GROUP_CONCAT(t.name), '') AS tag_list
+		FROM links l
+		JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
+		JOIN users u ON u.id = lo.user_id
+		LEFT JOIN link_tags lt ON lt.link_id = l.id
+		LEFT JOIN tags t ON t.id = lt.tag_id
+		WHERE l.visibility = 'public'
+		  AND lo.user_id = ?
+		GROUP BY l.id
+		ORDER BY l.created_at DESC
+		LIMIT ? OFFSET ?
+	`, userID, perPage, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return links, total, nil
+}
+
 // ListShares returns all users with access to a link.
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) ListShares(ctx context.Context, linkID string) ([]ShareRecord, error) {

@@ -3,6 +3,7 @@
 // Governing: SPEC-0004 REQ "Route Registration and Priority", "Shared Base Layout"
 // Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
 // Governing: SPEC-0007 REQ "Swagger UI Endpoint", ADR-0010
+// Governing: SPEC-0012 REQ "User Profile Route Priority"
 package handler
 
 import (
@@ -155,6 +156,11 @@ func NewRouter(deps Deps) http.Handler {
 		KeywordStore:     deps.KeywordStore,
 	})
 	r.Mount("/api/v1", apiRouter)
+
+	// User profile pages — no auth required, BEFORE slug catch-all.
+	// Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})", REQ "User Profile Route Priority"
+	profileHandler := NewProfileHandler(deps.UserStore, deps.LinkStore)
+	r.With(deps.AuthMiddleware.OptionalUser).Get("/u/{displayNameSlug}", profileHandler.Show)
 
 	// Slug resolver -- catch-all, must be last.
 	// Resolver does not require auth (links are publicly accessible).
