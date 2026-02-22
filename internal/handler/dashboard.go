@@ -11,15 +11,19 @@ import (
 )
 
 // DashboardPage is the template data for the dashboard view.
+// Governing: SPEC-0014 REQ "Abstract Link Widget"
 type DashboardPage struct {
 	BasePage
-	User    *store.User
-	Links   []*store.Link
-	Tags    []*store.Tag
-	Query   string // current search query
-	Tag     string // current tag filter slug
-	Flash   *Flash
-	Keyword string // first configured keyword (e.g. "go") for slug prefix display
+	User      *store.User
+	Links     []*store.Link
+	Tags      []*store.Tag
+	Query     string // current search query
+	Tag       string // current tag filter slug
+	Flash     *Flash
+	Keyword   string // first configured keyword (e.g. "go") for slug prefix display
+	ShowTitle bool   // show Title column
+	ShowOwner bool   // show Owner(s) column
+	ShowTags  bool   // show Tags column
 }
 
 // DashboardHandler serves the authenticated link management dashboard.

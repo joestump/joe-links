@@ -44,10 +44,16 @@ type AdminUsersPage struct {
 
 // AdminLinksPage is the template data for the admin link list.
 // Governing: SPEC-0011 REQ "Admin Links Screen"
+// Governing: SPEC-0014 REQ "Abstract Link Widget"
 type AdminLinksPage struct {
 	BasePage
-	Links []*store.AdminLink
-	Query string
+	Links     []*store.AdminLink
+	Query     string
+	Tag       string // unused in admin, present for shared link_list partial compatibility
+	Keyword   string // first configured keyword for slug prefix display
+	ShowTitle bool   // show Title column
+	ShowOwner bool   // show Owner(s) column
+	ShowTags  bool   // show Tags column
 }
 
 // Dashboard renders the admin overview with summary stats.
@@ -109,14 +115,26 @@ func (h *AdminHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // Links renders the admin link list (all links across all users).
 // Supports HTMX search via ?q= query parameter with debounce.
 // Governing: SPEC-0011 REQ "Admin Links Screen", ADR-0007
+// Governing: SPEC-0014 REQ "Abstract Link Widget"
 func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	q := r.URL.Query().Get("q")
 	allLinks, _ := h.links.ListAllAdmin(r.Context(), q)
+
+	// Load first keyword for slug prefix display
+	keyword := ""
+	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
+		keyword = kws[0].Keyword
+	}
+
 	data := AdminLinksPage{
-		BasePage: newBasePage(r, user),
-		Links:    allLinks,
-		Query:    q,
+		BasePage:  newBasePage(r, user),
+		Links:     allLinks,
+		Query:     q,
+		Keyword:   keyword,
+		ShowTitle: true,
+		ShowOwner: true,
+		ShowTags:  true,
 	}
 	if isHTMX(r) {
 		renderPageFragment(w, "admin/links.html", "admin_link_list", data)
