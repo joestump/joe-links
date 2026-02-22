@@ -79,11 +79,30 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
+// ─── Tech stack ──────────────────────────────────────────────────────────────
+
+type TechItem = {
+  name: string;
+  label: string;
+};
+
+const TechList: TechItem[] = [
+  { name: 'Go',          label: 'Language'    },
+  { name: 'chi',         label: 'Router'      },
+  { name: 'HTMX',        label: 'Frontend'    },
+  { name: 'DaisyUI',     label: 'CSS'         },
+  { name: 'SQLite',      label: 'Database'    },
+  { name: 'PostgreSQL',  label: 'Database'    },
+  { name: 'MySQL',       label: 'Database'    },
+  { name: 'OIDC',        label: 'Auth'        },
+  { name: 'Single Binary', label: 'Deploy'   },
+];
+
 // ─── Components ──────────────────────────────────────────────────────────────
 
 function Feature({ emoji, title, description }: FeatureItem) {
   return (
-    <div className={clsx('col col--4')}>
+    <div className={clsx('col col--4', styles.featureCol)}>
       <div className={styles.featureCard}>
         <div className={styles.featureIcon}>{emoji}</div>
         <Heading as="h3" className={styles.featureTitle}>
@@ -134,6 +153,24 @@ function HomepageFeatures(): JSX.Element {
         <div className="row">
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TechStack(): JSX.Element {
+  return (
+    <section className={styles.techStack}>
+      <div className="container">
+        <p className={styles.techStackLabel}>Built with</p>
+        <div className={styles.techList}>
+          {TechList.map(({ name, label }) => (
+            <div key={name} className={styles.techChip}>
+              <span className={styles.techName}>{name}</span>
+              <span className={styles.techLabel}>{label}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -207,6 +244,7 @@ export default function Home(): JSX.Element {
       <HomepageHeader />
       <main>
         <HomepageFeatures />
+        <TechStack />
         <QuickStart />
         <AIDisclosure />
       </main>

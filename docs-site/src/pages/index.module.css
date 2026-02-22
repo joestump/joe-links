@@ -72,6 +72,10 @@
   padding: 3rem 0;
 }
 
+.featureCol {
+  margin-bottom: 1.5rem;
+}
+
 .featureCard {
   padding: 1.5rem;
   height: 100%;
@@ -110,6 +114,66 @@
   color: var(--ifm-color-emphasis-700);
   margin: 0;
   line-height: 1.55;
+}
+
+/* ── Tech Stack Section ──────────────────────────────────────────────────── */
+
+.techStack {
+  padding: 1.75rem 0 2.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.techStackLabel {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ifm-color-emphasis-500);
+  margin-bottom: 1rem;
+}
+
+.techList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+}
+
+.techChip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.techChip:hover {
+  border-color: #c084fc;
+  box-shadow: 0 2px 8px rgba(192, 132, 252, 0.15);
+}
+
+[data-theme='dark'] .techChip:hover {
+  border-color: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.2);
+}
+
+.techName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-900);
+}
+
+.techLabel {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--ifm-color-emphasis-500);
+  background: var(--ifm-color-emphasis-100);
+  padding: 0.1rem 0.4rem;
+  border-radius: 1rem;
 }
 
 /* ── Quick Start Section ─────────────────────────────────────────────────── */
