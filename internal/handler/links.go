@@ -84,7 +84,7 @@ func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore, us *store.Us
 func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
-	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form}
+	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form}
 	if isHTMX(r) {
 		renderFragment(w, "new_link_modal", data)
 		return
@@ -111,7 +111,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — validation errors re-render inside modal
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
 			renderFragment(w, "new_link_modal", data)
 			return
@@ -120,7 +120,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isReservedSlug(form.Slug) {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."}
 		if isHTMX(r) {
 			renderFragment(w, "new_link_modal", data)
 			return
@@ -131,9 +131,9 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	if err := store.ValidateURLVariables(form.URL); err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
-			renderPageFragment(w, "new.html", "content", data)
+			renderFragment(w, "new_link_modal", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -142,7 +142,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	link, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Title, form.Description)
 	if err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
 		if isHTMX(r) {
 			renderFragment(w, "new_link_modal", data)
 			return
@@ -202,7 +202,7 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		Tags:        strings.Join(tagNames, ", "),
 	}
 
-	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form}
+	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form}
 	if isHTMX(r) {
 		renderFragment(w, "edit_link_modal", data)
 		return
@@ -244,9 +244,9 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	if err := store.ValidateURLVariables(form.URL); err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: err.Error()}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: err.Error()}
 		if isHTMX(r) {
-			renderPageFragment(w, "edit.html", "content", data)
+			renderFragment(w, "edit_link_modal", data)
 			return
 		}
 		render(w, "edit.html", data)
@@ -255,7 +255,7 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	_, err = h.links.Update(r.Context(), id, form.URL, form.Title, form.Description)
 	if err != nil {
-		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: "Update failed."}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: "Update failed."}
 		// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — re-render inside modal on error
 		if isHTMX(r) {
 			renderFragment(w, "edit_link_modal", data)

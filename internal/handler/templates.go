@@ -17,9 +17,22 @@ import (
 // BasePage carries layout-level data available to every template.
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie"
 // Governing: SPEC-0004 REQ "Shared Base Layout" — User enables conditional admin nav link
+// Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section" — IsAdminPage drives <details open>
 type BasePage struct {
-	Theme string      // "joe-light", "joe-dark", or "" (let inline script decide)
-	User  *store.User // nil for unauthenticated pages
+	Theme       string      // "joe-light", "joe-dark", or "" (let inline script decide)
+	User        *store.User // nil for unauthenticated pages
+	IsAdminPage bool        // true when current path starts with /admin
+}
+
+// newBasePage constructs a BasePage from the current request, setting theme,
+// user, and admin-page state.
+// Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section"
+func newBasePage(r *http.Request, user *store.User) BasePage {
+	return BasePage{
+		Theme:       themeFromRequest(r),
+		User:        user,
+		IsAdminPage: strings.HasPrefix(r.URL.Path, "/admin"),
+	}
 }
 
 // themeFromRequest reads the "theme" cookie. Returns "" if absent or invalid,

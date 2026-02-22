@@ -43,7 +43,7 @@ func (h *TokensHandler) Index(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 	}
@@ -98,7 +98,7 @@ func (h *TokensHandler) Create(w http.ResponseWriter, r *http.Request) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		NewToken: plaintext,
@@ -132,7 +132,7 @@ func (h *TokensHandler) Revoke(w http.ResponseWriter, r *http.Request) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		Flash:    &Flash{Type: "success", Message: "Token revoked."},
@@ -177,7 +177,7 @@ func (h *TokensHandler) ConfirmRevoke(w http.ResponseWriter, r *http.Request) {
 func (h *TokensHandler) renderWithError(w http.ResponseWriter, r *http.Request, user *store.User, errMsg string) {
 	records, _ := h.tokens.ListByUser(r.Context(), user.ID)
 	data := TokensPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Tokens:   records,
 		Error:    errMsg,

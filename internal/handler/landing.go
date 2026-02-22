@@ -20,5 +20,5 @@ func (h *LandingHandler) Index(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/dashboard", http.StatusFound)
 		return
 	}
-	render(w, "landing.html", BasePage{Theme: themeFromRequest(r)})
+	render(w, "landing.html", newBasePage(r, nil))
 }
