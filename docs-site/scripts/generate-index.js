@@ -103,24 +103,10 @@ function hasStaticGuides() {
 }
 
 function generate() {
-  const adrCount = countAdrs();
-  const specCount = countSpecs();
-  const hasGuides = hasStaticGuides();
-
-  const safeTitle = projectTitle.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  const content = `---
-title: "${safeTitle}"
-slug: /
----
-
-import HomepageLanding from '@site/src/components/HomepageLanding';
-
-<HomepageLanding adrCount={${adrCount}} specCount={${specCount}} hasGuides={${hasGuides}} />
-`;
-
+  // The root index page is now handled by src/pages/index.tsx (a standalone
+  // Docusaurus page). We must NOT write docs-generated/index.mdx with slug:/
+  // or Docusaurus will report a duplicate route conflict with routeBasePath:'/'.
   fs.mkdirSync(DOCS_DEST, { recursive: true });
-  fs.writeFileSync(path.join(DOCS_DEST, 'index.mdx'), content);
-  console.log('  Generated index page');
 
   generateSpecsIndex();
 }

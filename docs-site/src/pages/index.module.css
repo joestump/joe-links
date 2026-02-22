@@ -1,0 +1,163 @@
+/* ── Hero Banner ─────────────────────────────────────────────────────────── */
+
+.heroBanner {
+  padding: 4rem 0 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #f3e8ff 0%, #faf5ff 60%, #f0fdf4 100%);
+}
+
+[data-theme='dark'] .heroBanner {
+  background: linear-gradient(160deg, #0d0018 0%, #1a0035 55%, #0a0012 100%);
+}
+
+.heroBadge {
+  display: inline-block;
+  padding: 0.3rem 0.85rem;
+  border-radius: 2rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(192, 132, 252, 0.15);
+  color: #7c3aed;
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  margin-bottom: 1.25rem;
+}
+
+[data-theme='dark'] .heroBadge {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border-color: rgba(168, 85, 247, 0.4);
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #7c3aed, #c084fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme='dark'] .heroTitle {
+  background: linear-gradient(135deg, #c084fc, #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroTagline {
+  font-size: 1.2rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 480px;
+  margin: 0 auto 2rem;
+  line-height: 1.65;
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ── Features Section ────────────────────────────────────────────────────── */
+
+.features {
+  padding: 3rem 0;
+}
+
+.featureCard {
+  padding: 1.5rem;
+  height: 100%;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 0.75rem;
+  background: var(--ifm-background-surface-color);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.featureCard:hover {
+  border-color: #c084fc;
+  box-shadow: 0 8px 24px rgba(192, 132, 252, 0.15);
+  transform: translateY(-3px);
+}
+
+[data-theme='dark'] .featureCard:hover {
+  border-color: #a855f7;
+  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.2);
+}
+
+.featureIcon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+
+.featureTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+  margin-top: 0;
+}
+
+.featureDesc {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ── Quick Start Section ─────────────────────────────────────────────────── */
+
+.quickStart {
+  padding: 3rem 0;
+  background: var(--ifm-background-surface-color);
+}
+
+.codeBlock {
+  background: #111111;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.codeBlock pre {
+  margin: 0;
+  padding: 1.5rem;
+  background: transparent !important;
+  color: #e9d5ff;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  overflow-x: auto;
+}
+
+/* ── AI Disclosure ───────────────────────────────────────────────────────── */
+
+.aiDisclosure {
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  text-align: center;
+}
+
+.aiDisclosure p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .heroTitle {
+    font-size: 2.5rem;
+  }
+
+  .heroTagline {
+    font-size: 1.05rem;
+  }
+}

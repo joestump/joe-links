@@ -186,6 +186,10 @@ Slugs must be at least 2 characters, lowercase letters/numbers/hyphens only, no 
 
 Keywords (like `go`, `wtf`, `gh`) are registered in the Admin → Keywords section of the dashboard. The extension fetches the keyword list from `/api/v1/keywords` on install and every 60 minutes. When you type `go/slack` in the address bar, the extension intercepts the search and redirects to your server.
 
+## Built with AI
+
+joe-links was designed and written by [Claude](https://www.anthropic.com/claude) (Anthropic's AI assistant) in collaboration with [Joe Stump](https://github.com/joestump). The full source code, architecture decisions (ADRs), and feature specifications are open source and publicly available in this repository.
+
 ## License
 
 MIT
