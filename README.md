@@ -156,7 +156,7 @@ After code changes: click the **↺** (reload) icon on the extension card.
 2. Click **Load Temporary Add-on...**
 3. Select `extension/manifest.json`
 
-> Temporary add-ons are removed when Firefox quits. For persistence, package the extension as `.xpi`.
+> ⚠️ **Heads up!** Temporary add-ons vanish when Firefox quits — poof! 💨 For a permanent install, package the extension as a signed `.xpi`.
 
 After code changes: click **Reload** next to the extension in `about:debugging`.
 
@@ -172,7 +172,7 @@ After code changes: click **Reload** next to the extension in `about:debugging`.
    - If the extension doesn't appear: **Develop → Allow Unsigned Extensions** first
    - If the Develop menu isn't visible: **Settings → Advanced → Show features for web developers**
 
-> For day-to-day development, Chrome is faster to iterate on. Re-run the converter after any code changes.
+> 💡 **Tip:** Chrome is faster for day-to-day development iteration. Re-run the converter after any extension code changes before testing in Safari.
 
 ### Using the popup
 
