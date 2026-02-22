@@ -101,6 +101,22 @@
     button#create:hover { background: var(--primary-hover); }
     button#create:disabled { opacity: 0.5; cursor: not-allowed; }
     #status { display: none; }
+    #no-api-key {
+      display: none;
+      border-radius: var(--radius);
+      border: 1px solid var(--error-border);
+      background: var(--error-bg);
+      color: var(--error-text);
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      line-height: 1.4;
+    }
+    #no-api-key a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: underline;
+      cursor: pointer;
+    }
     .status-box {
       border-radius: var(--radius);
       border: 1px solid;
@@ -134,6 +150,10 @@
     joe-links
   </div>
   <div class="body">
+    <!-- Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "no API key" -->
+    <div id="no-api-key">
+      No API key configured. <a id="open-options">Configure an API key</a> in the extension options to create links.
+    </div>
     <div class="field">
       <label for="url">Destination URL</label>
       <input type="text" id="url" placeholder="https://example.com/long/url" />

@@ -3,6 +3,19 @@
 
 const DEFAULTS = { baseURL: 'http://go', apiKey: '' };
 
+// Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "no API key"
+// When no API key is configured, show a notice directing user to options page.
+document.addEventListener('DOMContentLoaded', async () => {
+  const { apiKey } = await chrome.storage.local.get(DEFAULTS);
+  if (!apiKey) {
+    document.getElementById('no-api-key').style.display = 'block';
+    document.getElementById('create').disabled = true;
+  }
+  document.getElementById('open-options').addEventListener('click', () => {
+    chrome.runtime.openOptionsPage();
+  });
+});
+
 // Pre-fill the current tab's URL.
 // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "popup opens"
 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
