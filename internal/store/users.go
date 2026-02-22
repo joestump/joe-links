@@ -3,6 +3,9 @@ package store
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -10,18 +13,36 @@ import (
 )
 
 type User struct {
-	ID          string    `db:"id"`
-	Provider    string    `db:"provider"`
-	Subject     string    `db:"subject"`
-	Email       string    `db:"email"`
-	DisplayName string    `db:"display_name"`
-	Role        string    `db:"role"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
+	ID              string    `db:"id"`
+	Provider        string    `db:"provider"`
+	Subject         string    `db:"subject"`
+	Email           string    `db:"email"`
+	DisplayName     string    `db:"display_name"`
+	DisplayNameSlug string    `db:"display_name_slug"`
+	Role            string    `db:"role"`
+	CreatedAt       time.Time `db:"created_at"`
+	UpdatedAt       time.Time `db:"updated_at"`
 }
 
 func (u *User) IsAdmin() bool {
 	return u.Role == "admin"
+}
+
+var (
+	reWhitespace      = regexp.MustCompile(`\s+`)
+	reNonSlugChar     = regexp.MustCompile(`[^a-z0-9-]`)
+	reConsecutiveHyph = regexp.MustCompile(`-{2,}`)
+)
+
+// DeriveDisplayNameSlug converts a display name into a URL-safe slug.
+// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
+func DeriveDisplayNameSlug(displayName string) string {
+	s := strings.ToLower(displayName)
+	s = reWhitespace.ReplaceAllString(s, "-")
+	s = reNonSlugChar.ReplaceAllString(s, "")
+	s = reConsecutiveHyph.ReplaceAllString(s, "-")
+	s = strings.Trim(s, "-")
+	return s
 }
 
 type UserStore struct {
@@ -32,6 +53,41 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 	return &UserStore{db: db}
 }
 
+// GetByDisplayNameSlug returns the user matching the given display_name_slug, or sql.ErrNoRows.
+// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
+func (s *UserStore) GetByDisplayNameSlug(ctx context.Context, slug string) (*User, error) {
+	var u User
+	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE display_name_slug = ?`, slug)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+// resolveUniqueSlug derives a slug from displayName and appends a numeric suffix if needed.
+// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
+func (s *UserStore) resolveUniqueSlug(ctx context.Context, displayName, excludeUserID string) (string, error) {
+	base := DeriveDisplayNameSlug(displayName)
+	if base == "" {
+		base = "user"
+	}
+	candidate := base
+	suffix := 2
+	for {
+		var count int
+		err := s.db.GetContext(ctx, &count,
+			`SELECT COUNT(*) FROM users WHERE display_name_slug = ? AND id != ?`, candidate, excludeUserID)
+		if err != nil {
+			return "", err
+		}
+		if count == 0 {
+			return candidate, nil
+		}
+		candidate = fmt.Sprintf("%s-%d", base, suffix)
+		suffix++
+	}
+}
+
 // Upsert creates or updates a user record on OIDC login.
 // adminEmail: if non-empty and matches email on INSERT, role is set to "admin".
 //
@@ -40,6 +96,8 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 //
 // TODO: Placeholder `?` works for SQLite and MySQL but PostgreSQL needs `$1`, `$2`, etc.
 // In production, use a DB-agnostic query builder or separate query files per driver.
+//
+// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
 func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displayName, adminEmail string) (*User, error) {
 	role := "user"
 	if adminEmail != "" && email == adminEmail {
@@ -48,17 +106,32 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	id := uuid.New().String()
 	now := time.Now().UTC()
 
+	// Look up existing user to get their ID for slug uniqueness check.
+	var existingID string
+	var existing User
+	err := s.db.GetContext(ctx, &existing, `SELECT * FROM users WHERE provider = ? AND subject = ?`, provider, subject)
+	if err == nil {
+		existingID = existing.ID
+	}
+
+	// Derive a unique display_name_slug for this user.
+	slug, err := s.resolveUniqueSlug(ctx, displayName, existingID)
+	if err != nil {
+		return nil, err
+	}
+
 	// Try INSERT first; if the (provider, subject) pair already exists, UPDATE instead.
 	// The ON CONFLICT ... DO UPDATE syntax preserves the existing role for returning users
 	// because we don't include role in the UPDATE clause. For new users, role is set above.
-	_, err := s.db.ExecContext(ctx, `
-		INSERT INTO users (id, provider, subject, email, display_name, role, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	_, err = s.db.ExecContext(ctx, `
+		INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT (provider, subject) DO UPDATE SET
 			email = excluded.email,
 			display_name = excluded.display_name,
+			display_name_slug = excluded.display_name_slug,
 			updated_at = excluded.updated_at
-	`, id, provider, subject, email, displayName, role, now, now)
+	`, id, provider, subject, email, displayName, slug, role, now, now)
 	if err != nil {
 		return nil, err
 	}
