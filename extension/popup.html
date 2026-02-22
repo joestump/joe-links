@@ -62,8 +62,39 @@
     .header svg { flex-shrink: 0; }
     .body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
     .field { display: flex; flex-direction: column; gap: 3px; }
-    .row { display: flex; gap: 8px; }
-    .row .field { flex: 1; }
+    .label-row { display: flex; align-items: center; gap: 5px; }
+    .var-toggle {
+      background: none;
+      border: 1px solid var(--base-300);
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      font-size: 0.6rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .var-toggle:hover { border-color: var(--primary); color: var(--primary); }
+    .var-hint {
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      padding: 7px 9px;
+      font-size: 0.73rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .var-hint code {
+      font-family: monospace;
+      background: var(--base-300);
+      padding: 1px 3px;
+      border-radius: 2px;
+    }
     label {
       font-size: 0.72rem;
       font-weight: 600;
@@ -136,8 +167,21 @@
       color: var(--error-text);
     }
     .status-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; }
-    .status-link { font-family: monospace; font-weight: 700; font-size: 0.875rem; word-break: break-all; }
-    .status-copy { font-size: 0.72rem; opacity: 0.7; }
+    .status-link-row { display: flex; align-items: center; gap: 6px; }
+    .status-link { font-family: monospace; font-weight: 700; font-size: 0.875rem; word-break: break-all; flex: 1; }
+    .copy-btn {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: currentColor;
+      padding: 2px;
+      border-radius: 3px;
+      opacity: 0.6;
+      display: flex;
+      align-items: center;
+    }
+    .copy-btn:hover { opacity: 1; }
     .status-msg { font-size: 0.82rem; }
   </style>
 </head>
@@ -155,20 +199,21 @@
       No API key configured. <a id="open-options">Configure an API key</a> in the extension options to create links.
     </div>
     <div class="field">
-      <label for="url">Destination URL</label>
+      <div class="label-row">
+        <label for="url">Destination URL</label>
+        <button class="var-toggle" id="var-toggle" title="Variable placeholders" aria-label="Variable help">?</button>
+      </div>
       <input type="text" id="url" placeholder="https://example.com/long/url" />
-    </div>
-    <div class="row">
-      <div class="field">
-        <label for="keyword">Keyword</label>
-        <input type="text" id="keyword" placeholder="go" />
-      </div>
-      <div class="field">
-        <label for="slug">Slug</label>
-        <input type="text" id="slug" placeholder="my-link" />
+      <div class="var-hint" id="var-hint" hidden>
+        Use <code>$name</code> placeholders for dynamic links.<br>
+        Example: slug <code>gh</code>, URL <code>https://github.com/$user</code><br>
+        → <code>go/gh/joestump</code> opens that GitHub profile.
       </div>
     </div>
-    <p class="hint">keyword/slug → URL</p>
+    <div class="field">
+      <label for="slug">Slug</label>
+      <input type="text" id="slug" placeholder="my-link" />
+    </div>
     <button id="create">Create Link</button>
     <div id="status"></div>
   </div>

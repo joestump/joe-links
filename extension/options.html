@@ -88,17 +88,6 @@
     }
     button#save:hover { background: var(--primary-hover); }
     #saved { font-size: 0.82rem; color: var(--success-text); display: none; }
-    .divider { border: none; border-top: 1px solid var(--base-300); margin: 4px 0; }
-    .section-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; }
-    #keyword-list { font-size: 0.82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; }
-    #keyword-list span {
-      background: var(--base-200);
-      border: 1px solid var(--base-300);
-      border-radius: 4px;
-      padding: 2px 8px;
-      font-family: monospace;
-      font-size: 0.8rem;
-    }
   </style>
 </head>
 <body>
@@ -122,13 +111,7 @@
     </div>
     <div>
       <button id="save">Save</button>
-      <p id="saved">Saved — refreshing keyword list…</p>
-    </div>
-    <hr class="divider" />
-    <div>
-      <p class="section-title">Registered keyword hosts</p>
-      <p class="hint" style="margin-bottom:8px">These single-word hostnames are intercepted and redirected to your server.</p>
-      <div id="keyword-list">Loading…</div>
+      <p id="saved">Saved.</p>
     </div>
   </main>
   <script src="options.js"></script>

@@ -1,37 +1,17 @@
 // Governing: SPEC-0008 REQ "Configuration", ADR-0012
 'use strict';
 
-const input      = document.getElementById('baseURL');
-const apiKeyIn   = document.getElementById('apiKey');
-const errorMsg   = document.getElementById('error');
-const saveBtn    = document.getElementById('save');
-const savedMsg   = document.getElementById('saved');
-const kwList     = document.getElementById('keyword-list');
+const input    = document.getElementById('baseURL');
+const apiKeyIn = document.getElementById('apiKey');
+const errorMsg = document.getElementById('error');
+const saveBtn  = document.getElementById('save');
+const savedMsg = document.getElementById('saved');
 
 // Load saved values on page open.
-chrome.storage.local.get({ baseURL: 'http://go', apiKey: '', keywords: ['go'] }, ({ baseURL, apiKey, keywords }) => {
-  input.value = baseURL;
+chrome.storage.local.get({ baseURL: 'http://go', apiKey: '' }, ({ baseURL, apiKey }) => {
+  input.value    = baseURL;
   apiKeyIn.value = apiKey;
-  renderKeywords(keywords);
 });
-
-// Re-render keywords if they change (e.g. background refresh completed).
-chrome.storage.onChanged.addListener((changes) => {
-  if (changes.keywords) renderKeywords(changes.keywords.newValue ?? []);
-});
-
-function renderKeywords(keywords) {
-  if (!Array.isArray(keywords) || keywords.length === 0) {
-    kwList.textContent = 'None registered.';
-    return;
-  }
-  kwList.innerHTML = '';
-  for (const kw of keywords) {
-    const span = document.createElement('span');
-    span.textContent = kw;
-    kwList.appendChild(span);
-  }
-}
 
 // Governing: SPEC-0008 REQ "Configuration" scenario "User sets an invalid base URL"
 function validateURL(value) {
