@@ -12,13 +12,14 @@ import (
 
 // TagsHandler serves tag browsing views.
 type TagsHandler struct {
-	tags  *store.TagStore
-	links *store.LinkStore
+	tags     *store.TagStore
+	links    *store.LinkStore
+	keywords *store.KeywordStore
 }
 
 // NewTagsHandler creates a new TagsHandler.
-func NewTagsHandler(ts *store.TagStore, ls *store.LinkStore) *TagsHandler {
-	return &TagsHandler{tags: ts, links: ls}
+func NewTagsHandler(ts *store.TagStore, ls *store.LinkStore, ks *store.KeywordStore) *TagsHandler {
+	return &TagsHandler{tags: ts, links: ls, keywords: ks}
 }
 
 // TagIndexPage is the template data for the tag browser.
@@ -30,8 +31,14 @@ type TagIndexPage struct {
 // TagDetailPage is the template data for the tag detail view.
 type TagDetailPage struct {
 	BasePage
-	Tag   *store.Tag
-	Links []*store.Link
+	Tag            *store.Tag
+	Links          []*store.Link
+	Keyword        string
+	ShowVisibility bool
+	ShowActions    bool
+	ShowTitle      bool
+	ShowOwner      bool
+	ShowTags       bool
 }
 
 // Index renders all tags with ≥1 link and their counts.
@@ -61,10 +68,23 @@ func (h *TagsHandler) Detail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	links, _ := h.links.ListByTag(r.Context(), slug)
+
+	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
+	keyword := ""
+	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
+		keyword = kws[0].Keyword
+	}
+
 	data := TagDetailPage{
-		BasePage: newBasePage(r, user),
-		Tag:      tag,
-		Links:    links,
+		BasePage:       newBasePage(r, user),
+		Tag:            tag,
+		Links:          links,
+		Keyword:        keyword,
+		ShowVisibility: true,
+		ShowActions:    true,
+		ShowTitle:      true,
+		ShowOwner:      user != nil && user.IsAdmin(),
+		ShowTags:       false,
 	}
 	if isHTMX(r) {
 		renderPageFragment(w, "tags/detail.html", "content", data)

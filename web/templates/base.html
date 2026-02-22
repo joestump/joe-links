@@ -99,51 +99,63 @@
             {{end}}
         </nav>
 
-        <!-- Bottom: theme toggle, tokens, user -->
+        <!-- Bottom: new link button + user menu (accordion) -->
         <div class="p-3 border-t border-base-300 space-y-1">
-            <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun icon in dark mode, moon in light mode -->
-            <!-- Governing: SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" — onclick eager swap before HTMX fires -->
-            <button class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium hover:bg-base-300 transition-colors text-left"
-                    onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
-                    hx-post="/dashboard/theme"
-                    hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
-                    hx-swap="none">
-                <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </span>
-                <span id="theme-icon-moon" style="display:{{if eq .Theme "joe-dark"}}none{{else}}block{{end}}">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                    </svg>
-                </span>
-                Toggle theme
-            </button>
-
-            <a href="/dashboard/settings/tokens"
-               data-nav="/dashboard/settings/tokens"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                </svg>
-                API Tokens
+            <!-- New link button -->
+            <a href="/dashboard/links/new" class="btn btn-primary btn-sm w-full gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                New link
             </a>
 
-            <!-- User info + sign out -->
-            <div class="flex items-center gap-2 px-3 py-2">
-                <div class="bg-neutral text-neutral-content rounded-full w-8 h-8 flex items-center justify-center shrink-0">
-                    <span class="text-xs font-medium">{{slice .User.DisplayName 0 1}}</span>
-                </div>
-                <span class="text-sm font-medium truncate flex-1">{{.User.DisplayName}}</span>
-                <form method="POST" action="/auth/logout">
-                    <button type="submit" title="Sign out" class="btn btn-ghost btn-xs btn-square">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <!-- User menu accordion (expands inline, pushing New link up) -->
+            <div id="user-menu" class="hidden border-t border-base-300 pt-1 mt-1 space-y-0.5">
+                <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun icon in dark mode, moon in light mode -->
+                <!-- Governing: SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" — onclick eager swap before HTMX fires -->
+                <button class="flex items-center gap-3 text-sm w-full px-3 py-2 rounded-lg hover:bg-base-300 text-left"
+                        onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
+                        hx-post="/dashboard/theme"
+                        hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
+                        hx-swap="none">
+                    <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                    </span>
+                    <span id="theme-icon-moon" style="display:{{if eq .Theme "joe-dark"}}none{{else}}block{{end}}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </span>
+                    Toggle theme
+                </button>
+                <a href="/dashboard/settings/tokens" class="flex items-center gap-3 text-sm px-3 py-2 rounded-lg hover:bg-base-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    API Tokens
+                </a>
+                <form method="POST" action="/auth/logout" class="w-full">
+                    <button type="submit" class="flex items-center gap-3 text-sm w-full px-3 py-2 rounded-lg hover:bg-base-300 text-left text-error">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
+                        Sign out
                     </button>
                 </form>
             </div>
+
+            <!-- User trigger row -->
+            <button type="button" id="user-menu-btn"
+                    class="flex items-center gap-2 px-3 py-2 w-full rounded-lg hover:bg-base-300 transition-colors cursor-pointer"
+                    onclick="toggleUserMenu()">
+                <div class="bg-neutral text-neutral-content rounded-full w-8 h-8 flex items-center justify-center shrink-0 text-xs font-medium">
+                    {{slice .User.DisplayName 0 1}}
+                </div>
+                <span class="text-sm font-medium truncate flex-1">{{.User.DisplayName}}</span>
+                <svg id="user-menu-chevron" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-50 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+                </svg>
+            </button>
         </div>
     </aside>
 
@@ -207,6 +219,14 @@
         }
     });
 })();
+
+// User menu accordion toggle
+function toggleUserMenu() {
+    var menu = document.getElementById('user-menu');
+    var chevron = document.getElementById('user-menu-chevron');
+    var open = menu.classList.toggle('hidden') === false;
+    if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
 </script>
 
 <!-- Governing: SPEC-0004 REQ "Shared Base Layout" — modal target for HTMX injection -->
