@@ -18,8 +18,18 @@ type Link struct {
 	URL         string    `db:"url"`
 	Title       string    `db:"title"`
 	Description string    `db:"description"`
+	Visibility  string    `db:"visibility"` // Governing: SPEC-0010 REQ "Visibility Column on Links Table"
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
+}
+
+// ShareRecord represents a row in the link_shares table.
+// Governing: SPEC-0010 REQ "Link Shares Table"
+type ShareRecord struct {
+	LinkID    string    `db:"link_id"`
+	UserID    string    `db:"user_id"`
+	SharedBy  string    `db:"shared_by"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 // LinkStore is the sqlx-backed implementation of LinkStoreIface.
@@ -46,8 +56,8 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 	defer tx.Rollback()
 
 	_, err = tx.ExecContext(ctx, `
-		INSERT INTO links (id, slug, url, title, description, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, 'public', ?, ?)
 	`, id, slug, url, title, description, now, now)
 	if err != nil {
 		if isUniqueConstraintError(err) {
@@ -346,4 +356,47 @@ func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, err
 		return nil, err
 	}
 	return links, nil
+}
+
+// HasShare checks if user has a link_shares record.
+// Governing: SPEC-0010 REQ "Link Shares Table"
+func (s *LinkStore) HasShare(ctx context.Context, linkID, userID string) (bool, error) {
+	var count int
+	err := s.db.GetContext(ctx, &count,
+		`SELECT COUNT(*) FROM link_shares WHERE link_id = ? AND user_id = ?`, linkID, userID)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// AddShare creates a link_shares record.
+// Governing: SPEC-0010 REQ "Link Shares Table"
+func (s *LinkStore) AddShare(ctx context.Context, linkID, userID, sharedBy string) error {
+	_, err := s.db.ExecContext(ctx, `
+		INSERT INTO link_shares (link_id, user_id, shared_by) VALUES (?, ?, ?)
+	`, linkID, userID, sharedBy)
+	return err
+}
+
+// RemoveShare deletes a link_shares record.
+// Governing: SPEC-0010 REQ "Link Shares Table"
+func (s *LinkStore) RemoveShare(ctx context.Context, linkID, userID string) error {
+	_, err := s.db.ExecContext(ctx, `
+		DELETE FROM link_shares WHERE link_id = ? AND user_id = ?
+	`, linkID, userID)
+	return err
+}
+
+// ListShares returns all users with access to a link.
+// Governing: SPEC-0010 REQ "Link Shares Table"
+func (s *LinkStore) ListShares(ctx context.Context, linkID string) ([]ShareRecord, error) {
+	var shares []ShareRecord
+	err := s.db.SelectContext(ctx, &shares, `
+		SELECT * FROM link_shares WHERE link_id = ? ORDER BY created_at ASC
+	`, linkID)
+	if err != nil {
+		return nil, err
+	}
+	return shares, nil
 }

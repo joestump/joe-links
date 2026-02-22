@@ -21,6 +21,10 @@ var (
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	ErrDuplicateVariable = errors.New("duplicate variable name in URL template")
 
+	// ErrInvalidVisibility is returned when a visibility value is not one of public, private, secure.
+	// Governing: SPEC-0010 REQ "Visibility Column on Links Table"
+	ErrInvalidVisibility = errors.New("visibility must be one of: public, private, secure")
+
 	slugRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
 
 	// VarPlaceholderRe matches $varname placeholders in URL templates.
@@ -64,4 +68,15 @@ func ValidateURLVariables(url string) error {
 		seen[v] = true
 	}
 	return nil
+}
+
+// ValidateVisibility checks that v is one of the allowed visibility values.
+// Governing: SPEC-0010 REQ "Visibility Column on Links Table"
+func ValidateVisibility(v string) error {
+	switch v {
+	case "public", "private", "secure":
+		return nil
+	default:
+		return ErrInvalidVisibility
+	}
 }
