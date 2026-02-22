@@ -39,6 +39,19 @@ func (s *KeywordStore) List(ctx context.Context) ([]*Keyword, error) {
 	return keywords, nil
 }
 
+// GetByID returns the keyword matching the given ID, or ErrNotFound.
+func (s *KeywordStore) GetByID(ctx context.Context, id string) (*Keyword, error) {
+	var k Keyword
+	err := s.db.GetContext(ctx, &k, `SELECT * FROM keywords WHERE id = ?`, id)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &k, nil
+}
+
 // GetByKeyword returns the keyword matching the given keyword string, or ErrNotFound.
 func (s *KeywordStore) GetByKeyword(ctx context.Context, keyword string) (*Keyword, error) {
 	var k Keyword

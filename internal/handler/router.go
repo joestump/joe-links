@@ -104,7 +104,8 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Admin routes (require admin role)
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — admin group with RequireAdmin
-	admin := NewAdminHandler(deps.LinkStore, deps.UserStore)
+	admin := NewAdminHandler(deps.LinkStore, deps.UserStore, deps.KeywordStore)
+	keywordsHandler := NewKeywordsHandler(deps.KeywordStore)
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
 		r.Use(deps.AuthMiddleware.RequireRole("admin"))
@@ -112,6 +113,11 @@ func NewRouter(deps Deps) http.Handler {
 		r.Get("/admin/users", admin.Users)
 		r.Put("/admin/users/{id}/role", admin.UpdateRole)
 		r.Get("/admin/links", admin.Links)
+
+		// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
+		r.Get("/admin/keywords", keywordsHandler.Index)
+		r.Post("/admin/keywords", keywordsHandler.Create)
+		r.Delete("/admin/keywords/{id}", keywordsHandler.Delete)
 	})
 
 	// Swagger UI — no auth required; MUST be before slug catch-all.

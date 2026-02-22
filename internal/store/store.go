@@ -44,6 +44,7 @@ type TagStoreIface interface {
 // Governing: ADR-0011 REQ "Keyword Host Discovery"
 type KeywordStoreIface interface {
 	List(ctx context.Context) ([]*Keyword, error)
+	GetByID(ctx context.Context, id string) (*Keyword, error)
 	GetByKeyword(ctx context.Context, keyword string) (*Keyword, error)
 	Create(ctx context.Context, keyword, urlTemplate, description string) (*Keyword, error)
 	Update(ctx context.Context, id, keyword, urlTemplate, description string) (*Keyword, error)
