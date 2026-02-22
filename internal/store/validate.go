@@ -17,7 +17,15 @@ var (
 	// ErrSlugTaken is returned when a slug already exists in the database.
 	ErrSlugTaken = errors.New("slug is already taken")
 
+	// ErrDuplicateVariable is returned when a URL template contains duplicate $varname placeholders.
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	ErrDuplicateVariable = errors.New("duplicate variable name in URL template")
+
 	slugRe = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
+
+	// VarPlaceholderRe matches $varname placeholders in URL templates.
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	VarPlaceholderRe = regexp.MustCompile(`\$[a-z][a-z0-9_]*`)
 
 	reservedSlugs = map[string]bool{
 		"auth":      true,
@@ -36,6 +44,24 @@ func ValidateSlugFormat(slug string) error {
 	}
 	if reservedSlugs[slug] {
 		return fmt.Errorf("%w: %q", ErrSlugReserved, slug)
+	}
+	return nil
+}
+
+// ValidateURLVariables checks that any $varname placeholders in url are unique.
+// Returns nil if the URL contains no variables or all variable names are distinct.
+// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+func ValidateURLVariables(url string) error {
+	vars := VarPlaceholderRe.FindAllString(url, -1)
+	if len(vars) <= 1 {
+		return nil
+	}
+	seen := make(map[string]bool, len(vars))
+	for _, v := range vars {
+		if seen[v] {
+			return fmt.Errorf("%w: %s", ErrDuplicateVariable, v)
+		}
+		seen[v] = true
 	}
 	return nil
 }
