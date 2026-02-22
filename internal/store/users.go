@@ -204,7 +204,7 @@ func (s *UserStore) DeleteUserWithLinks(ctx context.Context, targetID, adminID, 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() { _ = tx.Rollback() }()
 
 	switch linkAction {
 	case "reassign":

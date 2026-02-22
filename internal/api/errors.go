@@ -17,7 +17,7 @@ type errorBody struct {
 func writeError(w http.ResponseWriter, status int, message, code string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(errorBody{Error: message, Code: code})
+	_ = json.NewEncoder(w).Encode(errorBody{Error: message, Code: code})
 }
 
 // isDBLockError reports whether err is a database locking/busy error.
@@ -38,5 +38,5 @@ func isDBLockError(err error) bool {
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(v)
+	_ = json.NewEncoder(w).Encode(v)
 }
