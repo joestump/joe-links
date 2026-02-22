@@ -9,7 +9,7 @@
     <a href="/admin" class="btn btn-ghost btn-sm">← Admin</a>
 </div>
 
-{{if .Users}}
+{{if .Rows}}
 <div class="overflow-x-auto">
     <table class="table">
         <thead>
@@ -19,10 +19,11 @@
                 <th>Provider</th>
                 <th>Role</th>
                 <th>Joined</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            {{range .Users}}
+            {{range .Rows}}
             {{template "user_row" .}}
             {{end}}
         </tbody>
@@ -35,6 +36,7 @@
 
 {{define "user_row"}}
 <!-- Governing: SPEC-0004 REQ "Admin Dashboard" — user row fragment for HTMX role toggle -->
+<!-- Governing: SPEC-0011 REQ "Admin User Deletion with Link Handling" — delete button hidden for self -->
 <tr id="user-{{.ID}}">
     <td>
         <div class="flex items-center gap-2">
@@ -62,5 +64,16 @@
         </select>
     </td>
     <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+    <td>
+        {{if ne .ID .CurrentUserID}}
+        <!-- Governing: SPEC-0011 REQ "Admin User Deletion with Link Handling" -->
+        <button class="btn btn-ghost btn-xs text-error"
+                hx-get="/admin/users/{{.ID}}/confirm-delete"
+                hx-target="#modal"
+                hx-swap="innerHTML">
+            Delete
+        </button>
+        {{end}}
+    </td>
 </tr>
 {{end}}

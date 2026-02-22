@@ -111,3 +111,62 @@ func (s *UserStore) UpdateRole(ctx context.Context, id, role string) (*User, err
 	}
 	return s.GetByID(ctx, id)
 }
+
+// CountPrimaryLinks returns the number of links where userID is the primary owner.
+// Governing: SPEC-0011 REQ "Admin User Deletion with Link Handling", ADR-0005
+func (s *UserStore) CountPrimaryLinks(ctx context.Context, userID string) (int, error) {
+	var count int
+	err := s.db.GetContext(ctx, &count,
+		`SELECT COUNT(*) FROM link_owners WHERE user_id = ? AND is_primary = 1`, userID)
+	return count, err
+}
+
+// DeleteUserWithLinks deletes a user and handles their links according to linkAction.
+// linkAction "reassign": transfers primary ownership to adminID, removes co-ownership rows.
+// linkAction "delete": deletes links where user is sole primary owner, removes co-ownership rows.
+// The user record deletion cascades to api_tokens, sessions, and link_owners via FK constraints.
+// Governing: SPEC-0011 REQ "Admin User Deletion with Link Handling", REQ "Admin User Deletion Endpoint", ADR-0005
+func (s *UserStore) DeleteUserWithLinks(ctx context.Context, targetID, adminID, linkAction string) error {
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	switch linkAction {
+	case "reassign":
+		// Transfer primary ownership to admin
+		_, err = tx.ExecContext(ctx,
+			`UPDATE link_owners SET user_id = ? WHERE user_id = ? AND is_primary = 1`,
+			adminID, targetID)
+		if err != nil {
+			return err
+		}
+	case "delete":
+		// Delete links where target is sole primary owner
+		_, err = tx.ExecContext(ctx, `
+			DELETE FROM links WHERE id IN (
+				SELECT link_id FROM link_owners
+				WHERE user_id = ? AND is_primary = 1
+			)`, targetID)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Remove any remaining co-ownership rows for this user (non-primary).
+	// Primary rows are handled above: reassigned or cascade-deleted with the link.
+	_, err = tx.ExecContext(ctx,
+		`DELETE FROM link_owners WHERE user_id = ? AND is_primary = 0`, targetID)
+	if err != nil {
+		return err
+	}
+
+	// Delete the user. CASCADE handles api_tokens and sessions.
+	_, err = tx.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, targetID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
