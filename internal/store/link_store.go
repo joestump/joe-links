@@ -44,6 +44,9 @@ func NewLinkStore(db *sqlx.DB, owns *OwnershipStore, tags *TagStore) *LinkStore 
 	return &LinkStore{db: db, owns: owns, tags: tags}
 }
 
+// q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
+func (s *LinkStore) q(query string) string { return s.db.Rebind(query) }
+
 // Create inserts a new link and registers ownerID as the primary owner.
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description, visibility string) (*Link, error) {
@@ -59,10 +62,10 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	_, err = tx.ExecContext(ctx, `
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
 		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-	`, id, slug, url, title, description, visibility, now, now)
+	`), id, slug, url, title, description, visibility, now, now)
 	if err != nil {
 		if isUniqueConstraintError(err) {
 			return nil, ErrSlugTaken
@@ -70,9 +73,9 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 		return nil, err
 	}
 
-	_, err = tx.ExecContext(ctx, `
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
 		INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 1)
-	`, id, ownerID)
+	`), id, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +91,7 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 // Governing: SPEC-0002 REQ "Link Store Interface" — WHEN GetBySlug called with missing slug THEN returns sentinel ErrNotFound
 func (s *LinkStore) GetBySlug(ctx context.Context, slug string) (*Link, error) {
 	var l Link
-	err := s.db.GetContext(ctx, &l, `SELECT * FROM links WHERE slug = ?`, slug)
+	err := s.db.GetContext(ctx, &l, s.q(`SELECT * FROM links WHERE slug = ?`), slug)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -101,7 +104,7 @@ func (s *LinkStore) GetBySlug(ctx context.Context, slug string) (*Link, error) {
 // GetByID returns the link matching id, or ErrNotFound.
 func (s *LinkStore) GetByID(ctx context.Context, id string) (*Link, error) {
 	var l Link
-	err := s.db.GetContext(ctx, &l, `SELECT * FROM links WHERE id = ?`, id)
+	err := s.db.GetContext(ctx, &l, s.q(`SELECT * FROM links WHERE id = ?`), id)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -115,12 +118,12 @@ func (s *LinkStore) GetByID(ctx context.Context, id string) (*Link, error) {
 // Governing: SPEC-0002 REQ "Link Store Interface" — WHEN ListByOwner called with user ID THEN returns all links where user appears in link_owners
 func (s *LinkStore) ListByOwner(ctx context.Context, ownerID string) ([]*Link, error) {
 	var links []*Link
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.* FROM links l
 		INNER JOIN link_owners lo ON lo.link_id = l.id
 		WHERE lo.user_id = ?
 		ORDER BY l.slug ASC
-	`, ownerID)
+	`), ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,13 +149,13 @@ func (s *LinkStore) SearchByOwner(ctx context.Context, ownerID, q string) ([]*Li
 	}
 	var links []*Link
 	pattern := "%" + q + "%"
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.* FROM links l
 		INNER JOIN link_owners lo ON lo.link_id = l.id
 		WHERE lo.user_id = ?
 		  AND (l.slug LIKE ? OR l.url LIKE ? OR l.description LIKE ?)
 		ORDER BY l.slug ASC
-	`, ownerID, pattern, pattern, pattern)
+	`), ownerID, pattern, pattern, pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -168,11 +171,11 @@ func (s *LinkStore) SearchAll(ctx context.Context, q string) ([]*Link, error) {
 	}
 	var links []*Link
 	pattern := "%" + q + "%"
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT * FROM links
 		WHERE slug LIKE ? OR url LIKE ? OR description LIKE ?
 		ORDER BY slug ASC
-	`, pattern, pattern, pattern)
+	`), pattern, pattern, pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -183,14 +186,14 @@ func (s *LinkStore) SearchAll(ctx context.Context, q string) ([]*Link, error) {
 // Governing: SPEC-0004 REQ "User Dashboard" — tag filter
 func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug string) ([]*Link, error) {
 	var links []*Link
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.* FROM links l
 		INNER JOIN link_owners lo ON lo.link_id = l.id
 		INNER JOIN link_tags lt ON lt.link_id = l.id
 		INNER JOIN tags t ON t.id = lt.tag_id
 		WHERE lo.user_id = ? AND t.slug = ?
 		ORDER BY l.slug ASC
-	`, ownerID, tagSlug)
+	`), ownerID, tagSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -202,9 +205,9 @@ func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug stri
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 func (s *LinkStore) Update(ctx context.Context, id, url, title, description, visibility string) (*Link, error) {
 	now := time.Now().UTC()
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.db.ExecContext(ctx, s.q(`
 		UPDATE links SET url = ?, title = ?, description = ?, visibility = ?, updated_at = ? WHERE id = ?
-	`, url, title, description, visibility, now, id)
+	`), url, title, description, visibility, now, id)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +218,7 @@ func (s *LinkStore) Update(ctx context.Context, id, url, title, description, vis
 // Governing: SPEC-0010 REQ "Visibility Column on Links Table", REQ "Admin Visibility Override"
 func (s *LinkStore) UpdateVisibility(ctx context.Context, id, visibility string) error {
 	now := time.Now().UTC()
-	_, err := s.db.ExecContext(ctx, `UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?`,
+	_, err := s.db.ExecContext(ctx, s.q(`UPDATE links SET visibility = ?, updated_at = ? WHERE id = ?`),
 		visibility, now, id)
 	return err
 }
@@ -224,13 +227,13 @@ func (s *LinkStore) UpdateVisibility(ctx context.Context, id, visibility string)
 // Governing: SPEC-0010 REQ "REST API Visibility Field"
 func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*Link, error) {
 	var links []*Link
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT DISTINCT l.* FROM links l
 		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.user_id = ?
 		LEFT JOIN link_shares ls ON ls.link_id = l.id AND ls.user_id = ?
 		WHERE lo.user_id IS NOT NULL OR ls.user_id IS NOT NULL
 		ORDER BY l.slug ASC
-	`, userID, userID)
+	`), userID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +243,7 @@ func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*
 
 // Delete removes a link by ID. CASCADE deletes handle link_owners and link_tags.
 func (s *LinkStore) Delete(ctx context.Context, id string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM links WHERE id = ?`, id)
+	_, err := s.db.ExecContext(ctx, s.q(`DELETE FROM links WHERE id = ?`), id)
 	return err
 }
 
@@ -268,7 +271,7 @@ func (s *LinkStore) SetTags(ctx context.Context, linkID string, tagNames []strin
 	defer func() { _ = tx.Rollback() }()
 
 	// Clear existing tags for this link.
-	_, err = tx.ExecContext(ctx, `DELETE FROM link_tags WHERE link_id = ?`, linkID)
+	_, err = tx.ExecContext(ctx, tx.Rebind(`DELETE FROM link_tags WHERE link_id = ?`), linkID)
 	if err != nil {
 		return err
 	}
@@ -279,9 +282,9 @@ func (s *LinkStore) SetTags(ctx context.Context, linkID string, tagNames []strin
 		if err != nil {
 			return err
 		}
-		_, err = tx.ExecContext(ctx, `
+		_, err = tx.ExecContext(ctx, tx.Rebind(`
 			INSERT INTO link_tags (link_id, tag_id) VALUES (?, ?)
-		`, linkID, tag.ID)
+		`), linkID, tag.ID)
 		if err != nil {
 			return err
 		}
@@ -293,12 +296,12 @@ func (s *LinkStore) SetTags(ctx context.Context, linkID string, tagNames []strin
 // ListTags returns all tags associated with a link.
 func (s *LinkStore) ListTags(ctx context.Context, linkID string) ([]*Tag, error) {
 	var tags []*Tag
-	err := s.db.SelectContext(ctx, &tags, `
+	err := s.db.SelectContext(ctx, &tags, s.q(`
 		SELECT t.* FROM tags t
 		INNER JOIN link_tags lt ON lt.tag_id = t.id
 		WHERE lt.link_id = ?
 		ORDER BY t.name ASC
-	`, linkID)
+	`), linkID)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +348,7 @@ func (s *LinkStore) ListAllAdmin(ctx context.Context, q string) ([]*AdminLink, e
 	query += ` GROUP BY l.id ORDER BY l.slug ASC`
 
 	var links []*AdminLink
-	err := s.db.SelectContext(ctx, &links, query, args...)
+	err := s.db.SelectContext(ctx, &links, s.q(query), args...)
 	if err != nil {
 		return nil, err
 	}
@@ -356,7 +359,7 @@ func (s *LinkStore) ListAllAdmin(ctx context.Context, q string) ([]*AdminLink, e
 // Governing: SPEC-0011 REQ "Admin Inline Link Editing"
 func (s *LinkStore) GetAdminLink(ctx context.Context, id string) (*AdminLink, error) {
 	var link AdminLink
-	err := s.db.GetContext(ctx, &link, `
+	err := s.db.GetContext(ctx, &link, s.q(`
 		SELECT l.*,
 			COALESCE(GROUP_CONCAT(DISTINCT u.display_name), '') AS owners,
 			COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags
@@ -366,7 +369,7 @@ func (s *LinkStore) GetAdminLink(ctx context.Context, id string) (*AdminLink, er
 		LEFT JOIN link_tags lt ON lt.link_id = l.id
 		LEFT JOIN tags t ON t.id = lt.tag_id
 		WHERE l.id = ?
-		GROUP BY l.id`, id)
+		GROUP BY l.id`), id)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -379,13 +382,13 @@ func (s *LinkStore) GetAdminLink(ctx context.Context, id string) (*AdminLink, er
 // ListByTag returns all links that have the given tag slug.
 func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, error) {
 	var links []*Link
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.* FROM links l
 		INNER JOIN link_tags lt ON lt.link_id = l.id
 		INNER JOIN tags t ON t.id = lt.tag_id
 		WHERE t.slug = ?
 		ORDER BY l.slug ASC
-	`, tagSlug)
+	`), tagSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -449,7 +452,7 @@ func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, pag
 	// Count total matching rows.
 	countQuery := `SELECT COUNT(DISTINCT l.id) FROM links l ` + baseWhere
 	var total int
-	if err := s.db.GetContext(ctx, &total, countQuery, args...); err != nil {
+	if err := s.db.GetContext(ctx, &total, s.q(countQuery), args...); err != nil {
 		return nil, 0, err
 	}
 
@@ -476,7 +479,7 @@ func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, pag
 	fetchArgs = append(fetchArgs, perPage, offset)
 
 	var links []*AdminLink
-	if err := s.db.SelectContext(ctx, &links, query, fetchArgs...); err != nil {
+	if err := s.db.SelectContext(ctx, &links, s.q(query), fetchArgs...); err != nil {
 		return nil, 0, err
 	}
 	return links, total, nil
@@ -486,12 +489,12 @@ func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, pag
 // Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
 func (s *LinkStore) ListSharedWithUser(ctx context.Context, userID string) ([]*Link, error) {
 	var links []*Link
-	err := s.db.SelectContext(ctx, &links, `
+	err := s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.* FROM links l
 		INNER JOIN link_shares ls ON ls.link_id = l.id
 		WHERE ls.user_id = ?
 		ORDER BY l.slug ASC
-	`, userID)
+	`), userID)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +506,7 @@ func (s *LinkStore) ListSharedWithUser(ctx context.Context, userID string) ([]*L
 func (s *LinkStore) HasShare(ctx context.Context, linkID, userID string) (bool, error) {
 	var count int
 	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*) FROM link_shares WHERE link_id = ? AND user_id = ?`, linkID, userID)
+		s.q(`SELECT COUNT(*) FROM link_shares WHERE link_id = ? AND user_id = ?`), linkID, userID)
 	if err != nil {
 		return false, err
 	}
@@ -513,18 +516,18 @@ func (s *LinkStore) HasShare(ctx context.Context, linkID, userID string) (bool, 
 // AddShare creates a link_shares record.
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) AddShare(ctx context.Context, linkID, userID, sharedBy string) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.db.ExecContext(ctx, s.q(`
 		INSERT INTO link_shares (link_id, user_id, shared_by) VALUES (?, ?, ?)
-	`, linkID, userID, sharedBy)
+	`), linkID, userID, sharedBy)
 	return err
 }
 
 // RemoveShare deletes a link_shares record.
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) RemoveShare(ctx context.Context, linkID, userID string) error {
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.db.ExecContext(ctx, s.q(`
 		DELETE FROM link_shares WHERE link_id = ? AND user_id = ?
-	`, linkID, userID)
+	`), linkID, userID)
 	return err
 }
 
@@ -542,18 +545,18 @@ func (p *PublicLink) Excerpt(maxLen int) string {
 func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, perPage int) ([]PublicLink, int, error) {
 	// Count total matching links
 	var total int
-	err := s.db.GetContext(ctx, &total, `
+	err := s.db.GetContext(ctx, &total, s.q(`
 		SELECT COUNT(DISTINCT l.id) FROM links l
 		JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
 		WHERE l.visibility = 'public' AND lo.user_id = ?
-	`, userID)
+	`), userID)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * perPage
 	var links []PublicLink
-	err = s.db.SelectContext(ctx, &links, `
+	err = s.db.SelectContext(ctx, &links, s.q(`
 		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
 		       u.display_name AS owner_display_name,
 		       u.display_name_slug AS owner_display_name_slug,
@@ -568,7 +571,7 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 		GROUP BY l.id
 		ORDER BY l.created_at DESC
 		LIMIT ? OFFSET ?
-	`, userID, perPage, offset)
+	`), userID, perPage, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -580,9 +583,9 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) ListShares(ctx context.Context, linkID string) ([]ShareRecord, error) {
 	var shares []ShareRecord
-	err := s.db.SelectContext(ctx, &shares, `
+	err := s.db.SelectContext(ctx, &shares, s.q(`
 		SELECT * FROM link_shares WHERE link_id = ? ORDER BY created_at ASC
-	`, linkID)
+	`), linkID)
 	if err != nil {
 		return nil, err
 	}

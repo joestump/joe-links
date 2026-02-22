@@ -53,11 +53,14 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 	return &UserStore{db: db}
 }
 
+// q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
+func (s *UserStore) q(query string) string { return s.db.Rebind(query) }
+
 // GetByDisplayNameSlug returns the user matching the given display_name_slug, or sql.ErrNoRows.
 // Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
 func (s *UserStore) GetByDisplayNameSlug(ctx context.Context, slug string) (*User, error) {
 	var u User
-	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE display_name_slug = ?`, slug)
+	err := s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE display_name_slug = ?`), slug)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +79,7 @@ func (s *UserStore) resolveUniqueSlug(ctx context.Context, displayName, excludeU
 	for {
 		var count int
 		err := s.db.GetContext(ctx, &count,
-			`SELECT COUNT(*) FROM users WHERE display_name_slug = ? AND id != ?`, candidate, excludeUserID)
+			s.q(`SELECT COUNT(*) FROM users WHERE display_name_slug = ? AND id != ?`), candidate, excludeUserID)
 		if err != nil {
 			return "", err
 		}
@@ -109,7 +112,7 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	// Look up existing user to get their ID for slug uniqueness check.
 	var existingID string
 	var existing User
-	err := s.db.GetContext(ctx, &existing, `SELECT * FROM users WHERE provider = ? AND subject = ?`, provider, subject)
+	err := s.db.GetContext(ctx, &existing, s.q(`SELECT * FROM users WHERE provider = ? AND subject = ?`), provider, subject)
 	if err == nil {
 		existingID = existing.ID
 	}
@@ -123,7 +126,7 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	// Try INSERT first; if the (provider, subject) pair already exists, UPDATE instead.
 	// The ON CONFLICT ... DO UPDATE syntax preserves the existing role for returning users
 	// because we don't include role in the UPDATE clause. For new users, role is set above.
-	_, err = s.db.ExecContext(ctx, `
+	_, err = s.db.ExecContext(ctx, s.q(`
 		INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT (provider, subject) DO UPDATE SET
@@ -131,13 +134,13 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 			display_name = excluded.display_name,
 			display_name_slug = excluded.display_name_slug,
 			updated_at = excluded.updated_at
-	`, id, provider, subject, email, displayName, slug, role, now, now)
+	`), id, provider, subject, email, displayName, slug, role, now, now)
 	if err != nil {
 		return nil, err
 	}
 
 	var u User
-	err = s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE provider = ? AND subject = ?`, provider, subject)
+	err = s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE provider = ? AND subject = ?`), provider, subject)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +150,7 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 // GetByEmail returns the user matching email, or ErrNotFound.
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
-	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE email = ?`, email)
+	err := s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE email = ?`), email)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +159,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 
 func (s *UserStore) GetByID(ctx context.Context, id string) (*User, error) {
 	var u User
-	err := s.db.GetContext(ctx, &u, `SELECT * FROM users WHERE id = ?`, id)
+	err := s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE id = ?`), id)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +180,7 @@ func (s *UserStore) ListAll(ctx context.Context) ([]*User, error) {
 // UpdateRole sets the role for the given user and returns the updated record.
 // Governing: SPEC-0004 REQ "Admin Dashboard" — inline role toggle
 func (s *UserStore) UpdateRole(ctx context.Context, id, role string) (*User, error) {
-	_, err := s.db.ExecContext(ctx, `UPDATE users SET role = ?, updated_at = ? WHERE id = ?`,
+	_, err := s.db.ExecContext(ctx, s.q(`UPDATE users SET role = ?, updated_at = ? WHERE id = ?`),
 		role, time.Now().UTC(), id)
 	if err != nil {
 		return nil, err
@@ -190,7 +193,7 @@ func (s *UserStore) UpdateRole(ctx context.Context, id, role string) (*User, err
 func (s *UserStore) CountPrimaryLinks(ctx context.Context, userID string) (int, error) {
 	var count int
 	err := s.db.GetContext(ctx, &count,
-		`SELECT COUNT(*) FROM link_owners WHERE user_id = ? AND is_primary = 1`, userID)
+		s.q(`SELECT COUNT(*) FROM link_owners WHERE user_id = ? AND is_primary = 1`), userID)
 	return count, err
 }
 
@@ -210,18 +213,18 @@ func (s *UserStore) DeleteUserWithLinks(ctx context.Context, targetID, adminID, 
 	case "reassign":
 		// Transfer primary ownership to admin
 		_, err = tx.ExecContext(ctx,
-			`UPDATE link_owners SET user_id = ? WHERE user_id = ? AND is_primary = 1`,
+			tx.Rebind(`UPDATE link_owners SET user_id = ? WHERE user_id = ? AND is_primary = 1`),
 			adminID, targetID)
 		if err != nil {
 			return err
 		}
 	case "delete":
 		// Delete links where target is sole primary owner
-		_, err = tx.ExecContext(ctx, `
+		_, err = tx.ExecContext(ctx, tx.Rebind(`
 			DELETE FROM links WHERE id IN (
 				SELECT link_id FROM link_owners
 				WHERE user_id = ? AND is_primary = 1
-			)`, targetID)
+			)`), targetID)
 		if err != nil {
 			return err
 		}
@@ -230,13 +233,13 @@ func (s *UserStore) DeleteUserWithLinks(ctx context.Context, targetID, adminID, 
 	// Remove any remaining co-ownership rows for this user (non-primary).
 	// Primary rows are handled above: reassigned or cascade-deleted with the link.
 	_, err = tx.ExecContext(ctx,
-		`DELETE FROM link_owners WHERE user_id = ? AND is_primary = 0`, targetID)
+		tx.Rebind(`DELETE FROM link_owners WHERE user_id = ? AND is_primary = 0`), targetID)
 	if err != nil {
 		return err
 	}
 
 	// Delete the user. CASCADE handles api_tokens and sessions.
-	_, err = tx.ExecContext(ctx, `DELETE FROM users WHERE id = ?`, targetID)
+	_, err = tx.ExecContext(ctx, tx.Rebind(`DELETE FROM users WHERE id = ?`), targetID)
 	if err != nil {
 		return err
 	}

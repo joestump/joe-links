@@ -25,11 +25,14 @@ func NewOwnershipStore(db *sqlx.DB) *OwnershipStore {
 	return &OwnershipStore{db: db}
 }
 
+// q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
+func (s *OwnershipStore) q(query string) string { return s.db.Rebind(query) }
+
 // AddOwner adds userID as a co-owner (is_primary=false) of linkID.
 // Returns ErrAlreadyOwner if already present.
 func (s *OwnershipStore) AddOwner(linkID, userID string) error {
 	_, err := s.db.Exec(
-		`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 0)`,
+		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 0)`),
 		linkID, userID,
 	)
 	if err != nil {
@@ -44,7 +47,7 @@ func (s *OwnershipStore) AddOwner(linkID, userID string) error {
 // AddPrimaryOwner adds userID as the primary owner during link creation.
 func (s *OwnershipStore) AddPrimaryOwner(linkID, userID string) error {
 	_, err := s.db.Exec(
-		`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 1)`,
+		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 1)`),
 		linkID, userID,
 	)
 	return err
@@ -54,7 +57,7 @@ func (s *OwnershipStore) AddPrimaryOwner(linkID, userID string) error {
 func (s *OwnershipStore) RemoveOwner(linkID, userID string) error {
 	var isPrimary bool
 	err := s.db.QueryRow(
-		`SELECT is_primary FROM link_owners WHERE link_id = ? AND user_id = ?`,
+		s.q(`SELECT is_primary FROM link_owners WHERE link_id = ? AND user_id = ?`),
 		linkID, userID,
 	).Scan(&isPrimary)
 	if err == sql.ErrNoRows {
@@ -66,7 +69,7 @@ func (s *OwnershipStore) RemoveOwner(linkID, userID string) error {
 	if isPrimary {
 		return ErrPrimaryOwnerImmutable
 	}
-	_, err = s.db.Exec(`DELETE FROM link_owners WHERE link_id = ? AND user_id = ?`, linkID, userID)
+	_, err = s.db.Exec(s.q(`DELETE FROM link_owners WHERE link_id = ? AND user_id = ?`), linkID, userID)
 	return err
 }
 
@@ -74,7 +77,7 @@ func (s *OwnershipStore) RemoveOwner(linkID, userID string) error {
 func (s *OwnershipStore) IsOwner(linkID, userID string) (bool, error) {
 	var count int
 	err := s.db.QueryRow(
-		`SELECT COUNT(*) FROM link_owners WHERE link_id = ? AND user_id = ?`,
+		s.q(`SELECT COUNT(*) FROM link_owners WHERE link_id = ? AND user_id = ?`),
 		linkID, userID,
 	).Scan(&count)
 	return count > 0, err
@@ -83,7 +86,7 @@ func (s *OwnershipStore) IsOwner(linkID, userID string) (bool, error) {
 // ListOwners returns all user IDs that own linkID.
 func (s *OwnershipStore) ListOwners(linkID string) ([]string, error) {
 	var owners []string
-	err := s.db.Select(&owners, `SELECT user_id FROM link_owners WHERE link_id = ?`, linkID)
+	err := s.db.Select(&owners, s.q(`SELECT user_id FROM link_owners WHERE link_id = ?`), linkID)
 	return owners, err
 }
 
@@ -96,12 +99,12 @@ type OwnerInfo struct {
 // ListOwnerUsers returns full user records for all owners of a link.
 func (s *OwnershipStore) ListOwnerUsers(linkID string) ([]*OwnerInfo, error) {
 	var owners []*OwnerInfo
-	err := s.db.Select(&owners, `
+	err := s.db.Select(&owners, s.q(`
 		SELECT u.*, lo.is_primary FROM users u
 		INNER JOIN link_owners lo ON lo.user_id = u.id
 		WHERE lo.link_id = ?
 		ORDER BY lo.is_primary DESC, u.display_name ASC
-	`, linkID)
+	`), linkID)
 	return owners, err
 }
 

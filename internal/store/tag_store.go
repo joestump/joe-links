@@ -32,6 +32,9 @@ func NewTagStore(db *sqlx.DB) *TagStore {
 	return &TagStore{db: db}
 }
 
+// q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
+func (s *TagStore) q(query string) string { return s.db.Rebind(query) }
+
 // DeriveTagSlug derives a URL-safe slug from a tag name:
 // lowercase, replace spaces/underscores with hyphens, strip non-[a-z0-9-].
 // Governing: ADR-0005 (tag slug derivation)
@@ -53,7 +56,7 @@ func (s *TagStore) Upsert(ctx context.Context, name string) (*Tag, error) {
 	slug := DeriveTagSlug(name)
 
 	var existing Tag
-	err := s.db.GetContext(ctx, &existing, `SELECT * FROM tags WHERE slug = ?`, slug)
+	err := s.db.GetContext(ctx, &existing, s.q(`SELECT * FROM tags WHERE slug = ?`), slug)
 	if err == nil {
 		return &existing, nil
 	}
@@ -63,13 +66,13 @@ func (s *TagStore) Upsert(ctx context.Context, name string) (*Tag, error) {
 
 	id := uuid.New().String()
 	now := time.Now().UTC()
-	_, err = s.db.ExecContext(ctx, `
+	_, err = s.db.ExecContext(ctx, s.q(`
 		INSERT INTO tags (id, name, slug, created_at) VALUES (?, ?, ?, ?)
-	`, id, strings.TrimSpace(name), slug, now)
+	`), id, strings.TrimSpace(name), slug, now)
 	if err != nil {
 		// Race condition: another goroutine inserted first. Re-fetch.
 		if isUniqueConstraintError(err) {
-			err = s.db.GetContext(ctx, &existing, `SELECT * FROM tags WHERE slug = ?`, slug)
+			err = s.db.GetContext(ctx, &existing, s.q(`SELECT * FROM tags WHERE slug = ?`), slug)
 			if err != nil {
 				return nil, err
 			}
@@ -86,7 +89,7 @@ func (s *TagStore) upsertTx(ctx context.Context, tx *sqlx.Tx, name string) (*Tag
 	slug := DeriveTagSlug(name)
 
 	var existing Tag
-	err := tx.GetContext(ctx, &existing, `SELECT * FROM tags WHERE slug = ?`, slug)
+	err := tx.GetContext(ctx, &existing, tx.Rebind(`SELECT * FROM tags WHERE slug = ?`), slug)
 	if err == nil {
 		return &existing, nil
 	}
@@ -96,12 +99,12 @@ func (s *TagStore) upsertTx(ctx context.Context, tx *sqlx.Tx, name string) (*Tag
 
 	id := uuid.New().String()
 	now := time.Now().UTC()
-	_, err = tx.ExecContext(ctx, `
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
 		INSERT INTO tags (id, name, slug, created_at) VALUES (?, ?, ?, ?)
-	`, id, strings.TrimSpace(name), slug, now)
+	`), id, strings.TrimSpace(name), slug, now)
 	if err != nil {
 		if isUniqueConstraintError(err) {
-			err = tx.GetContext(ctx, &existing, `SELECT * FROM tags WHERE slug = ?`, slug)
+			err = tx.GetContext(ctx, &existing, tx.Rebind(`SELECT * FROM tags WHERE slug = ?`), slug)
 			if err != nil {
 				return nil, err
 			}
@@ -118,9 +121,9 @@ func (s *TagStore) upsertTx(ctx context.Context, tx *sqlx.Tx, name string) (*Tag
 func (s *TagStore) SearchByPrefix(ctx context.Context, prefix string) ([]*Tag, error) {
 	var tags []*Tag
 	pattern := prefix + "%"
-	err := s.db.SelectContext(ctx, &tags, `
+	err := s.db.SelectContext(ctx, &tags, s.q(`
 		SELECT * FROM tags WHERE name LIKE ? ORDER BY name ASC LIMIT 10
-	`, pattern)
+	`), pattern)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +133,7 @@ func (s *TagStore) SearchByPrefix(ctx context.Context, prefix string) ([]*Tag, e
 // GetBySlug returns the tag matching slug, or ErrNotFound.
 func (s *TagStore) GetBySlug(ctx context.Context, slug string) (*Tag, error) {
 	var t Tag
-	err := s.db.GetContext(ctx, &t, `SELECT * FROM tags WHERE slug = ?`, slug)
+	err := s.db.GetContext(ctx, &t, s.q(`SELECT * FROM tags WHERE slug = ?`), slug)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}

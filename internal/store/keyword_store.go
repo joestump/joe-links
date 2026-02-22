@@ -29,6 +29,9 @@ func NewKeywordStore(db *sqlx.DB) *KeywordStore {
 	return &KeywordStore{db: db}
 }
 
+// q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
+func (s *KeywordStore) q(query string) string { return s.db.Rebind(query) }
+
 // List returns all keywords ordered by keyword name.
 func (s *KeywordStore) List(ctx context.Context) ([]*Keyword, error) {
 	var keywords []*Keyword
@@ -42,7 +45,7 @@ func (s *KeywordStore) List(ctx context.Context) ([]*Keyword, error) {
 // GetByID returns the keyword matching the given ID, or ErrNotFound.
 func (s *KeywordStore) GetByID(ctx context.Context, id string) (*Keyword, error) {
 	var k Keyword
-	err := s.db.GetContext(ctx, &k, `SELECT * FROM keywords WHERE id = ?`, id)
+	err := s.db.GetContext(ctx, &k, s.q(`SELECT * FROM keywords WHERE id = ?`), id)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -55,7 +58,7 @@ func (s *KeywordStore) GetByID(ctx context.Context, id string) (*Keyword, error)
 // GetByKeyword returns the keyword matching the given keyword string, or ErrNotFound.
 func (s *KeywordStore) GetByKeyword(ctx context.Context, keyword string) (*Keyword, error) {
 	var k Keyword
-	err := s.db.GetContext(ctx, &k, `SELECT * FROM keywords WHERE keyword = ?`, keyword)
+	err := s.db.GetContext(ctx, &k, s.q(`SELECT * FROM keywords WHERE keyword = ?`), keyword)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -69,9 +72,9 @@ func (s *KeywordStore) GetByKeyword(ctx context.Context, keyword string) (*Keywo
 func (s *KeywordStore) Create(ctx context.Context, keyword, urlTemplate, description string) (*Keyword, error) {
 	id := uuid.New().String()
 	now := time.Now().UTC()
-	_, err := s.db.ExecContext(ctx, `
+	_, err := s.db.ExecContext(ctx, s.q(`
 		INSERT INTO keywords (id, keyword, url_template, description, created_at) VALUES (?, ?, ?, ?, ?)
-	`, id, keyword, urlTemplate, description, now)
+	`), id, keyword, urlTemplate, description, now)
 	if err != nil {
 		return nil, err
 	}
@@ -80,9 +83,9 @@ func (s *KeywordStore) Create(ctx context.Context, keyword, urlTemplate, descrip
 
 // Update updates an existing keyword and returns it.
 func (s *KeywordStore) Update(ctx context.Context, id, keyword, urlTemplate, description string) (*Keyword, error) {
-	result, err := s.db.ExecContext(ctx, `
+	result, err := s.db.ExecContext(ctx, s.q(`
 		UPDATE keywords SET keyword = ?, url_template = ?, description = ? WHERE id = ?
-	`, keyword, urlTemplate, description, id)
+	`), keyword, urlTemplate, description, id)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +98,7 @@ func (s *KeywordStore) Update(ctx context.Context, id, keyword, urlTemplate, des
 	}
 	// Re-fetch to get the full row including created_at.
 	var k Keyword
-	err = s.db.GetContext(ctx, &k, `SELECT * FROM keywords WHERE id = ?`, id)
+	err = s.db.GetContext(ctx, &k, s.q(`SELECT * FROM keywords WHERE id = ?`), id)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +107,7 @@ func (s *KeywordStore) Update(ctx context.Context, id, keyword, urlTemplate, des
 
 // Delete removes a keyword by ID.
 func (s *KeywordStore) Delete(ctx context.Context, id string) error {
-	result, err := s.db.ExecContext(ctx, `DELETE FROM keywords WHERE id = ?`, id)
+	result, err := s.db.ExecContext(ctx, s.q(`DELETE FROM keywords WHERE id = ?`), id)
 	if err != nil {
 		return err
 	}
