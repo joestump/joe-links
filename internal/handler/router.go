@@ -118,7 +118,13 @@ func NewRouter(deps Deps) http.Handler {
 		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
 		r.Get("/admin/users/{id}/confirm-delete", admin.ConfirmDeleteUser)
 		r.Put("/admin/users/{id}/role", admin.UpdateRole)
+		// Governing: SPEC-0011 REQ "Admin Links Screen", "Admin Inline Link Editing", "Admin Link Deletion"
 		r.Get("/admin/links", admin.Links)
+		r.Get("/admin/links/{id}/edit", admin.EditLinkRow)
+		r.Get("/admin/links/{id}/row", admin.LinkRow)
+		r.Put("/admin/links/{id}", admin.UpdateLink)
+		r.Get("/admin/links/{id}/confirm-delete", admin.ConfirmDeleteLink)
+		r.Delete("/admin/links/{id}", admin.DeleteLink)
 
 		// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
 		r.Get("/admin/keywords", keywordsHandler.Index)
