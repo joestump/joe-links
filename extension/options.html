@@ -13,7 +13,8 @@
     }
     h1 { font-size: 1.15rem; margin-bottom: 1.5rem; }
     label { display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.9rem; }
-    input[type="text"] {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
       box-sizing: border-box;
       padding: 8px 10px;
@@ -22,7 +23,8 @@
       border-radius: 5px;
       outline: none;
     }
-    input[type="text"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    input[type="text"]:focus,
+    input[type="password"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
     input[type="text"].invalid { border-color: #dc2626; }
     .hint { font-size: 0.8rem; color: #666; margin-top: 0.3rem; }
     .error { color: #dc2626; font-size: 0.85rem; margin-top: 0.4rem; display: none; }
@@ -59,6 +61,10 @@
   <input type="text" id="baseURL" placeholder="http://go" autocomplete="off" spellcheck="false" />
   <p class="hint">The hostname of your joe-links server. Default: <code>http://go</code></p>
   <p class="error" id="error">Enter a valid URL, e.g. <code>http://go</code> or <code>https://links.example.com</code></p>
+
+  <label for="apiKey">API key (optional)</label>
+  <input type="password" id="apiKey" placeholder="jl_xxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+  <p class="hint">Personal access token from your joe-links dashboard. Used to create links and authenticate requests.</p>
 
   <button id="save">Save</button>
   <p id="saved">Saved and refreshing keyword list…</p>
