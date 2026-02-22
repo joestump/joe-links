@@ -155,9 +155,7 @@ func TestLinkStore_Update(t *testing.T) {
 	if updated.Description != "New desc" {
 		t.Errorf("description = %q, want %q", updated.Description, "New desc")
 	}
-	if !updated.UpdatedAt.After(created.CreatedAt) || updated.UpdatedAt.Equal(created.CreatedAt) {
-		// UpdatedAt should be >= CreatedAt (may be equal in fast tests)
-	}
+	// UpdatedAt should be >= CreatedAt (may be equal in fast tests)
 }
 
 func TestLinkStore_Delete(t *testing.T) {

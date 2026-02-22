@@ -335,5 +335,5 @@ func (h *AdminHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Return empty response so HTMX removes the row, plus OOB toast
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`<div id="toast-area" hx-swap-oob="innerHTML:#toast-area"><div class="alert alert-success"><span>User deleted.</span></div></div>`))
+	_, _ = w.Write([]byte(`<div id="toast-area" hx-swap-oob="innerHTML:#toast-area"><div class="alert alert-success"><span>User deleted.</span></div></div>`))
 }

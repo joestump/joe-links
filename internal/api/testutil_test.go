@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
@@ -87,20 +86,6 @@ func seedToken(t *testing.T, env *testEnv, userID string) string {
 	return plaintext
 }
 
-// seedExpiredToken creates a token that is already expired.
-func seedExpiredToken(t *testing.T, env *testEnv, userID string) string {
-	t.Helper()
-	plaintext, hash, err := auth.GenerateToken()
-	if err != nil {
-		t.Fatalf("generate token: %v", err)
-	}
-	expired := time.Now().Add(-1 * time.Hour)
-	_, err = env.TokenStore.Create(context.Background(), userID, "expired-token", hash, &expired)
-	if err != nil {
-		t.Fatalf("create expired token: %v", err)
-	}
-	return plaintext
-}
 
 // authRequest adds a Bearer token to the request.
 func authRequest(r *http.Request, token string) *http.Request {
