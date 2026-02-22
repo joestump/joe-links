@@ -85,9 +85,11 @@
         <!-- Bottom: theme toggle, tokens, user -->
         <div class="p-3 border-t border-base-300 space-y-1">
             <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun icon in dark mode, moon in light mode -->
+            <!-- Governing: SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" — onclick eager swap before HTMX fires -->
             <button class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium hover:bg-base-300 transition-colors text-left"
+                    onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
                     hx-post="/dashboard/theme"
-                    hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                    hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
                     hx-swap="none">
                 <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -145,10 +147,11 @@
         <a href="/" class="btn btn-ghost text-xl font-bold">Joe Links</a>
     </div>
     <div class="navbar-end gap-2">
-        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" -->
+        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
         <button class="btn btn-ghost btn-circle"
+                onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
                 hx-post="/dashboard/theme"
-                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
                 hx-swap="none">
             <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

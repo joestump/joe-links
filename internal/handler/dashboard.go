@@ -13,24 +13,26 @@ import (
 // DashboardPage is the template data for the dashboard view.
 type DashboardPage struct {
 	BasePage
-	User  *store.User
-	Links []*store.Link
-	Tags  []*store.Tag
-	Query string // current search query
-	Tag   string // current tag filter slug
-	Flash *Flash
+	User    *store.User
+	Links   []*store.Link
+	Tags    []*store.Tag
+	Query   string // current search query
+	Tag     string // current tag filter slug
+	Flash   *Flash
+	Keyword string // first configured keyword (e.g. "go") for slug prefix display
 }
 
 // DashboardHandler serves the authenticated link management dashboard.
 type DashboardHandler struct {
-	links *store.LinkStore
-	tags  *store.TagStore
+	links    *store.LinkStore
+	tags     *store.TagStore
+	keywords *store.KeywordStore
 }
 
 // NewDashboardHandler creates a new DashboardHandler.
 // Governing: SPEC-0004 REQ "User Dashboard"
-func NewDashboardHandler(ls *store.LinkStore, ts *store.TagStore) *DashboardHandler {
-	return &DashboardHandler{links: ls, tags: ts}
+func NewDashboardHandler(ls *store.LinkStore, ts *store.TagStore, ks *store.KeywordStore) *DashboardHandler {
+	return &DashboardHandler{links: ls, tags: ts, keywords: ks}
 }
 
 // Show renders the dashboard with the user's links (or all links for admins).
@@ -76,6 +78,12 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	// Load all tags for the tag filter chips
 	allTags, _ := h.tags.ListAll(r.Context())
 
+	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
+	keyword := ""
+	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
+		keyword = kws[0].Keyword
+	}
+
 	data := DashboardPage{
 		BasePage: newBasePage(r, user),
 		User:     user,
@@ -83,6 +91,7 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		Tags:     allTags,
 		Query:    query,
 		Tag:      tagSlug,
+		Keyword:  keyword,
 	}
 
 	if isHTMX(r) {
