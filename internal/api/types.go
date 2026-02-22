@@ -17,13 +17,14 @@ type OwnerResponse struct {
 }
 
 // LinkResponse is the full link resource.
-// Governing: SPEC-0005 REQ "API Response Structures"
+// Governing: SPEC-0005 REQ "API Response Structures", SPEC-0010 REQ "REST API Visibility Field"
 type LinkResponse struct {
 	ID          string          `json:"id"`
 	Slug        string          `json:"slug"`
 	URL         string          `json:"url"`
 	Title       string          `json:"title"`
 	Description string          `json:"description"`
+	Visibility  string          `json:"visibility"`
 	Tags        []string        `json:"tags"`
 	Owners      []OwnerResponse `json:"owners"`
 	CreatedAt   time.Time       `json:"created_at"`
@@ -38,21 +39,24 @@ type LinkListResponse struct {
 }
 
 // CreateLinkRequest is the body for POST /api/v1/links.
-// Governing: SPEC-0005 REQ "Links Collection"
+// Governing: SPEC-0005 REQ "Links Collection", SPEC-0010 REQ "REST API Visibility Field"
 type CreateLinkRequest struct {
 	Slug        string   `json:"slug"`
 	URL         string   `json:"url"`
 	Title       string   `json:"title,omitempty"`
 	Description string   `json:"description,omitempty"`
+	Visibility  string   `json:"visibility,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
 // UpdateLinkRequest is the body for PUT /api/v1/links/{id}.
 // Governing: SPEC-0005 REQ "Link Resource" — slug is intentionally omitted (immutable).
+// Governing: SPEC-0010 REQ "REST API Visibility Field"
 type UpdateLinkRequest struct {
 	URL         string   `json:"url"`
 	Title       string   `json:"title,omitempty"`
 	Description string   `json:"description,omitempty"`
+	Visibility  string   `json:"visibility,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
@@ -60,6 +64,23 @@ type UpdateLinkRequest struct {
 // Governing: SPEC-0005 REQ "Co-Owner Management"
 type AddOwnerRequest struct {
 	Email string `json:"email"`
+}
+
+// AddShareRequest is the body for POST /api/v1/links/{id}/shares.
+// Governing: SPEC-0010 REQ "Link Share Management API Endpoints"
+type AddShareRequest struct {
+	Email string `json:"email"`
+}
+
+// ShareResponse represents a share record in API responses.
+// Governing: SPEC-0010 REQ "Link Share Management API Endpoints"
+type ShareResponse struct {
+	LinkID      string    `json:"link_id"`
+	UserID      string    `json:"user_id"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"display_name"`
+	SharedBy    string    `json:"shared_by"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // TagResponse represents a tag with its link count.
