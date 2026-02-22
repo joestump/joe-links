@@ -10,6 +10,7 @@
                 {{if $.ShowTitle}}<th>Title</th>{{end}}
                 {{if $.ShowOwner}}<th>Owner(s)</th>{{end}}
                 {{if $.ShowTags}}<th>Tags</th>{{end}}
+                {{if $.ShowVisibility}}<th>Visibility</th>{{end}}
                 <th>Description</th>
                 <th>Created</th>
                 <th></th>
@@ -38,6 +39,9 @@
                 {{if $.ShowTitle}}<td class="text-sm text-base-content/70">{{.Title}}</td>{{end}}
                 {{if $.ShowOwner}}<td class="text-sm text-base-content/70">{{.Owners}}</td>{{end}}
                 {{if $.ShowTags}}<td class="text-sm">{{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}</td>{{end}}
+                {{if $.ShowVisibility}}<td class="text-sm">
+                    <span class="badge badge-sm {{if eq .Visibility "secure"}}badge-error{{else if eq .Visibility "private"}}badge-warning{{else}}badge-ghost{{end}}">{{.Visibility}}</span>
+                </td>{{end}}
                 <td class="text-sm text-base-content/60">{{.Description}}</td>
                 <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
                 <!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — Edit and Delete actions only (no View) -->
