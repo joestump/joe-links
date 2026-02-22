@@ -79,11 +79,11 @@
                 </td>
                 <td>
                     {{if not .RevokedAt.Valid}}
+                    <!-- Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal" -->
                     <button class="btn btn-ghost btn-xs text-error"
-                            hx-delete="/dashboard/settings/tokens/{{.ID}}"
-                            hx-target="#token-content"
-                            hx-swap="innerHTML"
-                            hx-confirm="Revoke this token? Any applications using it will stop working.">Revoke</button>
+                            hx-get="/dashboard/settings/tokens/{{.ID}}/confirm-revoke"
+                            hx-target="#modal"
+                            hx-swap="innerHTML">Revoke</button>
                     {{end}}
                 </td>
             </tr>

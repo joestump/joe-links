@@ -57,6 +57,14 @@ type LinkDetailPage struct {
 	Owners []*store.OwnerInfo
 }
 
+// ConfirmDeleteData holds template data for the delete confirmation modal.
+// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+type ConfirmDeleteData struct {
+	Name      string
+	DeleteURL string
+	Target    string
+}
+
 // LinksHandler provides HTTP handlers for link CRUD operations.
 type LinksHandler struct {
 	links *store.LinkStore
@@ -71,12 +79,13 @@ func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore, us *store.Us
 
 // New renders the create-link form.
 // Governing: SPEC-0004 REQ "New Link Form"
+// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal"
 func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
 	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form}
 	if isHTMX(r) {
-		renderPageFragment(w, "new.html", "content", data)
+		renderFragment(w, "new_link_modal", data)
 		return
 	}
 	render(w, "new.html", data)
@@ -99,10 +108,11 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Tags:        r.FormValue("tags"),
 	}
 
+	// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — validation errors re-render inside modal
 	if err := store.ValidateSlugFormat(form.Slug); err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
-			renderPageFragment(w, "new.html", "content", data)
+			renderFragment(w, "new_link_modal", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -111,7 +121,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if isReservedSlug(form.Slug) {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."}
 		if isHTMX(r) {
-			renderPageFragment(w, "new.html", "content", data)
+			renderFragment(w, "new_link_modal", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -122,7 +132,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
 		if isHTMX(r) {
-			renderPageFragment(w, "new.html", "content", data)
+			renderFragment(w, "new_link_modal", data)
 			return
 		}
 		render(w, "new.html", data)
@@ -137,9 +147,10 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — close modal + trigger list refresh
 	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", "/dashboard")
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("HX-Trigger", "linkCreated")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
@@ -147,6 +158,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 // Edit renders the edit-link form.
 // Governing: SPEC-0004 REQ "Edit Link Form"
+// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal"
 func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	id := chi.URLParam(r, "id")
@@ -180,7 +192,7 @@ func (h *LinksHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form}
 	if isHTMX(r) {
-		renderPageFragment(w, "edit.html", "content", data)
+		renderFragment(w, "edit_link_modal", data)
 		return
 	}
 	render(w, "edit.html", data)
@@ -221,8 +233,9 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	_, err = h.links.Update(r.Context(), id, form.URL, form.Title, form.Description)
 	if err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: "Update failed."}
+		// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — re-render inside modal on error
 		if isHTMX(r) {
-			renderPageFragment(w, "edit.html", "content", data)
+			renderFragment(w, "edit_link_modal", data)
 			return
 		}
 		render(w, "edit.html", data)
@@ -233,13 +246,13 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 	tagNames := parseTagNames(form.Tags)
 	_ = h.links.SetTags(r.Context(), id, tagNames)
 
-	redirect := "/dashboard/links/" + id
+	// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" — close modal + trigger list refresh
 	if isHTMX(r) {
-		w.Header().Set("HX-Redirect", redirect)
-		w.WriteHeader(http.StatusNoContent)
+		w.Header().Set("HX-Trigger", "linkUpdated")
+		w.WriteHeader(http.StatusOK)
 		return
 	}
-	http.Redirect(w, r, redirect, http.StatusSeeOther)
+	http.Redirect(w, r, "/dashboard/links/"+id, http.StatusSeeOther)
 }
 
 // Delete removes a link. Returns 200 with empty body for HTMX row removal.
@@ -270,6 +283,33 @@ func (h *LinksHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`<div id="toast-area" hx-swap-oob="innerHTML:#toast-area"><div class="alert alert-success"><span>Link deleted.</span></div></div>`))
+}
+
+// ConfirmDelete renders the delete confirmation modal for a link.
+// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+func (h *LinksHandler) ConfirmDelete(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	id := chi.URLParam(r, "id")
+
+	link, err := h.links.GetByID(r.Context(), id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	// Governing: SPEC-0002 REQ "Authorization Based on Ownership"
+	allowed, err := store.IsOwnerOrAdmin(h.owns, link.ID, user.ID, user.Role)
+	if err != nil || !allowed {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	data := ConfirmDeleteData{
+		Name:      link.Slug,
+		DeleteURL: "/dashboard/links/" + id,
+		Target:    "#link-" + id,
+	}
+	renderFragment(w, "confirm_delete", data)
 }
 
 // parseTagNames splits a comma-separated string into trimmed, non-empty tag names.

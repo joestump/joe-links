@@ -35,7 +35,10 @@
         <div>
             <h2 class="text-xl font-semibold mb-2">No links yet</h2>
             <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
-            <a href="/dashboard/links/new" class="btn btn-primary">Create a link</a>
+            <button class="btn btn-primary"
+                    hx-get="/dashboard/links/new"
+                    hx-target="#modal"
+                    hx-swap="innerHTML">Create a link</button>
         </div>
     </div>
 </div>

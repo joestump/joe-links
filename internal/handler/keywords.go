@@ -98,6 +98,26 @@ func (h *KeywordsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// ConfirmDelete renders the delete confirmation modal for a keyword.
+// GET /admin/keywords/{id}/confirm-delete
+// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+func (h *KeywordsHandler) ConfirmDelete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	kw, err := h.keywords.GetByID(r.Context(), id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := ConfirmDeleteData{
+		Name:      kw.Keyword,
+		DeleteURL: "/admin/keywords/" + id,
+		Target:    "#keyword-" + id,
+	}
+	renderFragment(w, "confirm_delete", data)
+}
+
 // renderList re-renders the keyword_list partial (or full page for non-HTMX).
 func (h *KeywordsHandler) renderList(w http.ResponseWriter, r *http.Request, user *store.User, errMsg string) {
 	keywords, _ := h.keywords.List(r.Context())

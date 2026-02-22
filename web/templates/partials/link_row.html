@@ -8,16 +8,17 @@
     </td>
     <td class="text-sm text-base-content/60">{{.Description}}</td>
     <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
+    <!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal", REQ "DaisyUI Delete Confirmation Modal" -->
     <td class="flex gap-1 justify-end">
         <a href="/dashboard/links/{{.ID}}" class="btn btn-xs btn-ghost">View</a>
-        <a href="/dashboard/links/{{.ID}}/edit" class="btn btn-xs btn-ghost">Edit</a>
-        <button
-            class="btn btn-xs btn-error btn-ghost"
-            hx-delete="/dashboard/links/{{.ID}}"
-            hx-target="#link-{{.ID}}"
-            hx-swap="outerHTML"
-            hx-confirm="Delete '{{.Slug}}'?"
-        >Delete</button>
+        <button class="btn btn-xs btn-ghost"
+                hx-get="/dashboard/links/{{.ID}}/edit"
+                hx-target="#modal"
+                hx-swap="innerHTML">Edit</button>
+        <button class="btn btn-xs btn-error btn-ghost"
+                hx-get="/dashboard/links/{{.ID}}/confirm-delete"
+                hx-target="#modal"
+                hx-swap="innerHTML">Delete</button>
     </td>
 </tr>
 {{end}}
