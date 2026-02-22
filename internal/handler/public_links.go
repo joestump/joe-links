@@ -1,0 +1,83 @@
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
+package handler
+
+import (
+	"math"
+	"net/http"
+	"strconv"
+
+	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/store"
+)
+
+const defaultPageSize = 25
+
+// PublicLinksPage is the template data for the public link browser.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
+type PublicLinksPage struct {
+	BasePage
+	Links      []store.PublicLink
+	Query      string
+	Page       int
+	TotalPages int
+	Total      int
+	HasPrev    bool
+	HasNext    bool
+	PrevPage   int
+	NextPage   int
+}
+
+// PublicLinksHandler serves the public link browser at GET /links.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
+type PublicLinksHandler struct {
+	links *store.LinkStore
+}
+
+// NewPublicLinksHandler creates a new PublicLinksHandler.
+func NewPublicLinksHandler(ls *store.LinkStore) *PublicLinksHandler {
+	return &PublicLinksHandler{links: ls}
+}
+
+// Index renders the public link browser with search and pagination.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
+func (h *PublicLinksHandler) Index(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserFromContext(r.Context())
+	query := r.URL.Query().Get("q")
+
+	page := 1
+	if p := r.URL.Query().Get("page"); p != "" {
+		if n, err := strconv.Atoi(p); err == nil && n > 0 {
+			page = n
+		}
+	}
+
+	links, total, err := h.links.ListPublic(r.Context(), query, page, defaultPageSize)
+	if err != nil {
+		http.Error(w, "could not load links", http.StatusInternalServerError)
+		return
+	}
+
+	totalPages := int(math.Ceil(float64(total) / float64(defaultPageSize)))
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	data := PublicLinksPage{
+		BasePage:   newBasePage(r, user),
+		Links:      links,
+		Query:      query,
+		Page:       page,
+		TotalPages: totalPages,
+		Total:      total,
+		HasPrev:    page > 1,
+		HasNext:    page < totalPages,
+		PrevPage:   page - 1,
+		NextPage:   page + 1,
+	}
+
+	if isHTMX(r) {
+		renderPageFragment(w, "links.html", "content", data)
+		return
+	}
+	render(w, "links.html", data)
+}

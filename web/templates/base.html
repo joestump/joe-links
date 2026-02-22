@@ -47,6 +47,15 @@
                 </svg>
                 Tags
             </a>
+            <!-- Governing: SPEC-0012 REQ "Public Link Browser (GET /links)" -->
+            <a href="/links"
+               data-nav="/links"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                Browse
+            </a>
             <!-- Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section" -->
             {{if eq .User.Role "admin"}}
             <details class="pt-3"{{if .IsAdminPage}} open{{end}}>
@@ -155,6 +164,8 @@
         <a href="/" class="btn btn-ghost text-xl font-bold">Joe Links</a>
     </div>
     <div class="navbar-end gap-2">
+        <!-- Governing: SPEC-0012 REQ "Public Link Browser (GET /links)" -->
+        <a href="/links" class="btn btn-sm btn-ghost">Browse</a>
         <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
         <button class="btn btn-ghost btn-circle"
                 onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"

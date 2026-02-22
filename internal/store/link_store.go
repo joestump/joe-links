@@ -358,6 +358,89 @@ func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, err
 	return links, nil
 }
 
+// PublicLink is a Link augmented with owner display name and tags for public views.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
+type PublicLink struct {
+	ID               string    `db:"id"`
+	Slug             string    `db:"slug"`
+	URL              string    `db:"url"`
+	Title            string    `db:"title"`
+	Description      string    `db:"description"`
+	Visibility       string    `db:"visibility"`
+	CreatedAt        time.Time `db:"created_at"`
+	OwnerDisplayName string    `db:"owner_display_name"`
+	OwnerSlug        string    `db:"owner_display_name_slug"`
+	TagList          string    `db:"tag_list"` // comma-separated
+}
+
+// Tags returns tag names as a slice for template iteration.
+func (p *PublicLink) Tags() []string {
+	if p.TagList == "" {
+		return nil
+	}
+	return strings.Split(p.TagList, ",")
+}
+
+// TruncatedDescription returns the description truncated to 150 chars with ellipsis.
+func (p *PublicLink) TruncatedDescription() string {
+	if len(p.Description) <= 150 {
+		return p.Description
+	}
+	return p.Description[:150] + "..."
+}
+
+// DisplayTitle returns the title if set, otherwise the URL.
+func (p *PublicLink) DisplayTitle() string {
+	if p.Title != "" {
+		return p.Title
+	}
+	return p.URL
+}
+
+// ListPublic returns paginated public links, optionally filtered by search query.
+// Returns the matching links and total count for pagination.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
+func (s *LinkStore) ListPublic(ctx context.Context, q string, page, perPage int) ([]PublicLink, int, error) {
+	baseWhere := `WHERE l.visibility = 'public'`
+	var args []interface{}
+	if q != "" {
+		pattern := "%" + q + "%"
+		baseWhere += ` AND (l.slug LIKE ? OR l.url LIKE ? OR l.title LIKE ? OR l.description LIKE ?)`
+		args = append(args, pattern, pattern, pattern, pattern)
+	}
+
+	// Count total matching rows.
+	countQuery := `SELECT COUNT(DISTINCT l.id) FROM links l ` + baseWhere
+	var total int
+	if err := s.db.GetContext(ctx, &total, countQuery, args...); err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch paginated results.
+	offset := (page - 1) * perPage
+	query := `
+		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
+		       COALESCE(u.display_name, '') AS owner_display_name,
+		       COALESCE(u.display_name_slug, '') AS owner_display_name_slug,
+		       COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tag_list
+		FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
+		LEFT JOIN users u ON u.id = lo.user_id
+		LEFT JOIN link_tags lt ON lt.link_id = l.id
+		LEFT JOIN tags t ON t.id = lt.tag_id
+		` + baseWhere + `
+		GROUP BY l.id
+		ORDER BY l.created_at DESC
+		LIMIT ? OFFSET ?`
+	fetchArgs := append(args, perPage, offset)
+
+	var links []PublicLink
+	if err := s.db.SelectContext(ctx, &links, query, fetchArgs...); err != nil {
+		return nil, 0, err
+	}
+	return links, total, nil
+}
+
 // HasShare checks if user has a link_shares record.
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) HasShare(ctx context.Context, linkID, userID string) (bool, error) {
