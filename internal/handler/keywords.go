@@ -1,4 +1,4 @@
-// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
+// Governing: SPEC-0008 REQ "Keyword Host Discovery", SPEC-0011 REQ "Admin Keywords Screen", ADR-0011
 package handler
 
 import (
@@ -48,7 +48,7 @@ func (h *KeywordsHandler) Index(w http.ResponseWriter, r *http.Request) {
 // Validates: keyword non-empty, lowercase alphanumeric+hyphens ([a-z][a-z0-9-]*)
 // Validates: url_template contains "{slug}"
 // On error: re-render keyword_list partial with error via HTMX
-// Governing: SPEC-0008 REQ "Keyword Host Discovery", ADR-0011
+// Governing: SPEC-0011 REQ "Admin Keywords Screen", ADR-0007
 func (h *KeywordsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if err := r.ParseForm(); err != nil {
@@ -70,14 +70,20 @@ func (h *KeywordsHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0011 REQ "Admin Keywords Screen" — URL template must contain {slug}
 	if !strings.Contains(urlTemplate, "{slug}") {
 		h.renderList(w, r, user, "URL template must contain {slug} placeholder.")
 		return
 	}
 
-	_, err := h.keywords.Create(r.Context(), keyword, urlTemplate, description)
-	if err != nil {
+	// Governing: SPEC-0011 REQ "Admin Keywords Screen" — reject duplicate keywords
+	if existing, _ := h.keywords.GetByKeyword(r.Context(), keyword); existing != nil {
 		h.renderList(w, r, user, "A keyword with that name already exists.")
+		return
+	}
+
+	if _, err := h.keywords.Create(r.Context(), keyword, urlTemplate, description); err != nil {
+		h.renderList(w, r, user, "Failed to create keyword.")
 		return
 	}
 
