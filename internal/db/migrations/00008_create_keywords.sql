@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS keywords (
     keyword     TEXT NOT NULL UNIQUE,
     url_template TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
-    created_at  DATETIME NOT NULL DEFAULT (datetime('now'))
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- +goose Down

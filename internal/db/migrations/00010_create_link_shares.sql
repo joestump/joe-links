@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS link_shares (
     link_id    TEXT NOT NULL REFERENCES links(id) ON DELETE CASCADE,
     user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     shared_by  TEXT NOT NULL REFERENCES users(id),
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (link_id, user_id)
 );
 

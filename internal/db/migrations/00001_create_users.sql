@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     email       TEXT NOT NULL,
     display_name TEXT NOT NULL DEFAULT '',
     role        TEXT NOT NULL DEFAULT 'user',
-    created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(provider, subject)
 );
 -- +goose StatementEnd
