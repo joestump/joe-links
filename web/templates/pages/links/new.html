@@ -41,6 +41,7 @@
                     <div id="slug-status" class="mt-1 min-h-[1.25rem]"></div>
                 </div>
 
+                <!-- Governing: SPEC-0009 REQ "Link Creation and Editing UI", ADR-0013 -->
                 <div class="form-control mb-4">
                     <label class="label">
                         <span class="label-text">Destination URL <span class="text-error">*</span></span>
@@ -48,11 +49,14 @@
                     <input
                         type="url"
                         name="url"
+                        id="url-input"
                         class="input input-bordered"
                         placeholder="https://example.com/very/long/url"
                         required
                         value="{{.Form.URL}}"
+                        oninput="updateVarHint()"
                     >
+                    <div id="url-var-hint" class="mt-1 min-h-[1.25rem]"></div>
                 </div>
 
                 <div class="form-control mb-4">
@@ -127,5 +131,25 @@ function addTag(name) {
     document.getElementById('tag-suggestions').innerHTML = '';
     input.focus();
 }
+
+// Governing: SPEC-0009 REQ "Link Creation and Editing UI", ADR-0013
+function updateVarHint() {
+    var input = document.getElementById('url-input');
+    var hint = document.getElementById('url-var-hint');
+    var re = /\$[a-z][a-z0-9_]*/g;
+    var matches = input.value.match(re);
+    if (!matches || matches.length === 0) {
+        hint.innerHTML = '';
+        return;
+    }
+    var names = matches.map(function(m){ return m.substring(1); });
+    var slug = document.querySelector('input[name="slug"]');
+    var slugVal = slug ? slug.value || 'my-link' : 'my-link';
+    var example = 'go/' + slugVal + '/' + names.map(function(n){ return '&lt;' + n + '&gt;'; }).join('/');
+    hint.innerHTML = '<span class="text-xs text-info">' +
+        'Variables detected: ' + names.map(function(n){ return '<code class="badge badge-sm badge-outline">$' + n + '</code>'; }).join(' ') +
+        ' — navigate as <code class="font-mono">' + example + '</code></span>';
+}
+document.addEventListener('DOMContentLoaded', updateVarHint);
 </script>
 {{end}}

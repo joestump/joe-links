@@ -102,3 +102,22 @@ func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 	}
 	render(w, "admin/links.html", data)
 }
+
+// ConfirmDeleteUser renders the delete confirmation modal for a user.
+// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
+func (h *AdminHandler) ConfirmDeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	target, err := h.users.GetByID(r.Context(), id)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := ConfirmDeleteData{
+		Name:      target.DisplayName,
+		DeleteURL: "/admin/users/" + id,
+		Target:    "#user-" + id,
+	}
+	renderFragment(w, "confirm_delete", data)
+}

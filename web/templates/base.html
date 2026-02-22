@@ -10,7 +10,7 @@
     <script src="/static/js/htmx.min.js"></script>
 </head>
 <body class="min-h-screen bg-base-100"
-      hx-on:themeChanged="document.documentElement.setAttribute('data-theme',event.detail.theme);document.getElementById('theme-toggle-icon').textContent=event.detail.theme==='joe-dark'?'☀️':'🌙'">
+      hx-on:themeChanged="document.documentElement.setAttribute('data-theme',event.detail.theme);document.getElementById('theme-icon-sun').style.display=event.detail.theme==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=event.detail.theme==='joe-dark'?'none':'block'">
 
 {{if .User}}
 <!-- Governing: SPEC-0004 REQ "Shared Base Layout" — navbar with nav links, conditional Admin, user dropdown -->
@@ -37,12 +37,14 @@
         </ul>
     </div>
     <div class="navbar-end gap-2">
-        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun when dark, moon when light -->
+        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
         <button id="theme-toggle" class="btn btn-ghost btn-circle"
+                onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
                 hx-post="/dashboard/theme"
-                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
                 hx-swap="none">
-            <span id="theme-toggle-icon">{{if eq .Theme "joe-dark"}}☀️{{else}}🌙{{end}}</span>
+            <span id="theme-icon-sun" style="{{if eq .Theme "joe-dark"}}display:block{{else}}display:none{{end}}">☀️</span>
+            <span id="theme-icon-moon" style="{{if eq .Theme "joe-dark"}}display:none{{else}}display:block{{end}}">🌙</span>
         </button>
         <div class="dropdown dropdown-end">
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
@@ -52,6 +54,7 @@
             </div>
             <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
                 <li><span class="text-sm font-medium">{{.User.DisplayName}}</span></li>
+                <!-- Governing: SPEC-0013 REQ "API Tokens Link in User Section" -->
                 <li><a href="/dashboard/settings/tokens">API Tokens</a></li>
                 <li>
                     <form method="POST" action="/auth/logout">
@@ -68,12 +71,14 @@
         <a href="/" class="btn btn-ghost text-xl font-bold">Joe Links</a>
     </div>
     <div class="navbar-end gap-2">
-        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control" — sun when dark, moon when light -->
+        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
         <button id="theme-toggle" class="btn btn-ghost btn-circle"
+                onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
                 hx-post="/dashboard/theme"
-                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme") === "joe-dark" ? "joe-light" : "joe-dark"}'
+                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
                 hx-swap="none">
-            <span id="theme-toggle-icon">{{if eq .Theme "joe-dark"}}☀️{{else}}🌙{{end}}</span>
+            <span id="theme-icon-sun" style="{{if eq .Theme "joe-dark"}}display:block{{else}}display:none{{end}}">☀️</span>
+            <span id="theme-icon-moon" style="{{if eq .Theme "joe-dark"}}display:none{{else}}display:block{{end}}">🌙</span>
         </button>
         <a href="/auth/login" class="btn btn-sm btn-primary">Sign in</a>
     </div>

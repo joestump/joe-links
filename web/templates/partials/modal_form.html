@@ -1,0 +1,198 @@
+{{/* Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal" */}}
+{{define "modal_form"}}
+<dialog id="form-modal" class="modal modal-open">
+    <div class="modal-box">
+        {{block "modal_content" .}}{{end}}
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="document.getElementById('modal').innerHTML=''">close</button>
+    </form>
+</dialog>
+{{end}}
+
+{{define "new_link_modal"}}
+<dialog id="form-modal" class="modal modal-open">
+    <div class="modal-box max-w-lg">
+        <h3 class="font-bold text-lg mb-4">Create a new link</h3>
+
+        {{if .Error}}
+        <div class="alert alert-error mb-4">
+            <span>{{.Error}}</span>
+        </div>
+        {{end}}
+
+        <form hx-post="/dashboard/links" hx-target="#modal" hx-swap="innerHTML">
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">Slug <span class="text-error">*</span></span>
+                    <span class="label-text-alt text-base-content/50">e.g. jira, standup</span>
+                </label>
+                <label class="input input-bordered flex items-center gap-2">
+                    <span class="text-base-content/50 font-mono">go/</span>
+                    <input
+                        type="text"
+                        name="slug"
+                        class="grow font-mono"
+                        placeholder="my-link"
+                        pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]|[a-z0-9]"
+                        required
+                        value="{{.Form.Slug}}"
+                        hx-get="/dashboard/links/validate-slug"
+                        hx-trigger="input changed delay:300ms"
+                        hx-target="#slug-status"
+                        hx-swap="innerHTML"
+                    >
+                </label>
+                <div id="slug-status" class="mt-1 min-h-[1.25rem]"></div>
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">Destination URL <span class="text-error">*</span></span>
+                </label>
+                <input
+                    type="url"
+                    name="url"
+                    class="input input-bordered"
+                    placeholder="https://example.com/very/long/url"
+                    required
+                    value="{{.Form.URL}}"
+                >
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">Title</span>
+                </label>
+                <input
+                    type="text"
+                    name="title"
+                    class="input input-bordered"
+                    placeholder="Short descriptive title"
+                    value="{{.Form.Title}}"
+                >
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text">Description</span>
+                </label>
+                <input
+                    type="text"
+                    name="description"
+                    class="input input-bordered"
+                    placeholder="What does this link go to?"
+                    value="{{.Form.Description}}"
+                >
+            </div>
+
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text">Tags</span>
+                    <span class="label-text-alt text-base-content/50">comma-separated</span>
+                </label>
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="tags"
+                        id="tags-input"
+                        class="input input-bordered w-full"
+                        placeholder="engineering, tools, jira"
+                        value="{{.Form.Tags}}"
+                        autocomplete="off"
+                        hx-get="/dashboard/tags/suggest"
+                        hx-trigger="input changed delay:200ms"
+                        hx-target="#tag-suggestions"
+                        hx-swap="innerHTML"
+                        hx-vals='js:{q: event.target.value.split(",").pop().trim()}'
+                        hx-params="none"
+                    >
+                    <ul id="tag-suggestions" class="menu bg-base-100 shadow-lg rounded-box absolute z-10 w-full mt-1"></ul>
+                </div>
+            </div>
+
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('modal').innerHTML=''">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create link</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="document.getElementById('modal').innerHTML=''">close</button>
+    </form>
+</dialog>
+
+<script>
+function addTag(name) {
+    var input = document.getElementById('tags-input');
+    var parts = input.value.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+    if (parts.length > 0) { parts.pop(); }
+    parts.push(name);
+    input.value = parts.join(', ') + ', ';
+    document.getElementById('tag-suggestions').innerHTML = '';
+    input.focus();
+}
+</script>
+{{end}}
+
+{{define "edit_link_modal"}}
+<dialog id="form-modal" class="modal modal-open">
+    <div class="modal-box max-w-lg">
+        <h3 class="font-bold text-lg mb-4">Edit <span class="font-mono">{{.Link.Slug}}</span></h3>
+
+        {{if .Error}}
+        <div class="alert alert-error mb-4">
+            <span>{{.Error}}</span>
+        </div>
+        {{end}}
+
+        <form hx-put="/dashboard/links/{{.Link.ID}}" hx-target="#modal" hx-swap="innerHTML">
+            <div class="form-control mb-4">
+                <label class="label"><span class="label-text">Slug</span></label>
+                <label class="input input-bordered flex items-center gap-2 opacity-60">
+                    <span class="text-base-content/50 font-mono">go/</span>
+                    <input type="text" class="grow font-mono" disabled value="{{.Link.Slug}}">
+                </label>
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label"><span class="label-text">Destination URL <span class="text-error">*</span></span></label>
+                <input type="url" name="url" class="input input-bordered"
+                    required value="{{if .Form.URL}}{{.Form.URL}}{{else}}{{.Link.URL}}{{end}}">
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label"><span class="label-text">Title</span></label>
+                <input type="text" name="title" class="input input-bordered"
+                    value="{{if .Form.Title}}{{.Form.Title}}{{else}}{{.Link.Title}}{{end}}">
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label"><span class="label-text">Description</span></label>
+                <input type="text" name="description" class="input input-bordered"
+                    value="{{if .Form.Description}}{{.Form.Description}}{{else}}{{.Link.Description}}{{end}}">
+            </div>
+
+            <div class="form-control mb-6">
+                <label class="label">
+                    <span class="label-text">Tags</span>
+                    <span class="label-text-alt text-base-content/50">comma-separated</span>
+                </label>
+                <input type="text" name="tags" class="input input-bordered"
+                    placeholder="engineering, tools"
+                    value="{{.Form.Tags}}">
+            </div>
+
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost"
+                        onclick="document.getElementById('modal').innerHTML=''">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save changes</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button onclick="document.getElementById('modal').innerHTML=''">close</button>
+    </form>
+</dialog>
+{{end}}
