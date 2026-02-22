@@ -92,6 +92,13 @@ jobs:
             done
           done
 
+      - name: Package browser extension
+        run: |
+          cd extension
+          zip -r ../dist/joe-links-extension.zip \
+            manifest.json background.js options.html options.js popup.html popup.js icons/
+          echo "Packaged extension"
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
