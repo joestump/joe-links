@@ -56,6 +56,7 @@ type AdminLinksPage struct {
 	ShowOwner      bool   // show Owner(s) column
 	ShowTags       bool   // show Tags column
 	ShowVisibility bool   // show Visibility column
+	ShowActions    bool   // show Edit/Delete action buttons
 }
 
 // Dashboard renders the admin overview with summary stats.
@@ -138,6 +139,7 @@ func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 		ShowOwner:      true,
 		ShowTags:       true,
 		ShowVisibility: true,
+		ShowActions:    true,
 	}
 	if isHTMX(r) {
 		renderPageFragment(w, "admin/links.html", "admin_link_list", data)

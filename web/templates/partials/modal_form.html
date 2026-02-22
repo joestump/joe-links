@@ -49,15 +49,19 @@
             <div class="form-control mb-4">
                 <label class="label">
                     <span class="label-text">Destination URL <span class="text-error">*</span></span>
+                    <span class="label-text-alt text-base-content/50">use <code class="font-mono">$var</code> for variable parts</span>
                 </label>
                 <input
                     type="url"
                     name="url"
+                    id="modal-url-input"
                     class="input input-bordered"
-                    placeholder="https://example.com/very/long/url"
+                    placeholder="https://jira.example.com/browse/$ticket"
                     required
                     value="{{.Form.URL}}"
+                    oninput="modalUpdateVarHint(this)"
                 >
+                <div id="modal-url-var-hint" class="mt-1 min-h-[1.25rem]"></div>
             </div>
 
             <div class="form-control mb-4">
@@ -143,6 +147,24 @@ function addTag(name) {
     document.getElementById('tag-suggestions').innerHTML = '';
     input.focus();
 }
+function modalUpdateVarHint(urlInput) {
+    var hint = document.getElementById('modal-url-var-hint');
+    if (!hint) return;
+    var re = /\$[a-z][a-z0-9_]*/g;
+    var matches = urlInput.value.match(re);
+    if (!matches || matches.length === 0) { hint.innerHTML = ''; return; }
+    var names = matches.map(function(m){ return m.substring(1); });
+    var slugEl = document.querySelector('#form-modal input[name="slug"]');
+    var slugVal = slugEl ? (slugEl.value || 'my-link') : 'my-link';
+    var example = 'go/' + slugVal + '/' + names.map(function(n){ return '&lt;' + n + '&gt;'; }).join('/');
+    hint.innerHTML = '<span class="text-xs text-info">Variables: ' +
+        names.map(function(n){ return '<code class="badge badge-sm badge-outline font-mono">$' + n + '</code>'; }).join(' ') +
+        ' — navigate as <code class="font-mono text-xs">' + example + '</code></span>';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var u = document.getElementById('modal-url-input');
+    if (u) modalUpdateVarHint(u);
+});
 </script>
 {{end}}
 
@@ -167,9 +189,14 @@ function addTag(name) {
             </div>
 
             <div class="form-control mb-4">
-                <label class="label"><span class="label-text">Destination URL <span class="text-error">*</span></span></label>
-                <input type="url" name="url" class="input input-bordered"
-                    required value="{{if .Form.URL}}{{.Form.URL}}{{else}}{{.Link.URL}}{{end}}">
+                <label class="label">
+                    <span class="label-text">Destination URL <span class="text-error">*</span></span>
+                    <span class="label-text-alt text-base-content/50">use <code class="font-mono">$var</code> for variable parts</span>
+                </label>
+                <input type="url" name="url" id="modal-url-input" class="input input-bordered"
+                    required value="{{if .Form.URL}}{{.Form.URL}}{{else}}{{.Link.URL}}{{end}}"
+                    oninput="modalUpdateVarHint(this)">
+                <div id="modal-url-var-hint" class="mt-1 min-h-[1.25rem]"></div>
             </div>
 
             <div class="form-control mb-4">
@@ -215,4 +242,24 @@ function addTag(name) {
         <button onclick="document.getElementById('modal').innerHTML=''">close</button>
     </form>
 </dialog>
+<script>
+function modalUpdateVarHint(urlInput) {
+    var hint = document.getElementById('modal-url-var-hint');
+    if (!hint) return;
+    var re = /\$[a-z][a-z0-9_]*/g;
+    var matches = urlInput.value.match(re);
+    if (!matches || matches.length === 0) { hint.innerHTML = ''; return; }
+    var names = matches.map(function(m){ return m.substring(1); });
+    var slugEl = document.querySelector('#form-modal .font-mono[disabled]');
+    var slugVal = slugEl ? (slugEl.value || 'my-link') : 'my-link';
+    var example = 'go/' + slugVal + '/' + names.map(function(n){ return '&lt;' + n + '&gt;'; }).join('/');
+    hint.innerHTML = '<span class="text-xs text-info">Variables: ' +
+        names.map(function(n){ return '<code class="badge badge-sm badge-outline font-mono">$' + n + '</code>'; }).join(' ') +
+        ' — navigate as <code class="font-mono text-xs">' + example + '</code></span>';
+}
+document.addEventListener('DOMContentLoaded', function() {
+    var u = document.getElementById('modal-url-input');
+    if (u) modalUpdateVarHint(u);
+});
+</script>
 {{end}}

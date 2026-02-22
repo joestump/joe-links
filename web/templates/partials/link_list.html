@@ -13,31 +13,36 @@
                 {{if $.ShowVisibility}}<th>Visibility</th>{{end}}
                 <th>Description</th>
                 <th>Created</th>
-                <th></th>
+                {{if $.ShowActions}}<th></th>{{end}}
             </tr>
         </thead>
         <tbody id="links-table">
             {{range .Links}}
             <tr id="link-{{.ID}}">
                 <td class="whitespace-nowrap">
-                    {{if $.Keyword}}
-                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank"><span class="font-weight-normal text-base-content/50">{{$.Keyword}}/</span>{{.Slug}}</a>
-                    {{else}}
-                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
-                    {{end}}
-                    {{$copyText := .Slug}}{{if $.Keyword}}{{$copyText = printf "%s/%s" $.Keyword .Slug}}{{end}}
-                    <button class="btn btn-xs btn-ghost tooltip tooltip-right ml-1" data-tip="Copy link"
-                            onclick="(function(btn){navigator.clipboard.writeText('{{$copyText}}').then(function(){btn.setAttribute('data-tip','Copied!');setTimeout(function(){btn.setAttribute('data-tip','Copy link')},1500)})})(this)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                    </button>
+                    <div class="flex items-center gap-1">
+                        {{if $.Keyword}}
+                        <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank"><span class="font-normal text-base-content/50">{{$.Keyword}}/</span>{{.Slug}}</a>
+                        {{else}}
+                        <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
+                        {{end}}
+                        {{$copyText := .Slug}}{{if $.Keyword}}{{$copyText = printf "%s/%s" $.Keyword .Slug}}{{end}}
+                        <button class="btn btn-xs btn-ghost tooltip tooltip-right" data-tip="Copy link"
+                                onclick="(function(btn){navigator.clipboard.writeText('{{$copyText}}').then(function(){btn.setAttribute('data-tip','Copied!');setTimeout(function(){btn.setAttribute('data-tip','Copy link')},1500)})})(this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                        </button>
+                    </div>
                 </td>
                 <td class="max-w-xs truncate text-sm text-base-content/70">
                     <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
                 </td>
                 {{if $.ShowTitle}}<td class="text-sm text-base-content/70">{{.Title}}</td>{{end}}
-                {{if $.ShowOwner}}<td class="text-sm text-base-content/70">{{.Owners}}</td>{{end}}
+                {{if $.ShowOwner}}<td class="text-sm text-base-content/70">
+                    {{if .OwnerSlug}}<a href="/u/{{.OwnerSlug}}" class="link link-hover">{{.Owners}}</a>{{else}}{{.Owners}}{{end}}
+                    {{if .IsOwner}}<span class="badge badge-xs badge-success ml-1">you</span>{{end}}
+                </td>{{end}}
                 {{if $.ShowTags}}<td class="text-sm">{{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}</td>{{end}}
                 {{if $.ShowVisibility}}<td class="text-sm">
                     <span class="badge badge-sm {{if eq .Visibility "secure"}}badge-error{{else if eq .Visibility "private"}}badge-warning{{else}}badge-ghost{{end}}">{{.Visibility}}</span>
@@ -45,7 +50,7 @@
                 <td class="text-sm text-base-content/60">{{.Description}}</td>
                 <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
                 <!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — Edit and Delete actions only (no View) -->
-                <td class="flex gap-1 justify-end">
+                {{if $.ShowActions}}<td class="flex gap-1 justify-end">
                     <button class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="Edit"
                             hx-get="/dashboard/links/{{.ID}}/edit"
                             hx-target="#modal"
@@ -62,7 +67,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
-                </td>
+                </td>{{end}}
             </tr>
             {{end}}
         </tbody>
@@ -85,10 +90,7 @@
             <h2 class="text-xl font-semibold mb-2">No links yet</h2>
             {{if not $.IsAdminPage}}
             <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
-            <button class="btn btn-primary"
-                    hx-get="/dashboard/links/new"
-                    hx-target="#modal"
-                    hx-swap="innerHTML">Create a link</button>
+            <a href="/dashboard/links/new" class="btn btn-primary">Create a link</a>
             {{else}}
             <p class="text-base-content/60 mb-4">No links have been created yet.</p>
             {{end}}

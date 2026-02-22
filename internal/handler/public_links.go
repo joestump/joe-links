@@ -16,26 +16,34 @@ const defaultPageSize = 25
 // Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
 type PublicLinksPage struct {
 	BasePage
-	Links      []store.PublicLink
-	Query      string
-	Page       int
-	TotalPages int
-	Total      int
-	HasPrev    bool
-	HasNext    bool
-	PrevPage   int
-	NextPage   int
+	Links          []*store.AdminLink
+	Query          string
+	Tag            string // unused; present for link_list partial compatibility
+	Keyword        string // unused; present for link_list partial compatibility
+	Page           int
+	TotalPages     int
+	Total          int
+	HasPrev        bool
+	HasNext        bool
+	PrevPage       int
+	NextPage       int
+	ShowTitle      bool
+	ShowOwner      bool
+	ShowTags       bool
+	ShowVisibility bool
+	ShowActions    bool
 }
 
 // PublicLinksHandler serves the public link browser at GET /links.
 // Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
 type PublicLinksHandler struct {
-	links *store.LinkStore
+	links    *store.LinkStore
+	keywords *store.KeywordStore
 }
 
 // NewPublicLinksHandler creates a new PublicLinksHandler.
-func NewPublicLinksHandler(ls *store.LinkStore) *PublicLinksHandler {
-	return &PublicLinksHandler{links: ls}
+func NewPublicLinksHandler(ls *store.LinkStore, ks *store.KeywordStore) *PublicLinksHandler {
+	return &PublicLinksHandler{links: ls, keywords: ks}
 }
 
 // Index renders the public link browser with search and pagination.
@@ -51,7 +59,12 @@ func (h *PublicLinksHandler) Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	links, total, err := h.links.ListPublic(r.Context(), query, page, defaultPageSize)
+	currentUserID := ""
+	if user != nil {
+		currentUserID = user.ID
+	}
+
+	links, total, err := h.links.ListPublic(r.Context(), currentUserID, query, page, defaultPageSize)
 	if err != nil {
 		http.Error(w, "could not load links", http.StatusInternalServerError)
 		return
@@ -62,17 +75,26 @@ func (h *PublicLinksHandler) Index(w http.ResponseWriter, r *http.Request) {
 		totalPages = 1
 	}
 
+	keyword := ""
+	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
+		keyword = kws[0].Keyword
+	}
+
 	data := PublicLinksPage{
-		BasePage:   newBasePage(r, user),
-		Links:      links,
-		Query:      query,
-		Page:       page,
-		TotalPages: totalPages,
-		Total:      total,
-		HasPrev:    page > 1,
-		HasNext:    page < totalPages,
-		PrevPage:   page - 1,
-		NextPage:   page + 1,
+		BasePage:       newBasePage(r, user),
+		Links:          links,
+		Query:          query,
+		Keyword:        keyword,
+		Page:           page,
+		TotalPages:     totalPages,
+		Total:          total,
+		HasPrev:        page > 1,
+		HasNext:        page < totalPages,
+		PrevPage:       page - 1,
+		NextPage:       page + 1,
+		ShowOwner:      true,
+		ShowTags:       true,
+		ShowVisibility: true,
 	}
 
 	if isHTMX(r) {

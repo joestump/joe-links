@@ -24,9 +24,11 @@ type DashboardPage struct {
 	Filter    string // "shared" for shared-with-me view
 	Flash     *Flash
 	Keyword   string // first configured keyword (e.g. "go") for slug prefix display
-	ShowTitle bool   // show Title column
-	ShowOwner bool   // show Owner(s) column
-	ShowTags  bool   // show Tags column
+	ShowTitle      bool // show Title column
+	ShowOwner      bool // show Owner(s) column
+	ShowTags       bool // show Tags column
+	ShowVisibility bool // show Visibility column
+	ShowActions    bool // show Edit/Delete action buttons
 }
 
 // DashboardHandler serves the authenticated link management dashboard.
@@ -96,14 +98,15 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := DashboardPage{
-		BasePage: newBasePage(r, user),
-		User:     user,
-		Links:    links,
-		Tags:     allTags,
-		Query:    query,
-		Tag:      tagSlug,
-		Filter:   filter,
-		Keyword:  keyword,
+		BasePage:    newBasePage(r, user),
+		User:        user,
+		Links:       links,
+		Tags:        allTags,
+		Query:       query,
+		Tag:         tagSlug,
+		Filter:      filter,
+		Keyword:     keyword,
+		ShowActions: true,
 	}
 
 	if isHTMX(r) {

@@ -14,10 +14,21 @@
       "ui-ux-improvements": 55,
       "admin-management": 59,
       "user-profiles-public-browsing": 57,
-      "link-visibility": 58
+      "link-visibility": 58,
+      "link-list-consistency": 60,
+      "browser-extension": 61
     },
-    "views": ["All Work", "Board", "Roadmap"],
-    "columns": ["Todo", "In Progress", "In Review", "Done"],
+    "views": [
+      "All Work",
+      "Board",
+      "Roadmap"
+    ],
+    "columns": [
+      "Todo",
+      "In Progress",
+      "In Review",
+      "Done"
+    ],
     "iteration_weeks": 2
   },
   "branches": {

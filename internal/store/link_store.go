@@ -309,8 +309,10 @@ func (s *LinkStore) ListTags(ctx context.Context, linkID string) ([]*Tag, error)
 // Governing: SPEC-0011 REQ "Admin Links Screen", ADR-0005
 type AdminLink struct {
 	Link
-	Owners string `db:"owners"` // comma-separated owner display names
-	Tags   string `db:"tags"`   // comma-separated tag names
+	Owners    string `db:"owners"`     // comma-separated owner display names
+	Tags      string `db:"tags"`       // comma-separated tag names
+	OwnerSlug string `db:"owner_slug"` // primary owner's display_name_slug (populated in public views)
+	IsOwner   bool   `db:"is_owner"`   // true if the querying user is an owner (populated in public views)
 }
 
 // TagList returns tag names as a slice for template iteration.
@@ -432,7 +434,10 @@ func (p *PublicLink) DisplayTitle() string {
 // ListPublic returns paginated public links, optionally filtered by search query.
 // Returns the matching links and total count for pagination.
 // Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
-func (s *LinkStore) ListPublic(ctx context.Context, q string, page, perPage int) ([]PublicLink, int, error) {
+// ListPublic returns paginated public links as AdminLink rows, optionally filtered by query.
+// currentUserID is used to set IsOwner; pass "" for unauthenticated callers.
+// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
+func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, page, perPage int) ([]*AdminLink, int, error) {
 	baseWhere := `WHERE l.visibility = 'public'`
 	var args []interface{}
 	if q != "" {
@@ -451,10 +456,13 @@ func (s *LinkStore) ListPublic(ctx context.Context, q string, page, perPage int)
 	// Fetch paginated results.
 	offset := (page - 1) * perPage
 	query := `
-		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
-		       COALESCE(u.display_name, '') AS owner_display_name,
-		       COALESCE(u.display_name_slug, '') AS owner_display_name_slug,
-		       COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tag_list
+		SELECT l.*,
+		       COALESCE(u.display_name, '') AS owners,
+		       COALESCE(u.display_name_slug, '') AS owner_slug,
+		       COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags,
+		       CASE WHEN EXISTS(
+		           SELECT 1 FROM link_owners lo2 WHERE lo2.link_id = l.id AND lo2.user_id = ?
+		       ) THEN 1 ELSE 0 END AS is_owner
 		FROM links l
 		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
 		LEFT JOIN users u ON u.id = lo.user_id
@@ -464,9 +472,10 @@ func (s *LinkStore) ListPublic(ctx context.Context, q string, page, perPage int)
 		GROUP BY l.id
 		ORDER BY l.created_at DESC
 		LIMIT ? OFFSET ?`
-	fetchArgs := append(args, perPage, offset)
+	fetchArgs := append([]interface{}{currentUserID}, args...)
+	fetchArgs = append(fetchArgs, perPage, offset)
 
-	var links []PublicLink
+	var links []*AdminLink
 	if err := s.db.SelectContext(ctx, &links, query, fetchArgs...); err != nil {
 		return nil, 0, err
 	}

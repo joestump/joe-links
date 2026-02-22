@@ -14,15 +14,17 @@ extension is built.
 ### Goals
 - Intercept search navigations that match registered keyword patterns and redirect to the
   go-links server
-- Support Chrome natively (unpacked load); support Safari via `xcrun safari-web-extension-converter`
+- Support Chrome natively (unpacked load); support Safari via `xcrun safari-web-extension-converter`;
+  support Firefox via `about:debugging` temporary add-on load
 - Dynamically discover keyword hosts from the server (supporting ADR-0011 keyword forwarding)
+- Authenticate server requests with an optional API key (Personal Access Token)
+- Provide a browser action popup for quick link creation from the current tab
 - Remain invisible unless a go-link pattern is detected (zero interference with normal browsing)
 
 ### Non-Goals
-- Firefox support (not a primary target; MV3 Firefox compatibility can be added later)
 - Omnibox / keyword-search UX (changes typing UX from `go/foo` to `go foo`; rejected)
-- Packaging or publishing to Chrome Web Store or Safari App Store (manual install only)
-- Link creation or management UI within the extension
+- Packaging or publishing to Chrome Web Store, Firefox Add-ons, or Safari App Store (manual install only)
+- Full link management UI within the extension (edit, delete, list) — only creation via popup
 
 ## Decisions
 
@@ -75,6 +77,51 @@ The canonical host is always present regardless of API results.
 workers are ephemeral). Alarms survive service worker restarts too, making periodic refresh
 reliable without keeping the service worker alive.
 
+### API Key Authentication
+
+**Choice**: Store an optional API key in `chrome.storage.local` alongside `baseURL`. When
+present, attach it as an `Authorization: Bearer {key}` header on all outbound requests to
+the joe-links server (keyword discovery, link creation). When absent, requests are sent
+without authentication.
+
+**Rationale**: The joe-links server supports Personal Access Tokens (SPEC-0006, ADR-0009)
+with `Authorization: Bearer` headers. Reusing the same auth mechanism keeps the extension
+simple — no OAuth flow, no token refresh, no cookie management. The user creates a PAT in
+the joe-links dashboard and pastes it into the extension options page. This also means the
+extension never handles user credentials directly.
+
+**Alternatives considered**:
+- OAuth2/OIDC flow from the extension: overly complex for a browser extension; requires
+  redirect handling, token storage, and refresh logic
+- Cookie-based auth: would require the extension to maintain a session with the server,
+  which is fragile across service worker restarts in MV3
+
+### Browser Action Popup for Link Creation
+
+**Choice**: Add a `popup.html` browser action that lets users create short links. The popup
+pre-fills the current tab's URL via `chrome.tabs.query`, provides slug and optional keyword
+fields, and POSTs to `{baseURL}/api/v1/links` with the stored API key.
+
+**Rationale**: A popup is the simplest way to expose link creation without navigating away
+from the current page. Pre-filling the URL reduces friction to a single field (the slug).
+The popup is stateless — it reads config from `chrome.storage.local` on open and makes a
+single API call on submit.
+
+**Alternatives considered**:
+- Content script with floating UI: invasive, risks style conflicts with host pages
+- Side panel: requires additional permissions and is not supported in all browsers
+- Options page with creation form: too many clicks; the popup is one click away
+
+### On-Install Setup Flow
+
+**Choice**: In the `chrome.runtime.onInstalled` handler, check `chrome.storage.local` for
+a saved `baseURL`. If none exists (fresh install), open the options page in a new tab via
+`chrome.runtime.openOptionsPage()`.
+
+**Rationale**: Without a configured server URL, the extension cannot function. Opening the
+options page on first install guides the user to configure the minimum required settings
+(base URL and optionally an API key) before the extension can intercept any navigations.
+
 ## Architecture
 
 ```mermaid
@@ -104,9 +151,11 @@ flowchart TD
 ```
 extension/
 ├── manifest.json          # MV3 manifest
-├── background.js          # Service worker: interception + keyword refresh
-├── options.html           # Options page UI
+├── background.js          # Service worker: interception + keyword refresh + on-install setup
+├── options.html           # Options page UI (base URL + API key)
 ├── options.js             # Options page logic
+├── popup.html             # Browser action popup UI (create link)
+├── popup.js               # Popup logic (pre-fill URL, POST to API)
 └── icons/
     ├── icon-16.png
     ├── icon-48.png
@@ -116,9 +165,11 @@ extension/
 **`manifest.json`** declares:
 - `manifest_version: 3`
 - `background.service_worker: "background.js"`
-- `permissions: ["storage", "tabs", "webNavigation", "alarms"]`
+- `permissions: ["storage", "tabs", "webNavigation", "alarms", "activeTab"]`
 - `host_permissions: ["http://go/*", "<all_urls>"]` (all_urls needed for search engine matching)
 - `options_ui.page: "options.html"`
+- `action.default_popup: "popup.html"`
+- `browser_specific_settings.gecko.id` and `gecko.strict_min_version` for Firefox
 
 **`background.js`** responsibilities:
 1. On install/startup: load keywords from storage, schedule alarm
@@ -126,8 +177,13 @@ extension/
 3. On `webNavigation.onBeforeNavigate`: check URL against search engine list, decode `q`,
    test against keyword set, call `tabs.update` if match
 
-**`options.html` / `options.js`**: simple form to read/write `baseURL` in `chrome.storage.local`,
-with URL validation before saving.
+**`options.html` / `options.js`**: form to read/write `baseURL` and `apiKey` in
+`chrome.storage.local`, with URL validation before saving.
+
+**`popup.html` / `popup.js`**: browser action popup for creating short links. On open,
+queries `chrome.tabs.query` for the active tab URL and pre-fills the destination field.
+Submits via POST to `{baseURL}/api/v1/links` with `Authorization: Bearer {apiKey}` header.
+Displays success (created slug) or error message.
 
 ## Risks / Trade-offs
 

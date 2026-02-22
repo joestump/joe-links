@@ -73,8 +73,8 @@ func NewRouter(deps Deps) http.Handler {
 	// Authenticated routes
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — dashboard, link, and tag routes
 	dashboard := NewDashboardHandler(deps.LinkStore, deps.TagStore, deps.KeywordStore)
-	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore)
-	tags := NewTagsHandler(deps.TagStore, deps.LinkStore)
+	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore, deps.KeywordStore)
+	tags := NewTagsHandler(deps.TagStore, deps.LinkStore, deps.KeywordStore)
 	tokensWeb := NewTokensHandler(deps.TokenStore)
 
 	r.Group(func(r chi.Router) {
@@ -168,7 +168,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Public link browser — no auth required; MUST be before slug catch-all.
 	// Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
-	publicLinks := NewPublicLinksHandler(deps.LinkStore)
+	publicLinks := NewPublicLinksHandler(deps.LinkStore, deps.KeywordStore)
 	r.With(deps.AuthMiddleware.OptionalUser).Get("/links", publicLinks.Index)
 
 	// Slug resolver -- catch-all, must be last.

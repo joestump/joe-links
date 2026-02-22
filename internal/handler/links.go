@@ -45,11 +45,12 @@ type LinkForm struct {
 // LinkFormPage is the template data for the new/edit link forms.
 type LinkFormPage struct {
 	BasePage
-	User  *store.User
-	Link  *store.Link
-	Form  LinkForm
-	Error string
-	Flash *Flash
+	User    *store.User
+	Link    *store.Link
+	Form    LinkForm
+	Error   string
+	Flash   *Flash
+	Keyword string // first configured keyword (e.g. "go") for slug prefix display
 }
 
 // LinkDetailPage is the template data for the link detail view.
@@ -82,23 +83,30 @@ type ConfirmDeleteData struct {
 
 // LinksHandler provides HTTP handlers for link CRUD operations.
 type LinksHandler struct {
-	links *store.LinkStore
-	owns  *store.OwnershipStore
-	users *store.UserStore
+	links    *store.LinkStore
+	owns     *store.OwnershipStore
+	users    *store.UserStore
+	keywords *store.KeywordStore
 }
 
 // NewLinksHandler creates a new LinksHandler.
-func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore, us *store.UserStore) *LinksHandler {
-	return &LinksHandler{links: ls, owns: os, users: us}
+func NewLinksHandler(ls *store.LinkStore, os *store.OwnershipStore, us *store.UserStore, ks *store.KeywordStore) *LinksHandler {
+	return &LinksHandler{links: ls, owns: os, users: us, keywords: ks}
 }
 
 // New renders the create-link form.
 // Governing: SPEC-0004 REQ "New Link Form"
-// Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal"
 func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
-	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form}
+
+	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
+	keyword := ""
+	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
+		keyword = kws[0].Keyword
+	}
+
+	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Keyword: keyword}
 	if isHTMX(r) {
 		renderFragment(w, "new_link_modal", data)
 		return
