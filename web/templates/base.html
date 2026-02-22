@@ -22,7 +22,18 @@
         <ul class="menu menu-horizontal px-1">
             <li><a href="/dashboard">Dashboard</a></li>
             <li><a href="/dashboard/tags">Tags</a></li>
-            {{if eq .User.Role "admin"}}<li><a href="/admin">Admin</a></li>{{end}}
+            <!-- Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section" -->
+            {{if eq .User.Role "admin"}}
+            <li>
+                <details{{if .IsAdminPage}} open{{end}}>
+                    <summary class="list-none">Admin</summary>
+                    <ul class="bg-base-200 rounded-t-none p-2 z-10">
+                        <li><a href="/admin">Overview</a></li>
+                        <li><a href="/admin/users">Users</a></li>
+                    </ul>
+                </details>
+            </li>
+            {{end}}
         </ul>
     </div>
     <div class="navbar-end gap-2">

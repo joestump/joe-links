@@ -49,7 +49,7 @@ func (h *AdminHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
 	allLinks, _ := h.links.ListAll(r.Context())
 	allKeywords, _ := h.keywords.List(r.Context())
 	data := AdminDashboardPage{
-		BasePage:     BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage:     newBasePage(r, user),
 		UserCount:    len(allUsers),
 		LinkCount:    len(allLinks),
 		KeywordCount: len(allKeywords),
@@ -63,7 +63,7 @@ func (h *AdminHandler) Users(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	allUsers, _ := h.users.ListAll(r.Context())
 	data := AdminUsersPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Users:    allUsers,
 	}
 	render(w, "admin/users.html", data)
@@ -97,7 +97,7 @@ func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	allLinks, _ := h.links.ListAll(r.Context())
 	data := AdminLinksPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Links:    allLinks,
 	}
 	render(w, "admin/links.html", data)

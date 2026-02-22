@@ -37,7 +37,7 @@ func (h *KeywordsHandler) Index(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	keywords, _ := h.keywords.List(r.Context())
 	data := AdminKeywordsPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Keywords: keywords,
 	}
 	render(w, "admin/keywords.html", data)
@@ -102,7 +102,7 @@ func (h *KeywordsHandler) Delete(w http.ResponseWriter, r *http.Request) {
 func (h *KeywordsHandler) renderList(w http.ResponseWriter, r *http.Request, user *store.User, errMsg string) {
 	keywords, _ := h.keywords.List(r.Context())
 	data := AdminKeywordsPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		Keywords: keywords,
 		Error:    errMsg,
 	}

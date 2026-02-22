@@ -104,7 +104,7 @@ func (h *LinksHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	owners, _ := h.owns.ListOwnerUsers(link.ID)
 
 	data := LinkDetailPage{
-		BasePage: BasePage{Theme: themeFromRequest(r), User: user},
+		BasePage: newBasePage(r, user),
 		User:     user,
 		Link:     link,
 		Tags:     tags,
