@@ -10,7 +10,8 @@
     "storage",
     "tabs",
     "webNavigation",
-    "alarms"
+    "alarms",
+    "activeTab"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -26,7 +27,8 @@
       "48": "icons/icon-48.png",
       "128": "icons/icon-128.png"
     },
-    "default_title": "joe-links"
+    "default_title": "joe-links",
+    "default_popup": "popup.html"
   },
   "options_ui": {
     "page": "options.html",

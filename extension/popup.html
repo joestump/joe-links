@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Link — joe-links</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      width: 300px;
+      margin: 0;
+      padding: 16px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 0.95rem; margin: 0 0 12px; font-weight: 600; }
+    label { display: block; margin-bottom: 0.25rem; font-weight: 600; font-size: 0.8rem; }
+    input[type="text"] {
+      width: 100%; box-sizing: border-box;
+      padding: 6px 8px; font-size: 0.85rem;
+      border: 1px solid #ccc; border-radius: 4px;
+      outline: none; margin-bottom: 8px;
+    }
+    input[type="text"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
+    .row { display: flex; gap: 6px; }
+    .row input { margin-bottom: 0; }
+    .hint { font-size: 0.75rem; color: #888; margin: -4px 0 8px; }
+    button {
+      width: 100%; padding: 7px; font-size: 0.9rem;
+      background: #3b82f6; color: #fff;
+      border: none; border-radius: 4px; cursor: pointer;
+      margin-top: 4px;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    #status { margin-top: 8px; font-size: 0.85rem; display: none; }
+    #status.success { color: #16a34a; }
+    #status.error { color: #dc2626; }
+    #created-link { font-family: monospace; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <!-- Governing: SPEC-0008 REQ "Browser Action — Create Link", ADR-0012 -->
+  <h1>Create short link</h1>
+
+  <label for="url">Destination URL</label>
+  <input type="text" id="url" placeholder="https://example.com/long/url" />
+
+  <div class="row">
+    <div style="flex:1">
+      <label for="keyword">Keyword (optional)</label>
+      <input type="text" id="keyword" placeholder="go" />
+    </div>
+    <div style="flex:1">
+      <label for="slug">Slug</label>
+      <input type="text" id="slug" placeholder="my-link" />
+    </div>
+  </div>
+  <p class="hint">Creates: keyword/slug → URL</p>
+
+  <button id="create">Create Link</button>
+
+  <div id="status">
+    <span id="status-msg"></span>
+    <span id="created-link"></span>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
