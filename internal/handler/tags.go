@@ -99,17 +99,17 @@ func (h *TagsHandler) Suggest(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	w.Header().Set("Content-Type", "text/html")
 	if q == "" {
-		w.Write([]byte(""))
+		_, _ = w.Write([]byte(""))
 		return
 	}
 	tags, err := h.tags.SearchByPrefix(r.Context(), q)
 	if err != nil || len(tags) == 0 {
-		w.Write([]byte(""))
+		_, _ = w.Write([]byte(""))
 		return
 	}
 	var buf []byte
 	for _, t := range tags {
 		buf = append(buf, []byte(`<li><button type="button" class="btn btn-ghost btn-sm justify-start" onclick="addTag('`+html.EscapeString(t.Name)+`')">`+html.EscapeString(t.Name)+`</button></li>`)...)
 	}
-	w.Write(buf)
+	_, _ = w.Write(buf)
 }
