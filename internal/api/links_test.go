@@ -280,3 +280,76 @@ func TestLinks_Delete_Unauthenticated(t *testing.T) {
 		t.Errorf("status = %d, want %d", rec.Code, http.StatusUnauthorized)
 	}
 }
+
+// Governing: SPEC-0009 REQ "API Representation", ADR-0013
+func TestLinks_Create_VariableURL_Passthrough(t *testing.T) {
+	env := newTestEnv(t)
+	user := seedUser(t, env, "alice@example.com", "user")
+	token := seedToken(t, env, user.ID)
+
+	body := `{"slug":"github","url":"https://github.com/$username","title":"GitHub"}`
+	req := httptest.NewRequest("POST", "/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	authRequest(req, token)
+	rec := httptest.NewRecorder()
+	env.Router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusCreated, rec.Body.String())
+	}
+
+	var resp api.LinkResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.URL != "https://github.com/$username" {
+		t.Errorf("url = %q, want %q — API must return template as-is", resp.URL, "https://github.com/$username")
+	}
+}
+
+// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+func TestLinks_Create_DuplicateVariable_Rejected(t *testing.T) {
+	env := newTestEnv(t)
+	user := seedUser(t, env, "alice@example.com", "user")
+	token := seedToken(t, env, user.ID)
+
+	body := `{"slug":"dup-var","url":"https://example.com/$foo/$foo"}`
+	req := httptest.NewRequest("POST", "/links", bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	authRequest(req, token)
+	rec := httptest.NewRecorder()
+	env.Router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d; body: %s", rec.Code, http.StatusBadRequest, rec.Body.String())
+	}
+}
+
+// Governing: SPEC-0009 REQ "API Representation", ADR-0013
+func TestLinks_Get_VariableURL_Passthrough(t *testing.T) {
+	env := newTestEnv(t)
+	user := seedUser(t, env, "alice@example.com", "user")
+	token := seedToken(t, env, user.ID)
+
+	link, err := env.LinkStore.Create(context.Background(), "var-link", "https://example.com/$query/$page", user.ID, "Var Link", "")
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/links/"+link.ID, nil)
+	authRequest(req, token)
+	rec := httptest.NewRecorder()
+	env.Router.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d; body: %s", rec.Code, http.StatusOK, rec.Body.String())
+	}
+
+	var resp api.LinkResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.URL != "https://example.com/$query/$page" {
+		t.Errorf("url = %q, want %q — API must return template as-is", resp.URL, "https://example.com/$query/$page")
+	}
+}

@@ -1,6 +1,7 @@
 // Governing: SPEC-0001 REQ "Short Link Management", REQ "HTMX Hypermedia Interactions", ADR-0001
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie", ADR-0006
 // Governing: SPEC-0004 REQ "New Link Form", "Edit Link Form", "Delete Link"
+// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 package handler
 
 import (
@@ -118,6 +119,17 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	if err := store.ValidateURLVariables(form.URL); err != nil {
+		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderPageFragment(w, "new.html", "content", data)
+			return
+		}
+		render(w, "new.html", data)
+		return
+	}
+
 	link, err := h.links.Create(r.Context(), form.Slug, form.URL, user.ID, form.Title, form.Description)
 	if err != nil {
 		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Form: form, Error: "That slug is already taken. Choose a different one."}
@@ -216,6 +228,17 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
 		Tags:        r.FormValue("tags"),
+	}
+
+	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+	if err := store.ValidateURLVariables(form.URL); err != nil {
+		data := LinkFormPage{BasePage: BasePage{Theme: themeFromRequest(r), User: user}, User: user, Link: link, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderPageFragment(w, "edit.html", "content", data)
+			return
+		}
+		render(w, "edit.html", data)
+		return
 	}
 
 	_, err = h.links.Update(r.Context(), id, form.URL, form.Title, form.Description)
