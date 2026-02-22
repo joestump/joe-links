@@ -4,6 +4,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
@@ -46,6 +47,24 @@ func NewLinkStore(db *sqlx.DB, owns *OwnershipStore, tags *TagStore) *LinkStore 
 
 // q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
 func (s *LinkStore) q(query string) string { return s.db.Rebind(query) }
+
+// agg returns a dialect-appropriate string aggregation expression with deduplication.
+// PostgreSQL: STRING_AGG(DISTINCT col, ',') — SQLite/MySQL: GROUP_CONCAT(DISTINCT col)
+func (s *LinkStore) aggDistinct(col string) string {
+	if s.db.DriverName() == "postgres" {
+		return "COALESCE(STRING_AGG(DISTINCT " + col + ", ','), '')"
+	}
+	return "COALESCE(GROUP_CONCAT(DISTINCT " + col + "), '')"
+}
+
+// aggAll returns a dialect-appropriate string aggregation expression (no dedup).
+// PostgreSQL: STRING_AGG(col, ',') — SQLite/MySQL: GROUP_CONCAT(col)
+func (s *LinkStore) aggAll(col string) string {
+	if s.db.DriverName() == "postgres" {
+		return "COALESCE(STRING_AGG(" + col + ", ','), '')"
+	}
+	return "COALESCE(GROUP_CONCAT(" + col + "), '')"
+}
 
 // Create inserts a new link and registers ownerID as the primary owner.
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
@@ -330,15 +349,18 @@ func (a *AdminLink) TagList() []string {
 // Supports optional search query filtering by slug, URL, title, or owner display name.
 // Governing: SPEC-0011 REQ "Admin Links Screen"
 func (s *LinkStore) ListAllAdmin(ctx context.Context, q string) ([]*AdminLink, error) {
-	query := `
+	query := fmt.Sprintf(`
 		SELECT l.*,
-			COALESCE(GROUP_CONCAT(DISTINCT u.display_name), '') AS owners,
-			COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags
+			%s AS owners,
+			%s AS tags
 		FROM links l
 		LEFT JOIN link_owners lo ON lo.link_id = l.id
 		LEFT JOIN users u ON u.id = lo.user_id
 		LEFT JOIN link_tags lt ON lt.link_id = l.id
-		LEFT JOIN tags t ON t.id = lt.tag_id`
+		LEFT JOIN tags t ON t.id = lt.tag_id`,
+		s.aggDistinct("u.display_name"),
+		s.aggDistinct("t.name"),
+	)
 	var args []interface{}
 	if q != "" {
 		pattern := "%" + q + "%"
@@ -359,17 +381,20 @@ func (s *LinkStore) ListAllAdmin(ctx context.Context, q string) ([]*AdminLink, e
 // Governing: SPEC-0011 REQ "Admin Inline Link Editing"
 func (s *LinkStore) GetAdminLink(ctx context.Context, id string) (*AdminLink, error) {
 	var link AdminLink
-	err := s.db.GetContext(ctx, &link, s.q(`
+	err := s.db.GetContext(ctx, &link, s.q(fmt.Sprintf(`
 		SELECT l.*,
-			COALESCE(GROUP_CONCAT(DISTINCT u.display_name), '') AS owners,
-			COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags
+			%s AS owners,
+			%s AS tags
 		FROM links l
 		LEFT JOIN link_owners lo ON lo.link_id = l.id
 		LEFT JOIN users u ON u.id = lo.user_id
 		LEFT JOIN link_tags lt ON lt.link_id = l.id
 		LEFT JOIN tags t ON t.id = lt.tag_id
 		WHERE l.id = ?
-		GROUP BY l.id`), id)
+		GROUP BY l.id`,
+		s.aggDistinct("u.display_name"),
+		s.aggDistinct("t.name"),
+	)), id)
 	if err == sql.ErrNoRows {
 		return nil, ErrNotFound
 	}
@@ -457,12 +482,15 @@ func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, pag
 	}
 
 	// Fetch paginated results.
+	// COALESCE(MAX(u.*), '') is used instead of bare u.* so that PostgreSQL's
+	// strict GROUP BY is satisfied; the JOIN on is_primary=1 ensures at most
+	// one owner row per link, so MAX() returns the same value as the bare column.
 	offset := (page - 1) * perPage
-	query := `
+	query := fmt.Sprintf(`
 		SELECT l.*,
-		       COALESCE(u.display_name, '') AS owners,
-		       COALESCE(u.display_name_slug, '') AS owner_slug,
-		       COALESCE(GROUP_CONCAT(DISTINCT t.name), '') AS tags,
+		       COALESCE(MAX(u.display_name), '') AS owners,
+		       COALESCE(MAX(u.display_name_slug), '') AS owner_slug,
+		       %s AS tags,
 		       CASE WHEN EXISTS(
 		           SELECT 1 FROM link_owners lo2 WHERE lo2.link_id = l.id AND lo2.user_id = ?
 		       ) THEN 1 ELSE 0 END AS is_owner
@@ -471,10 +499,12 @@ func (s *LinkStore) ListPublic(ctx context.Context, currentUserID, q string, pag
 		LEFT JOIN users u ON u.id = lo.user_id
 		LEFT JOIN link_tags lt ON lt.link_id = l.id
 		LEFT JOIN tags t ON t.id = lt.tag_id
-		` + baseWhere + `
+		`+baseWhere+`
 		GROUP BY l.id
 		ORDER BY l.created_at DESC
-		LIMIT ? OFFSET ?`
+		LIMIT ? OFFSET ?`,
+		s.aggDistinct("t.name"),
+	)
 	fetchArgs := append([]interface{}{currentUserID}, args...)
 	fetchArgs = append(fetchArgs, perPage, offset)
 
@@ -556,11 +586,11 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 
 	offset := (page - 1) * perPage
 	var links []PublicLink
-	err = s.db.SelectContext(ctx, &links, s.q(`
+	err = s.db.SelectContext(ctx, &links, s.q(fmt.Sprintf(`
 		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
-		       u.display_name AS owner_display_name,
-		       u.display_name_slug AS owner_display_name_slug,
-		       COALESCE(GROUP_CONCAT(t.name), '') AS tag_list
+		       MAX(u.display_name) AS owner_display_name,
+		       MAX(u.display_name_slug) AS owner_display_name_slug,
+		       %s AS tag_list
 		FROM links l
 		JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
 		JOIN users u ON u.id = lo.user_id
@@ -571,7 +601,7 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 		GROUP BY l.id
 		ORDER BY l.created_at DESC
 		LIMIT ? OFFSET ?
-	`), userID, perPage, offset)
+	`, s.aggAll("t.name"))), userID, perPage, offset)
 	if err != nil {
 		return nil, 0, err
 	}
