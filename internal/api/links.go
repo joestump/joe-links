@@ -159,6 +159,10 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		log.Printf("api: create link %q: %v", req.Slug, err)
+		if isDBLockError(err) {
+			writeError(w, http.StatusServiceUnavailable, "server is busy, please retry", "DB_BUSY")
+			return
+		}
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
 	}

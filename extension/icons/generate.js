@@ -80,9 +80,9 @@ function createPNG(size, r, g, b) {
 const sizes = [16, 48, 128];
 const outDir = path.dirname(__filename);
 
-// Solid blue #3B82F6
+// Brand purple #c084fc
 sizes.forEach(size => {
-  const png = createPNG(size, 0x3B, 0x82, 0xF6);
+  const png = createPNG(size, 0xC0, 0x84, 0xFC);
   const outPath = path.join(outDir, `icon-${size}.png`);
   fs.writeFileSync(outPath, png);
   console.log(`Created ${outPath} (${png.length} bytes)`);

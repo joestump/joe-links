@@ -4,77 +4,133 @@
   <meta charset="UTF-8">
   <title>joe-links Settings</title>
   <style>
+    :root {
+      --primary: #c084fc;
+      --primary-hover: #a855f7;
+      --primary-content: #160030;
+      --base-100: #ffffff;
+      --base-200: #f5f5f5;
+      --base-300: #e8e8e8;
+      --base-content: #111111;
+      --muted: #6b7280;
+      --error-text: #9f1239;
+      --success-text: #166534;
+      --radius: 0.5rem;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --primary: #a855f7;
+        --primary-hover: #9333ea;
+        --primary-content: #f3e8ff;
+        --base-100: #111111;
+        --base-200: #1c1c1c;
+        --base-300: #2a2a2a;
+        --base-content: #f1f5f9;
+        --muted: #9ca3af;
+        --error-text: #fca5a5;
+        --success-text: #86efac;
+      }
+    }
+    * { box-sizing: border-box; }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      max-width: 420px;
-      margin: 40px auto;
-      padding: 0 20px;
-      color: #1a1a1a;
+      max-width: 460px;
+      margin: 0 auto;
+      background: var(--base-100);
+      color: var(--base-content);
+      font-size: 0.9rem;
     }
-    h1 { font-size: 1.15rem; margin-bottom: 1.5rem; }
-    label { display: block; margin-bottom: 0.35rem; font-weight: 600; font-size: 0.9rem; }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: var(--primary-content);
+      padding: 14px 20px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+    }
+    header svg { flex-shrink: 0; }
+    main { padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    label { font-weight: 600; font-size: 0.85rem; }
     input[type="text"],
     input[type="password"] {
       width: 100%;
-      box-sizing: border-box;
-      padding: 8px 10px;
-      font-size: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+      padding: 9px 12px;
+      font-size: 0.9rem;
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      color: var(--base-content);
       outline: none;
     }
     input[type="text"]:focus,
-    input[type="password"]:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.2); }
-    input[type="text"].invalid { border-color: #dc2626; }
-    .hint { font-size: 0.8rem; color: #666; margin-top: 0.3rem; }
-    .error { color: #dc2626; font-size: 0.85rem; margin-top: 0.4rem; display: none; }
-    button {
-      margin-top: 1rem;
-      padding: 8px 22px;
-      font-size: 0.95rem;
-      background: #3b82f6;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+    input[type="password"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
     }
-    button:hover { background: #2563eb; }
-    #saved { margin-top: 0.75rem; color: #16a34a; font-size: 0.9rem; display: none; }
-
-    .keywords-section { margin-top: 2rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem; }
-    .keywords-section h2 { font-size: 0.95rem; margin-bottom: 0.5rem; }
-    #keyword-list { font-size: 0.85rem; color: #555; }
+    input.invalid { border-color: var(--error-text); }
+    .hint { font-size: 0.78rem; color: var(--muted); }
+    .error-msg { font-size: 0.8rem; color: var(--error-text); display: none; }
+    button#save {
+      align-self: flex-start;
+      padding: 8px 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: var(--primary);
+      color: var(--primary-content);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button#save:hover { background: var(--primary-hover); }
+    #saved { font-size: 0.82rem; color: var(--success-text); display: none; }
+    .divider { border: none; border-top: 1px solid var(--base-300); margin: 4px 0; }
+    .section-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 2px; }
+    #keyword-list { font-size: 0.82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px; }
     #keyword-list span {
-      display: inline-block;
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
       border-radius: 4px;
       padding: 2px 8px;
-      margin: 2px;
+      font-family: monospace;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
-  <h1>joe-links</h1>
-
-  <label for="baseURL">Server base URL</label>
-  <input type="text" id="baseURL" placeholder="http://go" autocomplete="off" spellcheck="false" />
-  <p class="hint">The hostname of your joe-links server. Default: <code>http://go</code></p>
-  <p class="error" id="error">Enter a valid URL, e.g. <code>http://go</code> or <code>https://links.example.com</code></p>
-
-  <label for="apiKey">API key (optional)</label>
-  <input type="password" id="apiKey" placeholder="jl_xxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
-  <p class="hint">Personal access token from your joe-links dashboard. Used to create links and authenticate requests.</p>
-
-  <button id="save">Save</button>
-  <p id="saved">Saved and refreshing keyword list…</p>
-
-  <div class="keywords-section">
-    <h2>Registered keyword hosts</h2>
-    <p class="hint">These single-word hostnames are intercepted and redirected to your server.</p>
-    <div id="keyword-list">Loading…</div>
-  </div>
-
+  <header>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+    joe-links Settings
+  </header>
+  <main>
+    <div class="field">
+      <label for="baseURL">Server base URL</label>
+      <input type="text" id="baseURL" placeholder="http://go" autocomplete="off" spellcheck="false" />
+      <p class="hint">The hostname of your joe-links server. Default: <code>http://go</code></p>
+      <p class="error-msg" id="error">Enter a valid URL, e.g. <code>http://go</code> or <code>https://links.example.com</code></p>
+    </div>
+    <div class="field">
+      <label for="apiKey">API key</label>
+      <input type="password" id="apiKey" placeholder="jl_xxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+      <p class="hint">Personal access token from Dashboard → Settings → API Tokens. Required to create links.</p>
+    </div>
+    <div>
+      <button id="save">Save</button>
+      <p id="saved">Saved — refreshing keyword list…</p>
+    </div>
+    <hr class="divider" />
+    <div>
+      <p class="section-title">Registered keyword hosts</p>
+      <p class="hint" style="margin-bottom:8px">These single-word hostnames are intercepted and redirected to your server.</p>
+      <div id="keyword-list">Loading…</div>
+    </div>
+  </main>
   <script src="options.js"></script>
 </body>
 </html>
