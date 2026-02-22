@@ -143,8 +143,9 @@ func NewRouter(deps Deps) http.Handler {
 	// Resolver does not require auth (links are publicly accessible).
 	// Uses OptionalUser so the 404 page can offer "Create this link" when logged in.
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — catch-all AFTER named routes
+	// Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", ADR-0013 — wildcard for multi-segment paths
 	resolver := NewResolveHandler(deps.LinkStore, deps.KeywordStore)
-	r.With(deps.AuthMiddleware.OptionalUser).Get("/{slug}", resolver.Resolve)
+	r.With(deps.AuthMiddleware.OptionalUser).Get("/{slug}*", resolver.Resolve)
 
 	return r
 }
