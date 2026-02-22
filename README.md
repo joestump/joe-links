@@ -132,6 +132,60 @@ make dev
 | `make dev` | Start Dex + server together |
 | `make dev-stop` | Stop Dex |
 
+## Browser Extension
+
+The `extension/` directory contains a Manifest V3 browser extension that intercepts `keyword/slug` navigations and redirects to your joe-links server. It also provides a popup for creating short links with one click.
+
+### Setup
+
+1. Open the extension options (click the extension icon → kebab menu → Options, or load `extension/options.html` directly)
+2. Set the **Server base URL** to your joe-links instance (e.g. `http://localhost:8080` for local dev, `https://go.example.com` for production)
+3. Paste a **Personal Access Token** (created from Dashboard → Settings → API Tokens) into the API key field — needed to create links via the popup
+
+### Loading in Chrome
+
+1. Go to `chrome://extensions`
+2. Enable **Developer mode** (toggle, top-right)
+3. Click **Load unpacked** → select the `extension/` directory
+
+After code changes: click the **↺** (reload) icon on the extension card.
+
+### Loading in Firefox
+
+1. Go to `about:debugging#/runtime/this-firefox`
+2. Click **Load Temporary Add-on...**
+3. Select `extension/manifest.json`
+
+> Temporary add-ons are removed when Firefox quits. For persistence, package the extension as `.xpi`.
+
+After code changes: click **Reload** next to the extension in `about:debugging`.
+
+### Loading in Safari
+
+1. Install Xcode from the Mac App Store
+2. Convert the extension:
+   ```bash
+   xcrun safari-web-extension-converter extension/
+   ```
+3. Build and run the generated Xcode project (⌘R)
+4. In Safari: **Settings → Extensions** → enable joe-links
+   - If the extension doesn't appear: **Develop → Allow Unsigned Extensions** first
+   - If the Develop menu isn't visible: **Settings → Advanced → Show features for web developers**
+
+> For day-to-day development, Chrome is faster to iterate on. Re-run the converter after any code changes.
+
+### Using the popup
+
+Click the extension icon in the browser toolbar — the popup opens with the current tab's URL pre-filled. Enter a slug (and optionally a keyword prefix), then click **Create Link**. Requires a saved API key.
+
+### Slug format
+
+Slugs must be at least 2 characters, lowercase letters/numbers/hyphens only, no leading or trailing hyphen: `[a-z0-9][a-z0-9-]*[a-z0-9]`.
+
+### Keyword hosts
+
+Keywords (like `go`, `wtf`, `gh`) are registered in the Admin → Keywords section of the dashboard. The extension fetches the keyword list from `/api/v1/keywords` on install and every 60 minutes. When you type `go/slack` in the address bar, the extension intercepts the search and redirects to your server.
+
 ## License
 
 MIT
