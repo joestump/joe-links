@@ -18,7 +18,8 @@ var slugRE = regexp.MustCompile(`^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$`)
 
 // Governing: SPEC-0001 REQ "Short Link Resolution" — reserved prefixes MUST NOT be valid slugs.
 // Governing: SPEC-0012 REQ "User Profile Route Priority" — "u" reserved for user profile pages.
-var reservedPrefixes = []string{"auth", "static", "dashboard", "admin", "u"}
+// Governing: SPEC-0012 REQ "Public Link Browser Route Priority" — "links" reserved for public link browser.
+var reservedPrefixes = []string{"auth", "static", "dashboard", "admin", "u", "links"}
 
 // isReservedSlug returns true if the slug matches or starts with a reserved prefix.
 func isReservedSlug(slug string) bool {
@@ -151,7 +152,7 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if isReservedSlug(form.Slug) {
-		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin)."}
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: "That slug uses a reserved prefix (auth, static, dashboard, admin, links)."}
 		if isHTMX(r) {
 			renderFragment(w, "new_link_modal", data)
 			return

@@ -37,6 +37,7 @@ var (
 		"dashboard": true,
 		"admin":     true,
 		"u":         true,
+		"links":     true, // Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
 	}
 )
 

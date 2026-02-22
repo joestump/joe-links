@@ -166,6 +166,11 @@ func NewRouter(deps Deps) http.Handler {
 	profileHandler := NewProfileHandler(deps.UserStore, deps.LinkStore)
 	r.With(deps.AuthMiddleware.OptionalUser).Get("/u/{displayNameSlug}", profileHandler.Show)
 
+	// Public link browser — no auth required; MUST be before slug catch-all.
+	// Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
+	publicLinks := NewPublicLinksHandler(deps.LinkStore)
+	r.With(deps.AuthMiddleware.OptionalUser).Get("/links", publicLinks.Index)
+
 	// Slug resolver -- catch-all, must be last.
 	// Resolver does not require auth (links are publicly accessible).
 	// Uses OptionalUser so the 404 page can offer "Create this link" when logged in.

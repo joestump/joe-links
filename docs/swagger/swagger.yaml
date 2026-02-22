@@ -5,6 +5,11 @@ definitions:
       email:
         type: string
     type: object
+  internal_api.AddShareRequest:
+    properties:
+      email:
+        type: string
+    type: object
   internal_api.CreateLinkRequest:
     properties:
       description:
@@ -18,6 +23,8 @@ definitions:
       title:
         type: string
       url:
+        type: string
+      visibility:
         type: string
     type: object
   internal_api.CreateTokenRequest:
@@ -67,6 +74,8 @@ definitions:
         type: string
       url:
         type: string
+      visibility:
+        type: string
     type: object
   internal_api.OwnerResponse:
     properties:
@@ -76,6 +85,21 @@ definitions:
         type: string
       is_primary:
         type: boolean
+    type: object
+  internal_api.ShareResponse:
+    properties:
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      link_id:
+        type: string
+      shared_by:
+        type: string
+      user_id:
+        type: string
     type: object
   internal_api.TagListResponse:
     properties:
@@ -141,6 +165,8 @@ definitions:
       title:
         type: string
       url:
+        type: string
+      visibility:
         type: string
     type: object
   internal_api.UpdateRoleRequest:
@@ -613,6 +639,144 @@ paths:
       summary: Remove a co-owner
       tags:
       - Owners
+  /links/{id}/shares:
+    get:
+      consumes:
+      - application/json
+      description: Returns all users who have been shared access to a link. Only owners
+        and admins may access.
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_api.ShareResponse'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - BearerToken: []
+      summary: List link shares
+      tags:
+      - Shares
+    post:
+      consumes:
+      - application/json
+      description: Shares a link with a user by email address. Only owners and admins
+        may share.
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User to share with
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api.AddShareRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_api.ShareResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - BearerToken: []
+      summary: Add a share
+      tags:
+      - Shares
+  /links/{id}/shares/{uid}:
+    delete:
+      consumes:
+      - application/json
+      description: Removes a user's share access to a link. Only owners and admins
+        may remove shares.
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID of the share to remove
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - BearerToken: []
+      summary: Remove a share
+      tags:
+      - Shares
   /tags:
     get:
       consumes:

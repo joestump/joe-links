@@ -1,5 +1,6 @@
 // Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management", ADR-0008
 // Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
+// Governing: SPEC-0010 REQ "REST API Visibility Field"
 package api
 
 import (
@@ -60,10 +61,11 @@ func (h *linksAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 	var links []*store.Link
 	var err error
 
+	// Governing: SPEC-0010 REQ "REST API Visibility Field" — non-admin sees owned + shared
 	if user.Role == "admin" {
 		links, err = h.links.ListAll(r.Context())
 	} else {
-		links, err = h.links.ListByOwner(r.Context(), user.ID)
+		links, err = h.links.ListByOwnerOrShared(r.Context(), user.ID)
 	}
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
@@ -139,7 +141,17 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description, "")
+	// Governing: SPEC-0010 REQ "REST API Visibility Field" — defaults to "public"
+	visibility := req.Visibility
+	if visibility == "" {
+		visibility = "public"
+	}
+	if err := store.ValidateVisibility(visibility); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_VISIBILITY")
+		return
+	}
+
+	link, err := h.links.Create(r.Context(), req.Slug, req.URL, user.ID, req.Title, req.Description, visibility)
 	if err != nil {
 		if errors.Is(err, store.ErrSlugTaken) {
 			writeError(w, http.StatusConflict, "slug already exists", "SLUG_CONFLICT")
@@ -201,6 +213,7 @@ func (h *linksAPIHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0010 REQ "REST API Visibility Field" — owners, shared users, and admins may access
 	if user.Role != "admin" {
 		isOwner, err := h.ownership.IsOwner(link.ID, user.ID)
 		if err != nil {
@@ -208,8 +221,15 @@ func (h *linksAPIHandler) Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !isOwner {
-			writeError(w, http.StatusForbidden, "forbidden", "FORBIDDEN")
-			return
+			hasShare, err := h.links.HasShare(r.Context(), link.ID, user.ID)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
+				return
+			}
+			if !hasShare {
+				writeError(w, http.StatusForbidden, "forbidden", "FORBIDDEN")
+				return
+			}
 		}
 	}
 
@@ -288,7 +308,17 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description, link.Visibility)
+	// Governing: SPEC-0010 REQ "REST API Visibility Field"
+	visibility := link.Visibility
+	if req.Visibility != "" {
+		if err := store.ValidateVisibility(req.Visibility); err != nil {
+			writeError(w, http.StatusBadRequest, err.Error(), "INVALID_VISIBILITY")
+			return
+		}
+		visibility = req.Visibility
+	}
+
+	updated, err := h.links.Update(r.Context(), link.ID, req.URL, req.Title, req.Description, visibility)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
@@ -612,6 +642,7 @@ func (h *linksAPIHandler) toLinkResponse(ctx context.Context, link *store.Link) 
 		URL:         link.URL,
 		Title:       link.Title,
 		Description: link.Description,
+		Visibility:  link.Visibility,
 		Tags:        tagNames,
 		Owners:      ownerResponses,
 		CreatedAt:   link.CreatedAt,
