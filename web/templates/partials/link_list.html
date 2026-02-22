@@ -20,7 +20,7 @@
             <tr id="link-{{.ID}}">
                 <td class="whitespace-nowrap">
                     {{if $.Keyword}}
-                    <span class="font-mono text-base-content/50">{{$.Keyword}}/</span><a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
+                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank"><span class="font-weight-normal text-base-content/50">{{$.Keyword}}/</span>{{.Slug}}</a>
                     {{else}}
                     <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
                     {{end}}
