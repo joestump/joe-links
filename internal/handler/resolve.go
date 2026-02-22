@@ -50,8 +50,22 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Governing: ADR-0011 — check if request host is a registered keyword.
 	host := strings.SplitN(r.Host, ":", 2)[0]
+
+	// Path-based keyword routing: /{keyword}/{slug} on the main server.
+	// The browser extension redirects to {baseURL}/{keyword}/{slug} when the
+	// keyword hostname isn't the server itself (Firefox fallback).
+	// Governing: SPEC-0008 REQ "Search Interception and Redirect"
+	parts := strings.SplitN(fullPath, "/", 2)
+	if len(parts) == 2 && parts[1] != "" && parts[0] != host {
+		if kw, err := h.keywords.GetByKeyword(r.Context(), parts[0]); err == nil {
+			target := strings.ReplaceAll(kw.URLTemplate, "{slug}", parts[1])
+			http.Redirect(w, r, target, http.StatusFound)
+			return
+		}
+	}
+
+	// Governing: ADR-0011 — check if request host is a registered keyword.
 	kw, kwErr := h.keywords.GetByKeyword(r.Context(), host)
 	if kwErr == nil {
 		// Substitute {slug} in the URL template and redirect.

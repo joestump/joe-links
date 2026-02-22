@@ -47,6 +47,15 @@ func (e *resolveTestEnv) seedLink(t *testing.T, slug, url string) {
 	}
 }
 
+// seedKeyword creates a keyword with the given keyword string, URL template, and description.
+func (e *resolveTestEnv) seedKeyword(t *testing.T, keyword, urlTemplate, description string) {
+	t.Helper()
+	_, err := e.ks.Create(context.Background(), keyword, urlTemplate, description)
+	if err != nil {
+		t.Fatalf("seed keyword %q: %v", keyword, err)
+	}
+}
+
 // resolve builds a chi-routed request and records the response.
 func (e *resolveTestEnv) resolve(t *testing.T, path string) *httptest.ResponseRecorder {
 	t.Helper()
@@ -54,6 +63,19 @@ func (e *resolveTestEnv) resolve(t *testing.T, path string) *httptest.ResponseRe
 	r.Get("/{slug}*", e.rh.Resolve)
 
 	req := httptest.NewRequest(http.MethodGet, path, nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	return w
+}
+
+// resolveWithHost builds a chi-routed request with a custom Host header.
+func (e *resolveTestEnv) resolveWithHost(t *testing.T, path, host string) *httptest.ResponseRecorder {
+	t.Helper()
+	r := chi.NewRouter()
+	r.Get("/{slug}*", e.rh.Resolve)
+
+	req := httptest.NewRequest(http.MethodGet, path, nil)
+	req.Host = host
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
@@ -193,5 +215,74 @@ func TestResolve_DuplicatePlaceholder(t *testing.T) {
 	loc := w.Header().Get("Location")
 	if loc != "https://example.com/alice/profile/alice" {
 		t.Errorf("Location = %q, want %q", loc, "https://example.com/alice/profile/alice")
+	}
+}
+
+func TestResolve_PathKeywordRouting(t *testing.T) {
+	env := newResolveTestEnv(t)
+	env.seedKeyword(t, "gh", "https://github.com/{slug}", "GitHub shortcut")
+
+	w := env.resolve(t, "/gh/joestump")
+	if w.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusFound)
+	}
+	loc := w.Header().Get("Location")
+	if loc != "https://github.com/joestump" {
+		t.Errorf("Location = %q, want %q", loc, "https://github.com/joestump")
+	}
+}
+
+func TestResolve_PathKeywordRouting_MultiSegmentSlug(t *testing.T) {
+	env := newResolveTestEnv(t)
+	env.seedKeyword(t, "gh", "https://github.com/{slug}", "GitHub shortcut")
+
+	w := env.resolve(t, "/gh/joestump/joe-links")
+	if w.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusFound)
+	}
+	loc := w.Header().Get("Location")
+	if loc != "https://github.com/joestump/joe-links" {
+		t.Errorf("Location = %q, want %q", loc, "https://github.com/joestump/joe-links")
+	}
+}
+
+func TestResolve_PathKeywordRouting_UnknownKeyword(t *testing.T) {
+	env := newResolveTestEnv(t)
+	// "gh" not seeded — should fall through to normal resolution and 404.
+	w := env.resolve(t, "/gh/joestump")
+	if w.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want %d", w.Code, http.StatusNotFound)
+	}
+}
+
+func TestResolve_HostKeywordRouting(t *testing.T) {
+	env := newResolveTestEnv(t)
+	env.seedKeyword(t, "go", "https://go.example.com/{slug}", "")
+
+	// When Host header matches the keyword, host-header routing handles it.
+	// fullPath = "slack", so {slug} = "slack".
+	w := env.resolveWithHost(t, "/slack", "go")
+	if w.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusFound)
+	}
+	loc := w.Header().Get("Location")
+	if loc != "https://go.example.com/slack" {
+		t.Errorf("Location = %q, want %q", loc, "https://go.example.com/slack")
+	}
+}
+
+func TestResolve_PathKeywordRouting_SkipWhenHostIsKeyword(t *testing.T) {
+	env := newResolveTestEnv(t)
+	env.seedKeyword(t, "go", "https://go.example.com/{slug}", "")
+
+	// With Host: go, path-based routing is skipped (parts[0] == host).
+	// Host-header routing fires: fullPath = "go/slack", so {slug} = "go/slack".
+	w := env.resolveWithHost(t, "/go/slack", "go")
+	if w.Code != http.StatusFound {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusFound)
+	}
+	loc := w.Header().Get("Location")
+	if loc != "https://go.example.com/go/slack" {
+		t.Errorf("Location = %q, want %q", loc, "https://go.example.com/go/slack")
 	}
 }

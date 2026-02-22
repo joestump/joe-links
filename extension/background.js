@@ -23,11 +23,6 @@ const KEYWORD_RE = /^([a-z][a-z0-9-]*)\/(.+)$/;
 
 const DEFAULTS = { baseURL: 'http://go', keywords: ['go'] };
 
-async function getKeywords() {
-  const { keywords } = await chrome.storage.local.get({ keywords: DEFAULTS.keywords });
-  return Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
-}
-
 // Governing: SPEC-0008 REQ "Keyword Host Discovery", REQ "API Key Authentication"
 async function refreshKeywords() {
   const { baseURL, apiKey } = await chrome.storage.local.get({ baseURL: DEFAULTS.baseURL, apiKey: '' });
@@ -78,7 +73,7 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 // Governing: SPEC-0008 REQ "Search Interception and Redirect"
-// Intercept navigations to search engines whose query matches a registered keyword pattern.
+// Intercept navigations to search engines or direct keyword hostnames (Firefox).
 chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   // Only handle main-frame navigations.
   if (details.frameId !== 0) return;
@@ -86,17 +81,43 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   let url;
   try { url = new URL(details.url); } catch { return; }
 
-  const query = getSearchQuery(url);
-  if (!query) return;
+  // Combine storage reads into a single call for efficiency.
+  const { baseURL, keywords } = await chrome.storage.local.get({
+    baseURL: DEFAULTS.baseURL,
+    keywords: DEFAULTS.keywords,
+  });
+  const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
+  const serverHost = new URL(baseURL).hostname;
 
+  // Build the redirect URL for a keyword+slug pair.
+  // If the keyword IS the server hostname (DNS configured), use it directly.
+  // Otherwise route through the server via path-based keyword routing.
+  function redirectFor(keyword, slug) {
+    return keyword === serverHost
+      ? `http://${keyword}/${slug}`
+      : `${baseURL}/${keyword}/${slug}`;
+  }
+
+  // Case 1: Search engine interception.
   // Governing: SPEC-0008 REQ "Fallthrough Safety" — only exact keyword/slug matches intercept.
-  const match = query.match(KEYWORD_RE);
-  if (!match) return;
+  const query = getSearchQuery(url);
+  if (query) {
+    const match = query.match(KEYWORD_RE);
+    if (match) {
+      const [, keyword, slug] = match;
+      if (kws.includes(keyword)) {
+        chrome.tabs.update(details.tabId, { url: redirectFor(keyword, slug) });
+        return;
+      }
+    }
+  }
 
-  const [, keyword, slug] = match;
-  const keywords = await getKeywords();
-  if (!keywords.includes(keyword)) return;
-
-  // Redirect to the go-links server before the search page loads.
-  chrome.tabs.update(details.tabId, { url: `http://${keyword}/${slug}` });
+  // Case 2: Direct navigation to a keyword hostname (Firefox address bar behavior).
+  // Firefox treats "go/slack" as a direct URL http://go/slack rather than routing
+  // through a search engine, bypassing Case 1. Intercept and route via the server.
+  // Governing: SPEC-0008 REQ "Search Interception and Redirect"
+  if (kws.includes(url.hostname) && url.hostname !== serverHost && url.pathname.length > 1) {
+    const slug = url.pathname.slice(1); // strip leading "/"
+    chrome.tabs.update(details.tabId, { url: redirectFor(url.hostname, slug) });
+  }
 });
