@@ -10,76 +10,173 @@
     <script src="/static/js/htmx.min.js"></script>
 </head>
 <body class="min-h-screen bg-base-100"
-      hx-on:themeChanged="document.documentElement.setAttribute('data-theme',event.detail.theme);document.getElementById('theme-icon-sun').style.display=event.detail.theme==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=event.detail.theme==='joe-dark'?'none':'block'">
+      hx-on:themeChanged="(function(t){document.documentElement.setAttribute('data-theme',t);var s=document.getElementById('theme-icon-sun'),m=document.getElementById('theme-icon-moon');if(s)s.style.display=t==='joe-dark'?'block':'none';if(m)m.style.display=t==='joe-dark'?'none':'block'})(event.detail.theme)">
 
 {{if .User}}
-<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — navbar with nav links, conditional Admin, user dropdown -->
-<nav class="navbar bg-base-200 shadow-sm px-4">
-    <div class="navbar-start">
-        <a href="/dashboard" class="btn btn-ghost text-xl font-bold">Joe Links</a>
-    </div>
-    <div class="navbar-center hidden lg:flex">
-        <ul class="menu menu-horizontal px-1">
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/dashboard/tags">Tags</a></li>
-            {{if eq .User.Role "admin"}}<li><a href="/admin">Admin</a></li>{{end}}
-        </ul>
-    </div>
-    <div class="navbar-end gap-2">
-        <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
-        <button id="theme-toggle" class="btn btn-ghost btn-circle"
-                onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
-                hx-post="/dashboard/theme"
-                hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
-                hx-swap="none">
-            <span id="theme-icon-sun" style="{{if eq .Theme "joe-dark"}}display:block{{else}}display:none{{end}}">☀️</span>
-            <span id="theme-icon-moon" style="{{if eq .Theme "joe-dark"}}display:none{{else}}display:block{{end}}">🌙</span>
-        </button>
-        <div class="dropdown dropdown-end">
-            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
-                <div class="bg-neutral text-neutral-content rounded-full w-8">
-                    <span class="text-xs">{{slice .User.DisplayName 0 1}}</span>
-                </div>
-            </div>
-            <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-                <li><span class="text-sm font-medium">{{.User.DisplayName}}</span></li>
-                <!-- Governing: SPEC-0013 REQ "API Tokens Link in User Section" -->
-                <li><a href="/dashboard/settings/tokens">API Tokens</a></li>
-                <li>
-                    <form method="POST" action="/auth/logout">
-                        <button type="submit">Sign out</button>
-                    </form>
-                </li>
-            </ul>
+<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — left sidebar layout with nav links, conditional Admin section -->
+<div class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="fixed inset-y-0 left-0 w-64 bg-base-200 border-r border-base-300 flex flex-col z-40">
+
+        <!-- Brand -->
+        <div class="p-4 border-b border-base-300">
+            <a href="/dashboard" class="flex items-center gap-2 text-xl font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Joe Links
+            </a>
         </div>
+
+        <!-- Nav -->
+        <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+            <a href="/dashboard"
+               data-nav="/dashboard" data-nav-exact="true"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Dashboard
+            </a>
+            <a href="/dashboard/tags"
+               data-nav="/dashboard/tags"
+               class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Tags
+            </a>
+            {{if eq .User.Role "admin"}}
+            <div class="pt-3">
+                <p class="px-3 mb-1 text-xs font-semibold uppercase tracking-wider text-base-content/50">Admin</p>
+                <a href="/admin"
+                   data-nav="/admin" data-nav-exact="true"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Overview
+                </a>
+                <a href="/admin/users"
+                   data-nav="/admin/users"
+                   class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium hover:bg-base-300 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    Users
+                </a>
+            </div>
+            {{end}}
+        </nav>
+
+        <!-- Bottom: theme toggle, user -->
+        <div class="p-3 border-t border-base-300 space-y-1">
+            <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" — sun icon in dark mode, moon in light mode -->
+            <button class="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium hover:bg-base-300 transition-colors text-left"
+                    onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
+                    hx-post="/dashboard/theme"
+                    hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
+                    hx-swap="none">
+                <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </span>
+                <span id="theme-icon-moon" style="display:{{if eq .Theme "joe-dark"}}none{{else}}block{{end}}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                </span>
+                Toggle theme
+            </button>
+
+            <!-- User info + sign out -->
+            <div class="flex items-center gap-2 px-3 py-2">
+                <div class="bg-neutral text-neutral-content rounded-full w-8 h-8 flex items-center justify-center shrink-0">
+                    <span class="text-xs font-medium">{{slice .User.DisplayName 0 1}}</span>
+                </div>
+                <span class="text-sm font-medium truncate flex-1">{{.User.DisplayName}}</span>
+                <form method="POST" action="/auth/logout">
+                    <button type="submit" title="Sign out" class="btn btn-ghost btn-xs btn-square">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+            <div class="px-3 pb-1">
+                <!-- Governing: SPEC-0013 REQ "API Tokens Link in User Section" -->
+                <a href="/dashboard/settings/tokens" data-nav="/dashboard/settings/tokens"
+                   class="text-xs text-base-content/60 hover:text-base-content flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    API Tokens
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main content area -->
+    <div class="ml-64 flex-1 min-w-0">
+        <!-- Governing: SPEC-0004 REQ "Shared Base Layout" — toast area for HTMX OOB swaps -->
+        <div id="toast-area" class="toast toast-top toast-end z-50"></div>
+        <main class="p-8 max-w-6xl mx-auto">
+            {{block "content" .}}{{end}}
+        </main>
     </div>
-</nav>
+
+</div>
 {{else}}
+<!-- Unauthenticated: simple top navbar -->
 <nav class="navbar bg-base-200 shadow-sm px-4">
     <div class="navbar-start">
         <a href="/" class="btn btn-ghost text-xl font-bold">Joe Links</a>
     </div>
     <div class="navbar-end gap-2">
         <!-- Governing: SPEC-0003 REQ "Theme Toggle Control", SPEC-0013 REQ "Theme Toggle Immediate Visual Feedback" -->
-        <button id="theme-toggle" class="btn btn-ghost btn-circle"
+        <button class="btn btn-ghost btn-circle"
                 onclick="(function(){var cur=document.documentElement.getAttribute('data-theme');var next=cur==='joe-dark'?'joe-light':'joe-dark';document.documentElement.setAttribute('data-theme',next);document.getElementById('theme-icon-sun').style.display=next==='joe-dark'?'block':'none';document.getElementById('theme-icon-moon').style.display=next==='joe-dark'?'none':'block'})()"
                 hx-post="/dashboard/theme"
                 hx-vals='js:{theme: document.documentElement.getAttribute("data-theme")}'
                 hx-swap="none">
-            <span id="theme-icon-sun" style="{{if eq .Theme "joe-dark"}}display:block{{else}}display:none{{end}}">☀️</span>
-            <span id="theme-icon-moon" style="{{if eq .Theme "joe-dark"}}display:none{{else}}display:block{{end}}">🌙</span>
+            <span id="theme-icon-sun" style="display:{{if eq .Theme "joe-dark"}}block{{else}}none{{end}}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+            </span>
+            <span id="theme-icon-moon" style="display:{{if eq .Theme "joe-dark"}}none{{else}}block{{end}}">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </span>
         </button>
         <a href="/auth/login" class="btn btn-sm btn-primary">Sign in</a>
     </div>
 </nav>
-{{end}}
-
-<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — toast area for HTMX OOB swaps -->
+<!-- Governing: SPEC-0004 REQ "Shared Base Layout" — toast area -->
 <div id="toast-area" class="toast toast-top toast-end z-50"></div>
-
 <main class="container mx-auto px-4 py-8 max-w-4xl">
     {{block "content" .}}{{end}}
 </main>
+{{end}}
+
+<!-- Active nav highlighting -->
+<script>
+(function() {
+    var path = window.location.pathname;
+    document.querySelectorAll('[data-nav]').forEach(function(el) {
+        var target = el.getAttribute('data-nav');
+        var exact = el.getAttribute('data-nav-exact') === 'true';
+        var active = exact ? path === target : path === target || path.startsWith(target + '/');
+        if (active) {
+            el.classList.add('bg-primary', 'text-primary-content');
+            el.classList.remove('hover:bg-base-300');
+        }
+    });
+})();
+</script>
 
 <!-- Governing: SPEC-0004 REQ "Shared Base Layout" — modal target for HTMX injection -->
 <div id="modal"></div>
