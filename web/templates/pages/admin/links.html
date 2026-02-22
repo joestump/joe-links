@@ -4,6 +4,7 @@
 
 {{define "content"}}
 <!-- Governing: SPEC-0011 REQ "Admin Links Screen", ADR-0007 -->
+<!-- Governing: SPEC-0014 REQ "Abstract Link Widget" -->
 <div class="flex items-center justify-between mb-6">
     <h1 class="text-2xl font-bold">All Links</h1>
     <div class="flex items-center gap-3">
@@ -29,30 +30,8 @@
 {{end}}
 
 {{define "admin_link_list"}}
-{{if .Links}}
-<div class="overflow-x-auto">
-    <table class="table table-sm">
-        <thead>
-            <tr>
-                <th>Slug</th>
-                <th>URL</th>
-                <th>Title</th>
-                <th>Owner(s)</th>
-                <th>Tags</th>
-                <th>Created</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {{range .Links}}
-            {{template "admin_link_row" .}}
-            {{end}}
-        </tbody>
-    </table>
-</div>
-{{else}}
-<p class="text-base-content/60 py-8 text-center">No links found.</p>
-{{end}}
+<!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — admin uses shared link_list partial -->
+{{template "link_list" .}}
 {{end}}
 
 {{define "admin_link_row"}}

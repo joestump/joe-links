@@ -1,4 +1,5 @@
 {{define "link_list"}}
+<!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — shared partial for dashboard and admin views -->
 {{if .Links}}
 <div class="overflow-x-auto">
     <table class="table table-zebra w-full">
@@ -6,6 +7,9 @@
             <tr>
                 <th>Slug</th>
                 <th>URL</th>
+                {{if $.ShowTitle}}<th>Title</th>{{end}}
+                {{if $.ShowOwner}}<th>Owner(s)</th>{{end}}
+                {{if $.ShowTags}}<th>Tags</th>{{end}}
                 <th>Description</th>
                 <th>Created</th>
                 <th></th>
@@ -14,33 +18,30 @@
         <tbody id="links-table">
             {{range .Links}}
             <tr id="link-{{.ID}}">
-                <td>
+                <td class="whitespace-nowrap">
                     {{if $.Keyword}}
-                    <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{$.Keyword}}/{{.Slug}}</a>
+                    <span class="font-mono text-base-content/50">{{$.Keyword}}/</span><a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
                     {{else}}
                     <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
                     {{end}}
+                    {{$copyText := .Slug}}{{if $.Keyword}}{{$copyText = printf "%s/%s" $.Keyword .Slug}}{{end}}
+                    <button class="btn btn-xs btn-ghost tooltip tooltip-right ml-1" data-tip="Copy link"
+                            onclick="(function(btn){navigator.clipboard.writeText('{{$copyText}}').then(function(){btn.setAttribute('data-tip','Copied!');setTimeout(function(){btn.setAttribute('data-tip','Copy link')},1500)})})(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                    </button>
                 </td>
                 <td class="max-w-xs truncate text-sm text-base-content/70">
                     <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
                 </td>
+                {{if $.ShowTitle}}<td class="text-sm text-base-content/70">{{.Title}}</td>{{end}}
+                {{if $.ShowOwner}}<td class="text-sm text-base-content/70">{{.Owners}}</td>{{end}}
+                {{if $.ShowTags}}<td class="text-sm">{{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}</td>{{end}}
                 <td class="text-sm text-base-content/60">{{.Description}}</td>
                 <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
-                <!-- Governing: SPEC-0013 REQ "Create/Edit Link Form as HTMX Modal", REQ "DaisyUI Delete Confirmation Modal" -->
+                <!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — Edit and Delete actions only (no View) -->
                 <td class="flex gap-1 justify-end">
-                    {{$copyText := .Slug}}{{if $.Keyword}}{{$copyText = printf "%s/%s" $.Keyword .Slug}}{{end}}
-                    <button class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="Copy link"
-                            onclick="(function(btn){navigator.clipboard.writeText('{{$copyText}}').then(function(){btn.setAttribute('data-tip','Copied!');setTimeout(function(){btn.setAttribute('data-tip','Copy link')},1500)})})(this)">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                    </button>
-                    <a href="/{{.Slug}}" class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="View" target="_blank">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                    </a>
                     <button class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="Edit"
                             hx-get="/dashboard/links/{{.ID}}/edit"
                             hx-target="#modal"
@@ -70,7 +71,6 @@
         <div>
             <h2 class="text-xl font-semibold mb-2">No matching links</h2>
             <p class="text-base-content/60 mb-4">Try a different search or clear filters.</p>
-            <a href="/dashboard" class="btn btn-ghost">Clear filters</a>
         </div>
     </div>
 </div>
@@ -79,11 +79,15 @@
     <div class="hero-content text-center">
         <div>
             <h2 class="text-xl font-semibold mb-2">No links yet</h2>
+            {{if not $.IsAdminPage}}
             <p class="text-base-content/60 mb-4">Create your first short link to get started.</p>
             <button class="btn btn-primary"
                     hx-get="/dashboard/links/new"
                     hx-target="#modal"
                     hx-swap="innerHTML">Create a link</button>
+            {{else}}
+            <p class="text-base-content/60 mb-4">No links have been created yet.</p>
+            {{end}}
         </div>
     </div>
 </div>
