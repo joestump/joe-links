@@ -20,9 +20,11 @@ The extension uses Manifest V3 and works across modern Chromium and Gecko browse
 2. Click **Load Temporary Add-on...**
 3. Select `manifest.json` from the `extension/` directory
 
+> **Note on background scripts**: Firefox supported `background.scripts` (not `service_worker`) in MV3 until v128, with `service_worker` becoming the default in v133+. The manifest declares both so the extension works across all versions. Chrome ignores `background.scripts`; older Firefox ignores `service_worker`.
+
 Firefox requires a stable `browser_specific_settings.gecko.id` in `manifest.json`, which is already included. Note that temporary add-ons are removed when Firefox restarts; for persistent installation, package the extension as an `.xpi` and install via `about:addons`.
 
-Firefox 109+ is required (first stable release with full Manifest V3 support).
+Firefox 109+ is required (first stable release with MV3 support).
 
 ### Safari
 

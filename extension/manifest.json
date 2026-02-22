@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Navigate to go/slug links without typing http://",
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
   "permissions": [
     "storage",
