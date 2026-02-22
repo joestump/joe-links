@@ -41,6 +41,7 @@ func TestValidateSlugFormat(t *testing.T) {
 		{name: "reserved static", slug: "static", wantErr: ErrSlugReserved},
 		{name: "reserved dashboard", slug: "dashboard", wantErr: ErrSlugReserved},
 		{name: "reserved admin", slug: "admin", wantErr: ErrSlugReserved},
+		{name: "reserved links", slug: "links", wantErr: ErrSlugReserved}, // Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
 
 		// Not reserved (substrings of reserved words are fine)
 		{name: "auth-settings not reserved", slug: "auth-settings", wantErr: nil},
