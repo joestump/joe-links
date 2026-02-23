@@ -175,7 +175,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   await refreshKeywords();
   await updateRedirectRules();
   await setActionIcon();
-  chrome.alarms.create('keyword-refresh', { periodInMinutes: 60 });
+  chrome.alarms.create('keyword-refresh', { periodInMinutes: 5 });
 });
 
 chrome.runtime.onStartup.addListener(async () => {
@@ -192,9 +192,10 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 });
 
 // Allow the options page to trigger a keyword refresh after a base URL change.
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === 'refresh-keywords') {
-    refreshKeywords().then(() => updateRedirectRules());
+    refreshKeywords().then(() => updateRedirectRules()).then(() => sendResponse({}));
+    return true; // keep channel open for async response
   }
 });
 

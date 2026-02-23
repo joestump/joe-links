@@ -87,6 +87,19 @@
       transition: background 0.15s;
     }
     button#save:hover { background: var(--primary-hover); }
+    button#refresh-keywords {
+      padding: 8px 20px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background: var(--base-200);
+      color: var(--base-content);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button#refresh-keywords:hover { background: var(--base-300); }
+    button#refresh-keywords:disabled { opacity: 0.5; cursor: default; }
     #saved { font-size: 0.82rem; color: var(--success-text); display: none; }
   </style>
 </head>
@@ -112,6 +125,14 @@
     <div>
       <button id="save">Save</button>
       <p id="saved">Saved.</p>
+    </div>
+    <div style="border-top: 1px solid var(--base-300); padding-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+      <label>Keywords</label>
+      <p class="hint">Keywords are refreshed automatically every 5 minutes. You can also trigger an immediate refresh.</p>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="refresh-keywords">Refresh now</button>
+        <span id="refresh-status" style="font-size: 0.82rem; color: var(--success-text); display: none;"></span>
+      </div>
     </div>
   </main>
   <script src="options.js"></script>
