@@ -10,12 +10,18 @@ RUN npm run build
 
 # Stage 2 — Go builder
 FROM golang:1.24-alpine AS go-builder
+ARG VERSION=dev
+ARG COMMIT=unknown
+ARG BRANCH=unknown
 WORKDIR /build
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=css-builder /build/web/static/css/app.css web/static/css/app.css
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o joe-links ./cmd/joe-links
+RUN PKG="github.com/joestump/joe-links/internal/build" && \
+    CGO_ENABLED=0 go build \
+      -ldflags="-s -w -X ${PKG}.Version=${VERSION} -X ${PKG}.Commit=${COMMIT} -X ${PKG}.Branch=${BRANCH}" \
+      -o joe-links ./cmd/joe-links
 
 # Stage 3 — final
 FROM alpine:latest

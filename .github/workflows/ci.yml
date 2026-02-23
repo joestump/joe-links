@@ -80,13 +80,17 @@ jobs:
       - name: Cross-compile binaries
         run: |
           mkdir -p dist
+          VERSION="${{ github.ref_name }}"
+          COMMIT="${{ github.sha }}"
+          BRANCH="${{ github.ref_name }}"
+          PKG="github.com/joestump/joe-links/internal/build"
           for GOOS in linux darwin windows; do
             for GOARCH in amd64 arm64; do
               [ "$GOOS" = "windows" ] && [ "$GOARCH" = "arm64" ] && continue
               EXT=""; [ "$GOOS" = "windows" ] && EXT=".exe"
               OUTPUT="dist/joe-links-${GOOS}-${GOARCH}${EXT}"
               GOOS=$GOOS GOARCH=$GOARCH CGO_ENABLED=0 go build \
-                -ldflags="-s -w" \
+                -ldflags="-s -w -X ${PKG}.Version=${VERSION} -X ${PKG}.Commit=${COMMIT} -X ${PKG}.Branch=${BRANCH}" \
                 -o "$OUTPUT" ./cmd/joe-links
               echo "Built $OUTPUT"
             done
@@ -140,6 +144,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.ref_name }}
+            COMMIT=${{ github.sha }}
+            BRANCH=${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

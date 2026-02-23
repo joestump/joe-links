@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/joestump/joe-links/internal/build"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
 )
@@ -19,10 +20,13 @@ import (
 // Governing: SPEC-0004 REQ "Shared Base Layout" — User enables conditional admin nav link
 // Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section" — IsAdminPage drives <details open>
 type BasePage struct {
-	Theme       string      // "joe-light", "joe-dark", or "" (let inline script decide)
-	User        *store.User // nil for unauthenticated pages
-	IsAdminPage bool        // true when current path starts with /admin
-	SiteURL     string      // scheme://host of this server (e.g. "https://go.stump.rocks")
+	Theme          string      // "joe-light", "joe-dark", or "" (let inline script decide)
+	User           *store.User // nil for unauthenticated pages
+	IsAdminPage    bool        // true when current path starts with /admin
+	SiteURL        string      // scheme://host of this server (e.g. "https://go.stump.rocks")
+	BuildVersion   string      // e.g. "v0.2.15" or "dev"
+	BuildCommit    string      // short commit SHA, e.g. "abc1234"
+	BuildBranch    string      // e.g. "main"
 }
 
 // newBasePage constructs a BasePage from the current request, setting theme,
@@ -35,11 +39,18 @@ func newBasePage(r *http.Request, user *store.User) BasePage {
 	} else if r.TLS == nil {
 		scheme = "http"
 	}
+	commit := build.Commit
+	if len(commit) > 7 {
+		commit = commit[:7]
+	}
 	return BasePage{
-		Theme:       themeFromRequest(r),
-		User:        user,
-		IsAdminPage: strings.HasPrefix(r.URL.Path, "/admin"),
-		SiteURL:     scheme + "://" + r.Host,
+		Theme:        themeFromRequest(r),
+		User:         user,
+		IsAdminPage:  strings.HasPrefix(r.URL.Path, "/admin"),
+		SiteURL:      scheme + "://" + r.Host,
+		BuildVersion: build.Version,
+		BuildCommit:  commit,
+		BuildBranch:  build.Branch,
 	}
 }
 
