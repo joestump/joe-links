@@ -13,7 +13,7 @@
                     hx-delete="{{.DeleteURL}}"
                     hx-target="{{.Target}}"
                     hx-swap="outerHTML"
-                    onclick="document.getElementById('modal').innerHTML=''">
+                    hx-on::after-request="document.getElementById('modal').innerHTML=''">
                 Delete
             </button>
         </div>

@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await linksResult.value.json().catch(() => ({}));
     const links = data.links || [];
     if (links.length > 0) {
-      renderExistingLinks(links, serverKeyword);
+      renderExistingLinks(links, serverKeyword, baseURL);
     }
   }
 
@@ -176,8 +176,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+const ICON_EDIT = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+
 // Render the "Go links for this URL" section.
-function renderExistingLinks(links, serverKeyword) {
+function renderExistingLinks(links, serverKeyword, baseURL) {
   const container = document.getElementById('existing-links');
   const section = document.createElement('div');
   section.className = 'match-section';
@@ -196,7 +198,16 @@ function renderExistingLinks(links, serverKeyword) {
     span.className = 'match-link';
     span.textContent = short;
 
+    const editBtn = document.createElement('button');
+    editBtn.className = 'copy-btn';
+    editBtn.innerHTML = ICON_EDIT;
+    editBtn.title = 'Edit link';
+    editBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: `${baseURL}/dashboard/links/${link.id}/edit` });
+    });
+
     row.appendChild(span);
+    row.appendChild(editBtn);
     row.appendChild(makeCopyBtn(short));
     section.appendChild(row);
   }
