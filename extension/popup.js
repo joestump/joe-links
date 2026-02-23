@@ -3,32 +3,164 @@
 
 const DEFAULTS = { baseURL: 'http://go', apiKey: '' };
 
-// Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "no API key"
-// When no API key is configured, show a notice directing user to options page.
+const ICON_CLIPBOARD = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
+const ICON_CHECK     = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
+
+// Return a copy button that copies text and briefly shows a checkmark.
+function makeCopyBtn(text) {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.innerHTML = ICON_CLIPBOARD;
+  btn.title = 'Copy';
+  btn.addEventListener('click', () => {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.innerHTML = ICON_CHECK;
+      setTimeout(() => { btn.innerHTML = ICON_CLIPBOARD; }, 1500);
+    }).catch(() => {});
+  });
+  return btn;
+}
+
+// Try to extract a slug from a tab URL given a keyword URL template.
+// Template may contain a single $varname placeholder (e.g. "https://github.com/$user").
+// Returns the extracted slug or null if the URL doesn't match the template prefix.
+function matchKeywordTemplate(tabURL, urlTemplate) {
+  if (!urlTemplate || !urlTemplate.includes('$')) return null;
+  const varIdx = urlTemplate.indexOf('$');
+  const prefix = urlTemplate.slice(0, varIdx);
+  if (!tabURL.startsWith(prefix)) return null;
+  const slug = tabURL.slice(prefix.length).split('?')[0].split('#')[0];
+  return slug || null;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
-  const { apiKey } = await chrome.storage.local.get(DEFAULTS);
+  const { baseURL, apiKey } = await chrome.storage.local.get(DEFAULTS);
+
+  // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "no API key"
   if (!apiKey) {
     document.getElementById('no-api-key').style.display = 'block';
     document.getElementById('create').disabled = true;
   }
+
   document.getElementById('open-options').addEventListener('click', () => {
     chrome.runtime.openOptionsPage();
   });
 
-  // Toggle variable placeholder help text.
   document.getElementById('var-toggle').addEventListener('click', () => {
     const hint = document.getElementById('var-hint');
     hint.hidden = !hint.hidden;
   });
-});
 
-// Pre-fill the current tab's URL.
-// Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "popup opens"
-chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-  if (tabs[0]?.url) {
-    document.getElementById('url').value = tabs[0].url;
+  // Get the current tab URL.
+  // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "popup opens"
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabURL = tabs[0]?.url || '';
+  if (tabURL) document.getElementById('url').value = tabURL;
+
+  // Derive the short-link prefix from the base URL hostname.
+  // e.g. baseURL="https://go.stump.rocks" → serverKeyword="go"
+  let serverKeyword = 'go';
+  try { serverKeyword = new URL(baseURL).hostname.split('.')[0]; } catch {}
+
+  if (!apiKey || !tabURL) return;
+
+  const headers = { Authorization: `Bearer ${apiKey}` };
+
+  // Fetch existing links for this URL and keyword templates in parallel.
+  const [linksResult, kwResult] = await Promise.allSettled([
+    fetch(`${baseURL}/api/v1/links?url=${encodeURIComponent(tabURL)}`, {
+      headers,
+      signal: AbortSignal.timeout(5000),
+    }),
+    fetch(`${baseURL}/api/v1/keywords/templates`, {
+      headers,
+      signal: AbortSignal.timeout(5000),
+    }),
+  ]);
+
+  // Show existing go links for this URL.
+  if (linksResult.status === 'fulfilled' && linksResult.value.ok) {
+    const data = await linksResult.value.json().catch(() => ({}));
+    const links = data.links || [];
+    if (links.length > 0) {
+      renderExistingLinks(links, serverKeyword);
+    }
+  }
+
+  // Show keyword shortcut suggestions.
+  if (kwResult.status === 'fulfilled' && kwResult.value.ok) {
+    const templates = await kwResult.value.json().catch(() => []);
+    if (Array.isArray(templates)) {
+      const suggestions = [];
+      for (const tpl of templates) {
+        const slug = matchKeywordTemplate(tabURL, tpl.url_template);
+        if (slug) suggestions.push({ keyword: tpl.keyword, slug });
+      }
+      if (suggestions.length > 0) {
+        renderKeywordSuggestions(suggestions);
+        // Pre-fill the slug field with the first suggestion's slug if it's empty.
+        const slugInput = document.getElementById('slug');
+        if (!slugInput.value) slugInput.value = suggestions[0].slug;
+      }
+    }
   }
 });
+
+// Render the "Go links for this URL" section.
+function renderExistingLinks(links, serverKeyword) {
+  const container = document.getElementById('existing-links');
+  const section = document.createElement('div');
+  section.className = 'match-section';
+
+  const label = document.createElement('div');
+  label.className = 'match-section-label';
+  label.textContent = links.length === 1 ? 'Go link for this URL' : 'Go links for this URL';
+  section.appendChild(label);
+
+  for (const link of links) {
+    const short = `${serverKeyword}/${link.slug}`;
+    const row = document.createElement('div');
+    row.className = 'match-row';
+
+    const span = document.createElement('span');
+    span.className = 'match-link';
+    span.textContent = short;
+
+    row.appendChild(span);
+    row.appendChild(makeCopyBtn(short));
+    section.appendChild(row);
+  }
+
+  container.appendChild(section);
+}
+
+// Render the "Keyword shortcuts" section for matching keyword templates.
+function renderKeywordSuggestions(suggestions) {
+  const container = document.getElementById('keyword-suggestions');
+  const section = document.createElement('div');
+  section.className = 'kw-section';
+
+  const label = document.createElement('div');
+  label.className = 'kw-section-label';
+  label.textContent = 'Keyword shortcut' + (suggestions.length > 1 ? 's' : '');
+  section.appendChild(label);
+
+  for (const { keyword, slug } of suggestions) {
+    const short = `${keyword}/${slug}`;
+    const row = document.createElement('div');
+    row.className = 'kw-row';
+
+    const span = document.createElement('span');
+    span.className = 'kw-link';
+    span.textContent = short;
+
+    row.appendChild(span);
+    row.appendChild(makeCopyBtn(short));
+    section.appendChild(row);
+  }
+
+  container.appendChild(section);
+}
 
 document.getElementById('create').addEventListener('click', async () => {
   const urlInput  = document.getElementById('url');
@@ -48,6 +180,11 @@ document.getElementById('create').addEventListener('click', async () => {
   clearStatus();
 
   const { baseURL, apiKey } = await chrome.storage.local.get(DEFAULTS);
+
+  // Derive short-link prefix.
+  let serverKeyword = 'go';
+  try { serverKeyword = new URL(baseURL).hostname.split('.')[0]; } catch {}
+
   const headers = { 'Content-Type': 'application/json' };
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
@@ -61,15 +198,16 @@ document.getElementById('create').addEventListener('click', async () => {
     });
 
     if (res.ok) {
-      const data      = await res.json();
-      const linkSlug  = data.slug || slug;
-      const fullLink  = `${baseURL}/${linkSlug}`;
+      const data     = await res.json();
+      const linkSlug = data.slug || slug;
+      // Display and copy the short form: serverKeyword/slug (e.g. "go/my-link")
+      const shortLink = `${serverKeyword}/${linkSlug}`;
 
-      // Auto-copy to clipboard on create.
+      // Auto-copy short link to clipboard.
       // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "successful link creation"
-      navigator.clipboard.writeText(fullLink).catch(() => {});
+      navigator.clipboard.writeText(shortLink).catch(() => {});
 
-      showSuccess(fullLink);
+      showSuccess(shortLink);
       slugInput.value = '';
     } else {
       const errData = await res.json().catch(() => ({}));
@@ -87,44 +225,28 @@ document.getElementById('create').addEventListener('click', async () => {
 
 function clearStatus() {
   const el = document.getElementById('status');
-  el.innerHTML   = '';
+  el.innerHTML     = '';
   el.style.display = 'none';
 }
 
-// SVG icons for the copy button (clipboard → check on success).
-const ICON_CLIPBOARD = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
-const ICON_CHECK     = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-
-function showSuccess(fullLink) {
+function showSuccess(shortLink) {
   const el  = document.getElementById('status');
   const box = document.createElement('div');
   box.className = 'status-box success';
 
   const label = document.createElement('span');
-  label.className  = 'status-label';
+  label.className   = 'status-label';
   label.textContent = 'Link created';
 
   const row = document.createElement('div');
   row.className = 'status-link-row';
 
   const link = document.createElement('span');
-  link.className  = 'status-link';
-  link.textContent = fullLink;
-
-  const copyBtn = document.createElement('button');
-  copyBtn.className   = 'copy-btn';
-  copyBtn.innerHTML   = ICON_CLIPBOARD;
-  copyBtn.title       = 'Copy link';
-  copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(fullLink).then(() => {
-      copyBtn.innerHTML = ICON_CHECK;
-      setTimeout(() => { copyBtn.innerHTML = ICON_CLIPBOARD; }, 1500);
-    }).catch(() => {});
-  });
+  link.className   = 'status-link';
+  link.textContent = shortLink;
 
   row.appendChild(link);
-  row.appendChild(copyBtn);
-
+  row.appendChild(makeCopyBtn(shortLink));
   box.appendChild(label);
   box.appendChild(row);
   el.appendChild(box);
@@ -137,11 +259,11 @@ function showError(msg) {
   box.className = 'status-box error';
 
   const label = document.createElement('span');
-  label.className  = 'status-label';
+  label.className   = 'status-label';
   label.textContent = 'Error';
 
   const text = document.createElement('span');
-  text.className  = 'status-msg';
+  text.className   = 'status-msg';
   text.textContent = msg;
 
   box.appendChild(label);

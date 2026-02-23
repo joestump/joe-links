@@ -41,6 +41,9 @@ func NewAPIRouter(deps Deps) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(deps.BearerMiddleware.Authenticate)
 
+		// Keyword templates (auth required for full template data).
+		registerKeywordTemplateRoutes(r, deps.KeywordStore)
+
 		// Token management routes.
 		// Governing: SPEC-0006 REQ "Token Management API"
 		registerTokenRoutes(r, deps.TokenStore)

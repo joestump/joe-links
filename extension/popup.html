@@ -20,6 +20,9 @@
       --error-bg: #fff1f2;
       --error-border: #fca5a5;
       --error-text: #9f1239;
+      --info-bg: #eff6ff;
+      --info-border: #bfdbfe;
+      --info-text: #1e40af;
       --radius: 0.5rem;
     }
     @media (prefers-color-scheme: dark) {
@@ -38,6 +41,9 @@
         --error-bg: #450a0a;
         --error-border: #f87171;
         --error-text: #fca5a5;
+        --info-bg: #0f172a;
+        --info-border: #3b82f6;
+        --info-text: #93c5fd;
       }
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +53,7 @@
     }
     body {
       font-family: system-ui, -apple-system, sans-serif;
-      width: 320px;
+      width: 400px;
       background: var(--base-100);
       color: var(--base-content);
       font-size: 0.875rem;
@@ -154,6 +160,65 @@
       text-decoration: underline;
       cursor: pointer;
     }
+    /* Existing links / keyword suggestions */
+    .match-section {
+      border: 1px solid var(--info-border);
+      border-radius: var(--radius);
+      background: var(--info-bg);
+      overflow: hidden;
+    }
+    .match-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--info-text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 10px 4px;
+      opacity: 0.85;
+    }
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-top: 1px solid var(--info-border);
+    }
+    .match-link {
+      font-family: monospace;
+      font-size: 0.875rem;
+      font-weight: 700;
+      flex: 1;
+      color: var(--info-text);
+      word-break: break-all;
+    }
+    .kw-section {
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      background: var(--base-200);
+      overflow: hidden;
+    }
+    .kw-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 10px 4px;
+    }
+    .kw-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-top: 1px solid var(--base-300);
+    }
+    .kw-link {
+      font-family: monospace;
+      font-size: 0.875rem;
+      font-weight: 700;
+      flex: 1;
+      word-break: break-all;
+    }
     .status-box {
       border-radius: var(--radius);
       border: 1px solid;
@@ -207,6 +272,10 @@
     <div id="no-api-key">
       No API key configured. <a id="open-options">Configure an API key</a> in the extension options to create links.
     </div>
+    <!-- Existing go links for this URL — populated by popup.js -->
+    <div id="existing-links"></div>
+    <!-- Keyword shortcuts that match this URL — populated by popup.js -->
+    <div id="keyword-suggestions"></div>
     <div class="field">
       <div class="label-row">
         <label for="url">Destination URL</label>

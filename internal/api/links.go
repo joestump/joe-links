@@ -62,7 +62,9 @@ func (h *linksAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	// Governing: SPEC-0010 REQ "REST API Visibility Field" — non-admin sees owned + shared
-	if user.Role == "admin" {
+	if urlFilter := r.URL.Query().Get("url"); urlFilter != "" {
+		links, err = h.links.ListByURL(r.Context(), urlFilter, user.ID, user.Role == "admin")
+	} else if user.Role == "admin" {
 		links, err = h.links.ListAll(r.Context())
 	} else {
 		links, err = h.links.ListByOwnerOrShared(r.Context(), user.ID)

@@ -260,6 +260,26 @@ func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*
 }
 
 
+// ListByURL returns links whose URL exactly matches the given string.
+// Admins see all matches; regular users see owned, shared, or public links.
+func (s *LinkStore) ListByURL(ctx context.Context, url, userID string, isAdmin bool) ([]*Link, error) {
+	var links []*Link
+	if isAdmin {
+		err := s.db.SelectContext(ctx, &links, s.q(`
+			SELECT * FROM links WHERE url = ? ORDER BY created_at DESC
+		`), url)
+		return links, err
+	}
+	err := s.db.SelectContext(ctx, &links, s.q(`
+		SELECT DISTINCT l.* FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.user_id = ?
+		LEFT JOIN link_shares ls ON ls.link_id = l.id AND ls.user_id = ?
+		WHERE l.url = ? AND (l.visibility = 'public' OR lo.user_id IS NOT NULL OR ls.user_id IS NOT NULL)
+		ORDER BY l.created_at DESC
+	`), userID, userID, url)
+	return links, err
+}
+
 // Delete removes a link by ID. CASCADE deletes handle link_owners and link_tags.
 func (s *LinkStore) Delete(ctx context.Context, id string) error {
 	_, err := s.db.ExecContext(ctx, s.q(`DELETE FROM links WHERE id = ?`), id)
