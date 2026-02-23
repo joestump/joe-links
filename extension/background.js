@@ -23,6 +23,45 @@ const KEYWORD_RE = /^([a-z][a-z0-9-]*)\/(.+)$/;
 
 const DEFAULTS = { baseURL: 'http://go', keywords: ['go'] };
 
+// Install declarativeNetRequest dynamic rules that redirect keyword hostnames
+// (e.g. http(s)://go/*) to the real server before Chrome opens a socket.
+// This avoids the async race in onBeforeNavigate where Chrome's TLS failure
+// can beat the storage read.
+async function updateRedirectRules() {
+  const { baseURL, keywords } = await chrome.storage.local.get({
+    baseURL: DEFAULTS.baseURL,
+    keywords: DEFAULTS.keywords,
+  });
+  let serverURL;
+  try { serverURL = new URL(baseURL); } catch { return; }
+  const serverHost = serverURL.hostname;
+  const scheme = serverURL.protocol.slice(0, -1); // strip trailing ':'
+  const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
+
+  // One rule per keyword that differs from the server hostname.
+  // The transform keeps path/query/fragment intact and only swaps host+scheme.
+  const addRules = kws
+    .filter(k => k !== serverHost)
+    .map((keyword, i) => ({
+      id: i + 1,
+      priority: 1,
+      action: {
+        type: 'redirect',
+        redirect: { transform: { scheme, host: serverHost } },
+      },
+      condition: {
+        regexFilter: `^https?://${keyword.replace(/\./g, '\\.')}(/.*)?$`,
+        resourceTypes: ['main_frame'],
+      },
+    }));
+
+  const existing = await chrome.declarativeNetRequest.getDynamicRules();
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: existing.map(r => r.id),
+    addRules,
+  });
+}
+
 // Governing: SPEC-0008 REQ "Keyword Host Discovery", REQ "API Key Authentication"
 async function refreshKeywords() {
   const { baseURL, apiKey } = await chrome.storage.local.get({ baseURL: DEFAULTS.baseURL, apiKey: '' });
@@ -56,20 +95,27 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     }
   }
   await refreshKeywords();
+  await updateRedirectRules();
   chrome.alarms.create('keyword-refresh', { periodInMinutes: 60 });
 });
 
-chrome.runtime.onStartup.addListener(() => {
-  refreshKeywords();
+chrome.runtime.onStartup.addListener(async () => {
+  await refreshKeywords();
+  await updateRedirectRules();
 });
 
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'keyword-refresh') refreshKeywords();
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'keyword-refresh') {
+    await refreshKeywords();
+    await updateRedirectRules();
+  }
 });
 
 // Allow the options page to trigger a keyword refresh after a base URL change.
 chrome.runtime.onMessage.addListener((message) => {
-  if (message?.type === 'refresh-keywords') refreshKeywords();
+  if (message?.type === 'refresh-keywords') {
+    refreshKeywords().then(() => updateRedirectRules());
+  }
 });
 
 // Governing: SPEC-0008 REQ "Search Interception and Redirect"
