@@ -108,6 +108,9 @@ jobs:
         with:
           files: dist/*
           generate_release_notes: true
+          # Allow updating a release that was pre-created (e.g. with custom notes).
+          make_latest: "true"
+          fail_on_unmatched_files: false
 
   docker:
     name: Docker
