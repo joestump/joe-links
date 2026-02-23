@@ -24,6 +24,8 @@ type Config struct {
 		RedirectURL  string
 	}
 	AdminEmail      string
+	AdminGroups     []string // OIDC group names that grant the admin role
+	GroupsClaim     string   // OIDC claim name containing the user's groups (default: "groups")
 	SessionLifetime time.Duration
 	InsecureCookies bool
 }
@@ -52,6 +54,17 @@ func Load() (*Config, error) {
 	cfg.OIDC.RedirectURL = v.GetString("oidc.redirect_url")
 	cfg.AdminEmail = v.GetString("admin_email")
 	cfg.InsecureCookies = v.GetBool("insecure_cookies")
+	if raw := v.GetString("oidc.admin_groups"); raw != "" {
+		for _, g := range strings.Split(raw, ",") {
+			if g = strings.TrimSpace(g); g != "" {
+				cfg.AdminGroups = append(cfg.AdminGroups, g)
+			}
+		}
+	}
+	cfg.GroupsClaim = v.GetString("oidc.groups_claim")
+	if cfg.GroupsClaim == "" {
+		cfg.GroupsClaim = "groups"
+	}
 
 	lifetime, err := time.ParseDuration(v.GetString("session.lifetime"))
 	if err != nil {

@@ -18,17 +18,30 @@ const (
 
 // Handlers provides HTTP handlers for the OIDC authentication flow.
 type Handlers struct {
-	provider       *Provider
-	sessions       *scs.SessionManager
-	users          *store.UserStore
-	adminEmail     string
-	secureCookies  bool
+	provider      *Provider
+	sessions      *scs.SessionManager
+	users         *store.UserStore
+	adminEmail    string
+	adminGroups   []string // OIDC group names that grant the admin role
+	groupsClaim   string   // OIDC claim name for groups (default: "groups")
+	secureCookies bool
 }
 
 // NewHandlers creates a new Handlers with the given dependencies.
 // Set secureCookies=false for local HTTP development.
-func NewHandlers(p *Provider, sm *scs.SessionManager, us *store.UserStore, adminEmail string, secureCookies bool) *Handlers {
-	return &Handlers{provider: p, sessions: sm, users: us, adminEmail: adminEmail, secureCookies: secureCookies}
+func NewHandlers(p *Provider, sm *scs.SessionManager, us *store.UserStore, adminEmail string, adminGroups []string, groupsClaim string, secureCookies bool) *Handlers {
+	if groupsClaim == "" {
+		groupsClaim = "groups"
+	}
+	return &Handlers{
+		provider:      p,
+		sessions:      sm,
+		users:         us,
+		adminEmail:    adminEmail,
+		adminGroups:   adminGroups,
+		groupsClaim:   groupsClaim,
+		secureCookies: secureCookies,
+	}
 }
 
 // Login initiates the OIDC authorization code flow with PKCE.
@@ -81,21 +94,51 @@ func (h *Handlers) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract claims
-	var claims struct {
-		Subject string `json:"sub"`
-		Email   string `json:"email"`
-		Name    string `json:"name"`
-	}
-	if err := idToken.Claims(&claims); err != nil {
+	// Extract claims — groups claim is dynamic based on config.
+	var rawClaims map[string]interface{}
+	if err := idToken.Claims(&rawClaims); err != nil {
 		http.Error(w, "invalid claims", http.StatusUnauthorized)
 		return
 	}
+	email, _ := rawClaims["email"].(string)
+	name, _ := rawClaims["name"].(string)
+	subject, _ := rawClaims["sub"].(string)
 
-	// Upsert user record
-	user, err := h.users.Upsert(r.Context(), idToken.Issuer, claims.Subject, claims.Email, claims.Name, h.adminEmail)
+	// Determine role from adminEmail and OIDC group membership.
+	role := "user"
+	if h.adminEmail != "" && email == h.adminEmail {
+		role = "admin"
+	}
+	if role != "admin" && len(h.adminGroups) > 0 {
+		if groups := rawClaims[h.groupsClaim]; groups != nil {
+			var userGroups []string
+			switch v := groups.(type) {
+			case []interface{}:
+				for _, g := range v {
+					if s, ok := g.(string); ok {
+						userGroups = append(userGroups, s)
+					}
+				}
+			case []string:
+				userGroups = v
+			}
+			adminSet := make(map[string]struct{}, len(h.adminGroups))
+			for _, g := range h.adminGroups {
+				adminSet[g] = struct{}{}
+			}
+			for _, g := range userGroups {
+				if _, ok := adminSet[g]; ok {
+					role = "admin"
+					break
+				}
+			}
+		}
+	}
+
+	// Upsert user record — role is enforced on every login.
+	user, err := h.users.Upsert(r.Context(), idToken.Issuer, subject, email, name, role)
 	if err != nil {
-		log.Printf("auth callback: upsert user (issuer=%s subject=%s email=%s): %v", idToken.Issuer, claims.Subject, claims.Email, err)
+		log.Printf("auth callback: upsert user (issuer=%s subject=%s email=%s): %v", idToken.Issuer, subject, email, err)
 		http.Error(w, "user record error", http.StatusInternalServerError)
 		return
 	}

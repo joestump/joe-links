@@ -98,11 +98,9 @@ func (s *UserStore) resolveUniqueSlug(ctx context.Context, displayName, excludeU
 // Upsert creates or updates a user record on OIDC login.
 // adminEmail: if non-empty and matches email on INSERT, role is set to "admin".
 // Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup", ADR-0002
-func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displayName, adminEmail string) (*User, error) {
-	role := "user"
-	if adminEmail != "" && email == adminEmail {
-		role = "admin"
-	}
+// Upsert creates or updates a user record. The role is determined by the caller
+// (typically from adminEmail / OIDC group membership) and is enforced on every login.
+func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displayName, role string) (*User, error) {
 	id := uuid.New().String()
 	now := time.Now().UTC()
 
@@ -131,9 +129,9 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	if s.db.DriverName() == "mysql" {
 		if existingID != "" {
 			_, err = s.db.ExecContext(ctx, s.q(`
-				UPDATE users SET email = ?, display_name = ?, display_name_slug = ?, updated_at = ?
+				UPDATE users SET email = ?, display_name = ?, display_name_slug = ?, role = ?, updated_at = ?
 				WHERE provider = ? AND subject = ?
-			`), email, displayName, slug, now, provider, subject)
+			`), email, displayName, slug, role, now, provider, subject)
 		} else {
 			_, err = s.db.ExecContext(ctx, s.q(`
 				INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
@@ -142,7 +140,7 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 		}
 	} else {
 		// SQLite and PostgreSQL: atomic upsert.
-		// Role is excluded from the UPDATE clause so returning users keep their existing role.
+		// Role is included in the UPDATE so admin assignment via email/group is enforced on every login.
 		_, err = s.db.ExecContext(ctx, s.q(`
 			INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -150,6 +148,7 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 				email = excluded.email,
 				display_name = excluded.display_name,
 				display_name_slug = excluded.display_name_slug,
+				role = excluded.role,
 				updated_at = excluded.updated_at
 		`), id, provider, subject, email, displayName, slug, role, now, now)
 	}
