@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-02-22
 decision-makers: Joe Stump
 ---

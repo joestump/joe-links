@@ -85,7 +85,7 @@ An admin MUST be able to delete any link from the admin links screen. Clicking "
 
 ### Requirement: Admin Keywords Screen (`GET /admin/keywords`)
 
-The admin keywords screen MUST be served at `GET /admin/keywords` and MUST require the `admin` role. It MUST display all keywords from the `keywords` table in a table format showing: keyword, URL template, description, and created date. The screen MUST include a "New Keyword" form (inline or modal) with fields: keyword (required, unique), URL template (required, MUST contain `%s` placeholder), and description (optional). Submitting the form MUST issue `POST /admin/keywords`. Successful creation MUST re-render the keywords table via HTMX swap. Each keyword row MUST have a "Delete" action that opens a DaisyUI confirmation modal. Confirming deletion MUST issue `DELETE /admin/keywords/{id}` and remove the row from the DOM via HTMX swap.
+The admin keywords screen MUST be served at `GET /admin/keywords` and MUST require the `admin` role. It MUST display all keywords from the `keywords` table in a table format showing: keyword, URL template, description, and created date. The screen MUST include a "New Keyword" form (inline or modal) with fields: keyword (required, unique), URL template (required, MUST contain `{slug}` placeholder), and description (optional). Submitting the form MUST issue `POST /admin/keywords`. Successful creation MUST re-render the keywords table via HTMX swap. Each keyword row MUST have a "Delete" action that opens a DaisyUI confirmation modal. Confirming deletion MUST issue `DELETE /admin/keywords/{id}` and remove the row from the DOM via HTMX swap.
 
 #### Scenario: Keywords Listed
 
@@ -94,7 +94,7 @@ The admin keywords screen MUST be served at `GET /admin/keywords` and MUST requi
 
 #### Scenario: Create Keyword
 
-- **WHEN** an admin submits a valid keyword and URL template containing `%s`
+- **WHEN** an admin submits a valid keyword and URL template containing `{slug}`
 - **THEN** a new keyword MUST be created and the keywords table MUST be re-rendered
 
 #### Scenario: Duplicate Keyword Rejected
@@ -104,7 +104,7 @@ The admin keywords screen MUST be served at `GET /admin/keywords` and MUST requi
 
 #### Scenario: URL Template Missing Placeholder
 
-- **WHEN** an admin submits a URL template that does not contain `%s`
+- **WHEN** an admin submits a URL template that does not contain `{slug}`
 - **THEN** the form MUST display a validation error and MUST NOT create the keyword
 
 #### Scenario: Delete Keyword with Confirmation
