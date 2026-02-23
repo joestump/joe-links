@@ -25,6 +25,70 @@ const KEYWORD_RE = /^([A-Za-z][A-Za-z0-9-]*)\/(.+)$/;
 
 const DEFAULTS = { baseURL: 'http://go', keywords: ['go'] };
 
+// Draw a clean chain-link icon programmatically at a given size.
+// Avoids the diagonal-stroke "X" appearance of the PNG at 16px.
+// Governing: ADR-0012
+function makeIconData(size) {
+  try {
+    const canvas = new OffscreenCanvas(size, size);
+    const ctx = canvas.getContext('2d');
+    const s = size;
+    // Purple background
+    ctx.fillStyle = '#7c3aed';
+    ctx.beginPath();
+    ctx.roundRect(0, 0, s, s, s * 0.18);
+    ctx.fill();
+    // Draw two horizontal chain-link ovals
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = Math.max(1.5, s * 0.11);
+    ctx.lineCap = 'round';
+    const ry = s * 0.15;  // oval vertical radius
+    const rx = s * 0.24;  // oval horizontal radius
+    const gap = s * 0.06;
+    const cy = s / 2;
+    const x1 = s * 0.5 - gap / 2 - rx * 0.5; // left link center x
+    const x2 = s * 0.5 + gap / 2 + rx * 0.5; // right link center x
+    // Left oval
+    ctx.beginPath();
+    ctx.ellipse(x1, cy, rx, ry, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+    // Right oval (overlapping)
+    ctx.beginPath();
+    ctx.ellipse(x2, cy, rx, ry, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+    // Cover the inner overlap area so links look joined
+    ctx.fillStyle = '#7c3aed';
+    ctx.fillRect(x1 + rx * 0.55, cy - ry - 1, x2 - x1 - rx * 1.1, ry * 2 + 2);
+    // Redraw right half of left oval and left half of right oval over the cover
+    ctx.strokeStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(x1, cy, rx, ry, 0, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(x2, cy, rx, ry, 0, Math.PI / 2, (3 * Math.PI) / 2);
+    ctx.stroke();
+    return ctx.getImageData(0, 0, s, s);
+  } catch {
+    return null;
+  }
+}
+
+// Set the browser action icon using programmatically drawn image data.
+async function setActionIcon() {
+  try {
+    const imageData = {};
+    for (const size of [16, 48, 128]) {
+      const data = makeIconData(size);
+      if (data) imageData[size] = data;
+    }
+    if (Object.keys(imageData).length > 0) {
+      await chrome.action.setIcon({ imageData });
+    }
+  } catch {
+    // setIcon not available or OffscreenCanvas not supported — fall back to PNG.
+  }
+}
+
 // Install declarativeNetRequest dynamic rules that redirect keyword hostnames
 // (e.g. http(s)://go/*) to the real server before Chrome opens a socket.
 // This avoids the async race in onBeforeNavigate where Chrome's TLS failure
@@ -42,10 +106,14 @@ async function updateRedirectRules() {
     const scheme = serverURL.protocol.slice(0, -1); // strip trailing ':'
     const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
 
+    // Always include the short alias (e.g. 'go' from 'go.stump.rocks') so a
+    // declarativeNetRequest rule is created even when storage keywords are stale.
+    const serverKeyword = serverHost.split('.')[0];
+    const allKeywords = [...new Set([...kws, serverKeyword])].filter(k => k !== serverHost);
+
     // One rule per keyword that differs from the server hostname.
     // The transform keeps path/query/fragment intact and only swaps host+scheme.
-    const addRules = kws
-      .filter(k => k !== serverHost)
+    const addRules = allKeywords
       .map((keyword, i) => ({
         id: i + 1,
         priority: 1,
@@ -106,12 +174,14 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
   await refreshKeywords();
   await updateRedirectRules();
+  await setActionIcon();
   chrome.alarms.create('keyword-refresh', { periodInMinutes: 60 });
 });
 
 chrome.runtime.onStartup.addListener(async () => {
   await refreshKeywords();
   await updateRedirectRules();
+  await setActionIcon();
 });
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
@@ -165,7 +235,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
     if (match) {
       const [, rawKeyword, slug] = match;
       const keyword = rawKeyword.toLowerCase();
-      if (kws.includes(keyword)) {
+      // Accept stored keywords OR the server's own short alias (guards against stale storage).
+      if (kws.includes(keyword) || keyword === serverKeyword) {
         chrome.tabs.update(details.tabId, { url: redirectFor(keyword, slug) });
         return;
       }
@@ -175,8 +246,9 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   // Case 2: Direct navigation to a keyword hostname (Firefox address bar behavior).
   // Firefox treats "go/slack" as a direct URL http://go/slack rather than routing
   // through a search engine, bypassing Case 1. Intercept and route via the server.
+  // Also guards against stale storage by accepting serverKeyword directly.
   // Governing: SPEC-0008 REQ "Search Interception and Redirect"
-  if (kws.includes(url.hostname) && url.hostname !== serverHost && url.pathname.length > 1) {
+  if ((kws.includes(url.hostname) || url.hostname === serverKeyword) && url.hostname !== serverHost && url.pathname.length > 1) {
     const slug = url.pathname.slice(1); // strip leading "/"
     chrome.tabs.update(details.tabId, { url: redirectFor(url.hostname, slug) });
   }
