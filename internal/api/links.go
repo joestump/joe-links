@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"log"
@@ -527,7 +526,7 @@ func (h *linksAPIHandler) AddOwner(w http.ResponseWriter, r *http.Request) {
 
 	targetUser, err := h.users.GetByEmail(r.Context(), req.Email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, store.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "user not found", "NOT_FOUND")
 			return
 		}

@@ -2,7 +2,6 @@
 package api
 
 import (
-	"database/sql"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -164,7 +163,7 @@ func (h *sharesAPIHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 	targetUser, err := h.users.GetByEmail(r.Context(), req.Email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, store.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "user not found", "NOT_FOUND")
 			return
 		}

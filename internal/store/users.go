@@ -3,6 +3,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"regexp"
 	"strings"
@@ -56,11 +57,14 @@ func NewUserStore(db *sqlx.DB) *UserStore {
 // q rebinds ? placeholders to the driver's native format ($1,$2,... for PostgreSQL).
 func (s *UserStore) q(query string) string { return s.db.Rebind(query) }
 
-// GetByDisplayNameSlug returns the user matching the given display_name_slug, or sql.ErrNoRows.
+// GetByDisplayNameSlug returns the user matching the given display_name_slug, or ErrNotFound.
 // Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
 func (s *UserStore) GetByDisplayNameSlug(ctx context.Context, slug string) (*User, error) {
 	var u User
 	err := s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE display_name_slug = ?`), slug)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -93,14 +97,7 @@ func (s *UserStore) resolveUniqueSlug(ctx context.Context, displayName, excludeU
 
 // Upsert creates or updates a user record on OIDC login.
 // adminEmail: if non-empty and matches email on INSERT, role is set to "admin".
-//
-// TODO: The ON CONFLICT ... DO UPDATE syntax works in SQLite and PostgreSQL but NOT MySQL.
-// MySQL needs a separate implementation using INSERT ... ON DUPLICATE KEY UPDATE.
-//
-// TODO: Placeholder `?` works for SQLite and MySQL but PostgreSQL needs `$1`, `$2`, etc.
-// In production, use a DB-agnostic query builder or separate query files per driver.
-//
-// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup"
+// Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup", ADR-0002
 func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displayName, adminEmail string) (*User, error) {
 	role := "user"
 	if adminEmail != "" && email == adminEmail {
@@ -123,18 +120,34 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 		return nil, err
 	}
 
-	// Try INSERT first; if the (provider, subject) pair already exists, UPDATE instead.
-	// The ON CONFLICT ... DO UPDATE syntax preserves the existing role for returning users
-	// because we don't include role in the UPDATE clause. For new users, role is set above.
-	_, err = s.db.ExecContext(ctx, s.q(`
-		INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT (provider, subject) DO UPDATE SET
-			email = excluded.email,
-			display_name = excluded.display_name,
-			display_name_slug = excluded.display_name_slug,
-			updated_at = excluded.updated_at
-	`), id, provider, subject, email, displayName, slug, role, now, now)
+	// MySQL does not support ON CONFLICT ... DO UPDATE; use explicit INSERT/UPDATE instead.
+	// SQLite and PostgreSQL both support the UPSERT syntax.
+	// Governing: ADR-0002 (pluggable database drivers)
+	if s.db.DriverName() == "mysql" {
+		if existingID != "" {
+			_, err = s.db.ExecContext(ctx, s.q(`
+				UPDATE users SET email = ?, display_name = ?, display_name_slug = ?, updated_at = ?
+				WHERE provider = ? AND subject = ?
+			`), email, displayName, slug, now, provider, subject)
+		} else {
+			_, err = s.db.ExecContext(ctx, s.q(`
+				INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			`), id, provider, subject, email, displayName, slug, role, now, now)
+		}
+	} else {
+		// SQLite and PostgreSQL: atomic upsert.
+		// Role is excluded from the UPDATE clause so returning users keep their existing role.
+		_, err = s.db.ExecContext(ctx, s.q(`
+			INSERT INTO users (id, provider, subject, email, display_name, display_name_slug, role, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			ON CONFLICT (provider, subject) DO UPDATE SET
+				email = excluded.email,
+				display_name = excluded.display_name,
+				display_name_slug = excluded.display_name_slug,
+				updated_at = excluded.updated_at
+		`), id, provider, subject, email, displayName, slug, role, now, now)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +164,9 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
 	err := s.db.GetContext(ctx, &u, s.q(`SELECT * FROM users WHERE email = ?`), email)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
 	if err != nil {
 		return nil, err
 	}

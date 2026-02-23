@@ -2,7 +2,6 @@
 package handler
 
 import (
-	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -44,8 +43,7 @@ func (h *ProfileHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	profileUser, err := h.users.GetByDisplayNameSlug(r.Context(), slug)
 	if err != nil {
-		// GetByDisplayNameSlug returns sql.ErrNoRows when not found
-		if err == sql.ErrNoRows {
+		if err == store.ErrNotFound {
 			viewer := auth.UserFromContext(r.Context())
 			w.WriteHeader(http.StatusNotFound)
 			data := notFoundPage{BasePage: newBasePage(r, viewer), User: viewer, Slug: "u/" + slug}

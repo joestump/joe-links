@@ -36,6 +36,7 @@ var (
 		"static":    true,
 		"dashboard": true,
 		"admin":     true,
+		"api":       true, // Governing: SPEC-0005 REQ "API Router Mounting" — shadows /api/v1/* routes
 		"u":         true,
 		"links":     true, // Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
 	}

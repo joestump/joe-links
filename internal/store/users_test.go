@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"context"
-	"database/sql"
 	"testing"
 
 	"github.com/joestump/joe-links/internal/store"
@@ -75,8 +74,8 @@ func TestGetByDisplayNameSlug(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for nonexistent slug, got nil")
 	}
-	if err != sql.ErrNoRows {
-		t.Errorf("expected sql.ErrNoRows, got %v", err)
+	if err != store.ErrNotFound {
+		t.Errorf("expected store.ErrNotFound, got %v", err)
 	}
 }
 

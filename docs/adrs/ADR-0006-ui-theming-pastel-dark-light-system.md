@@ -38,7 +38,7 @@ Both themes are built around a warm pastel palette. Backgrounds and foregrounds 
 | Role            | Light (`joe-light`) | Dark (`joe-dark`)    |
 |-----------------|---------------------|----------------------|
 | Primary         | `#c084fc` (lilac)   | `#a855f7` (purple)   |
-| Primary content | `#160030` (dark purple) | `#160030` (dark purple) |
+| Primary content | `#160030` (dark purple) | `#160030` (dark purple) | <!-- WCAG contrast ratio vs #c084fc: ~7.4:1 — passes AA and AAA --> |
 | Secondary       | `#fb923c` (peach)   | `#f97316` (orange)   |
 | Accent          | `#34d399` (mint)    | `#10b981` (emerald)  |
 | Neutral         | `#6b7280` (slate)   | `#9ca3af`            |
