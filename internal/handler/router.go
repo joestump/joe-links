@@ -143,8 +143,9 @@ func NewRouter(deps Deps) http.Handler {
 	})
 
 	// Swagger UI — no auth required; MUST be before slug catch-all.
+	// Use BaseLayout to avoid SwaggerUIStandalonePreset store error in Swagger UI 5.x.
 	// Governing: SPEC-0007 REQ "Swagger UI Endpoint", REQ "Swagger UI Authorization"
-	r.Get("/api/docs/*", httpSwagger.WrapHandler)
+	r.Get("/api/docs/*", httpSwagger.Handler(httpSwagger.Layout(httpSwagger.BaseLayout)))
 
 	// API sub-router at /api/v1 — must be before slug catch-all.
 	// Governing: SPEC-0005 REQ "API Router Mounting"
