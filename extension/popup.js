@@ -33,7 +33,72 @@ function matchKeywordTemplate(tabURL, urlTemplate) {
   return slug || null;
 }
 
+// --- Tag pill management ---
+const tagList = [];
+
+function setupTagInput() {
+  const container = document.getElementById('tags-container');
+  const input     = document.getElementById('tags-input');
+
+  function addTag(raw) {
+    // Normalise: lowercase, replace non-alphanumeric runs with hyphens, strip leading/trailing hyphens.
+    const tag = raw.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (!tag || tagList.includes(tag)) return;
+    tagList.push(tag);
+
+    const pill = document.createElement('span');
+    pill.className = 'tag-pill';
+
+    const text = document.createElement('span');
+    text.textContent = tag;
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'tag-pill-remove';
+    removeBtn.innerHTML = '×';
+    removeBtn.title = 'Remove';
+    removeBtn.type = 'button';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      tagList.splice(tagList.indexOf(tag), 1);
+      pill.remove();
+    });
+
+    pill.appendChild(text);
+    pill.appendChild(removeBtn);
+    container.insertBefore(pill, input);
+  }
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab') {
+      if (input.value.trim()) {
+        e.preventDefault();
+        addTag(input.value);
+        input.value = '';
+      }
+    } else if (e.key === 'Backspace' && !input.value && tagList.length > 0) {
+      const last = tagList[tagList.length - 1];
+      const pills = container.querySelectorAll('.tag-pill');
+      if (pills.length > 0) {
+        pills[pills.length - 1].remove();
+        tagList.splice(tagList.indexOf(last), 1);
+      }
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    if (input.value.trim()) {
+      addTag(input.value);
+      input.value = '';
+    }
+  });
+
+  // Clicking anywhere in the tags row focuses the input.
+  container.addEventListener('click', () => input.focus());
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  setupTagInput();
+
   const { baseURL, apiKey } = await chrome.storage.local.get(DEFAULTS);
 
   // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "no API key"
@@ -51,16 +116,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     hint.hidden = !hint.hidden;
   });
 
-  // Get the current tab URL.
-  // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "popup opens"
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tabURL = tabs[0]?.url || '';
-  if (tabURL) document.getElementById('url').value = tabURL;
-
   // Derive the short-link prefix from the base URL hostname.
   // e.g. baseURL="https://go.stump.rocks" → serverKeyword="go"
   let serverKeyword = 'go';
   try { serverKeyword = new URL(baseURL).hostname.split('.')[0]; } catch {}
+
+  // Show the server keyword prefix in the slug field.
+  document.getElementById('slug-prefix').textContent = serverKeyword + '/';
+
+  // Get the current tab URL and title.
+  // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "popup opens"
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tabURL   = tabs[0]?.url   || '';
+  const tabTitle = tabs[0]?.title || '';
+  if (tabURL)   document.getElementById('url').value   = tabURL;
+  if (tabTitle) document.getElementById('title').value = tabTitle;
 
   if (!apiKey || !tabURL) return;
 
@@ -175,6 +245,14 @@ document.getElementById('create').addEventListener('click', async () => {
     return;
   }
 
+  // Flush any pending tag in the input box.
+  const tagsInput = document.getElementById('tags-input');
+  if (tagsInput.value.trim()) {
+    const raw = tagsInput.value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    if (raw && !tagList.includes(raw)) tagList.push(raw);
+    tagsInput.value = '';
+  }
+
   btn.disabled    = true;
   btn.textContent = 'Creating…';
   clearStatus();
@@ -188,12 +266,20 @@ document.getElementById('create').addEventListener('click', async () => {
   const headers = { 'Content-Type': 'application/json' };
   if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
 
+  const title       = document.getElementById('title').value.trim();
+  const description = document.getElementById('description').value.trim();
+
+  const body = { url, slug };
+  if (title)            body.title       = title;
+  if (description)      body.description = description;
+  if (tagList.length)   body.tags        = [...tagList];
+
   try {
     // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "submit form"
     const res = await fetch(`${baseURL}/api/v1/links`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, slug }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(10000),
     });
 
@@ -209,6 +295,9 @@ document.getElementById('create').addEventListener('click', async () => {
 
       showSuccess(shortLink);
       slugInput.value = '';
+      // Clear tags after successful creation.
+      tagList.length = 0;
+      document.querySelectorAll('.tag-pill').forEach(p => p.remove());
     } else {
       const errData = await res.json().catch(() => ({}));
       const msg = errData.error || errData.message || `Error ${res.status}`;

@@ -101,6 +101,17 @@
     button#refresh-keywords:hover { background: var(--base-300); }
     button#refresh-keywords:disabled { opacity: 0.5; cursor: default; }
     #saved { font-size: 0.82rem; color: var(--success-text); display: none; }
+    .kw-pill {
+      display: inline-flex;
+      align-items: center;
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
+      border-radius: 99px;
+      padding: 2px 10px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: var(--base-content);
+    }
   </style>
 </head>
 <body>
@@ -126,12 +137,16 @@
       <button id="save">Save</button>
       <p id="saved">Saved.</p>
     </div>
-    <div style="border-top: 1px solid var(--base-300); padding-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+    <div style="border-top: 1px solid var(--base-300); padding-top: 16px; display: flex; flex-direction: column; gap: 8px;">
       <label>Keywords</label>
       <p class="hint">Keywords are refreshed automatically every 5 minutes. You can also trigger an immediate refresh.</p>
       <div style="display: flex; align-items: center; gap: 10px;">
         <button id="refresh-keywords">Refresh now</button>
         <span id="refresh-status" style="font-size: 0.82rem; color: var(--success-text); display: none;"></span>
+      </div>
+      <div id="keywords-loaded" style="display: none; flex-direction: column; gap: 6px;">
+        <p class="hint" id="keywords-count"></p>
+        <div id="keywords-pills" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
       </div>
     </div>
   </main>

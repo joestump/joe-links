@@ -9,10 +9,41 @@ const savedMsg       = document.getElementById('saved');
 const refreshBtn     = document.getElementById('refresh-keywords');
 const refreshStatus  = document.getElementById('refresh-status');
 
+// Render the loaded keywords as pills in the options page.
+function renderKeywords(keywords) {
+  const section = document.getElementById('keywords-loaded');
+  const pills   = document.getElementById('keywords-pills');
+  const count   = document.getElementById('keywords-count');
+
+  if (!keywords || keywords.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  count.textContent = `${keywords.length} keyword${keywords.length === 1 ? '' : 's'} loaded`;
+  pills.innerHTML = '';
+  for (const kw of keywords) {
+    const pill = document.createElement('span');
+    pill.className = 'kw-pill';
+    pill.textContent = kw;
+    pills.appendChild(pill);
+  }
+  section.style.display = 'flex';
+}
+
 // Load saved values on page open.
-chrome.storage.local.get({ baseURL: 'http://go', apiKey: '' }, ({ baseURL, apiKey }) => {
+chrome.storage.local.get({ baseURL: 'http://go', apiKey: '', keywords: [] }, ({ baseURL, apiKey, keywords }) => {
   input.value    = baseURL;
   apiKeyIn.value = apiKey;
+  renderKeywords(keywords);
+});
+
+// Keep the keyword list up to date if the background worker refreshes while the
+// options page is open (e.g. after save triggers a refresh).
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.keywords) {
+    renderKeywords(changes.keywords.newValue || []);
+  }
 });
 
 // Governing: SPEC-0008 REQ "Configuration" scenario "User sets an invalid base URL"

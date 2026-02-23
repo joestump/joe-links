@@ -128,6 +128,124 @@
       border-color: var(--primary);
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
     }
+    /* Slug prefix row */
+    .slug-row {
+      display: flex;
+      align-items: center;
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .slug-row:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+    .slug-prefix {
+      font-family: monospace;
+      font-size: 0.875rem;
+      color: var(--muted);
+      padding: 7px 0 7px 10px;
+      white-space: nowrap;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .slug-row input[type="text"] {
+      width: auto;
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      padding: 7px 10px 7px 3px;
+      border-radius: 0;
+    }
+    .slug-row input[type="text"]:focus {
+      box-shadow: none;
+      border-color: transparent;
+    }
+    /* Tags pill input */
+    .tags-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      background: var(--base-200);
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      padding: 4px 8px;
+      cursor: text;
+      min-height: 34px;
+    }
+    .tags-row:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--base-300);
+      border-radius: 99px;
+      padding: 2px 6px 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--base-content);
+      white-space: nowrap;
+    }
+    .tag-pill-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0 1px;
+      font-size: 0.85rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+    }
+    .tag-pill-remove:hover { color: var(--base-content); }
+    #tags-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--base-content);
+      font-size: 0.875rem;
+      padding: 2px 2px;
+      min-width: 80px;
+      flex: 1;
+      width: auto;
+    }
+    #tags-input:focus { box-shadow: none; border-color: transparent; }
+    /* Expandable details */
+    .details-more { width: 100%; }
+    .details-toggle {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 0;
+    }
+    .details-toggle::-webkit-details-marker { display: none; }
+    .details-toggle::before {
+      content: '▶';
+      font-size: 0.55rem;
+      display: inline-block;
+      transition: transform 0.15s;
+    }
+    details[open] > .details-toggle::before { transform: rotate(90deg); }
+    .details-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 8px;
+    }
     .hint { font-size: 0.72rem; color: var(--muted); }
     button#create {
       width: 100%;
@@ -290,8 +408,31 @@
     </div>
     <div class="field">
       <label for="slug">Slug</label>
-      <input type="text" id="slug" placeholder="my-link" />
+      <div class="slug-row">
+        <span class="slug-prefix" id="slug-prefix">go/</span>
+        <input type="text" id="slug" placeholder="my-link" autocomplete="off" spellcheck="false" />
+      </div>
     </div>
+    <div class="field">
+      <label>Tags</label>
+      <div class="tags-row" id="tags-container">
+        <input type="text" id="tags-input" placeholder="Add tags…" autocomplete="off" />
+      </div>
+      <span class="hint">Press Enter or comma to add a tag</span>
+    </div>
+    <details class="details-more" id="more-details">
+      <summary class="details-toggle">More details</summary>
+      <div class="details-body">
+        <div class="field">
+          <label for="title">Title</label>
+          <input type="text" id="title" placeholder="Page title" />
+        </div>
+        <div class="field">
+          <label for="description">Description</label>
+          <input type="text" id="description" placeholder="Optional description" />
+        </div>
+      </div>
+    </details>
     <button id="create">Create Link</button>
     <div id="status"></div>
   </div>
