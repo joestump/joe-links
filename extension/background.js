@@ -14,12 +14,14 @@ function getSearchQuery(url) {
   if (h === 'search.brave.com' && p === '/search') return s.get('q');
   if (h === 'www.ecosia.org' && p === '/search') return s.get('q');
   if (h === 'www.qwant.com' && p === '/') return s.get('q');
+  if (h === 'kagi.com' && p === '/search') return s.get('q');
+  if (h === 'www.perplexity.ai' && p === '/search') return s.get('q');
   return null;
 }
 
-// Pattern: keyword/slug — keyword is lowercase alphanumeric+hyphens, slug is anything.
+// Pattern: keyword/slug — keyword is alphanumeric+hyphens (case-insensitive), slug is anything.
 // Governing: SPEC-0008 REQ "Search Interception and Redirect"
-const KEYWORD_RE = /^([a-z][a-z0-9-]*)\/(.+)$/;
+const KEYWORD_RE = /^([A-Za-z][A-Za-z0-9-]*)\/(.+)$/;
 
 const DEFAULTS = { baseURL: 'http://go', keywords: ['go'] };
 
@@ -27,39 +29,44 @@ const DEFAULTS = { baseURL: 'http://go', keywords: ['go'] };
 // (e.g. http(s)://go/*) to the real server before Chrome opens a socket.
 // This avoids the async race in onBeforeNavigate where Chrome's TLS failure
 // can beat the storage read.
+// Requires Chrome 90+ or Firefox 127+; older versions degrade gracefully.
 async function updateRedirectRules() {
-  const { baseURL, keywords } = await chrome.storage.local.get({
-    baseURL: DEFAULTS.baseURL,
-    keywords: DEFAULTS.keywords,
-  });
-  let serverURL;
-  try { serverURL = new URL(baseURL); } catch { return; }
-  const serverHost = serverURL.hostname;
-  const scheme = serverURL.protocol.slice(0, -1); // strip trailing ':'
-  const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
+  try {
+    const { baseURL, keywords } = await chrome.storage.local.get({
+      baseURL: DEFAULTS.baseURL,
+      keywords: DEFAULTS.keywords,
+    });
+    let serverURL;
+    try { serverURL = new URL(baseURL); } catch { return; }
+    const serverHost = serverURL.hostname;
+    const scheme = serverURL.protocol.slice(0, -1); // strip trailing ':'
+    const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
 
-  // One rule per keyword that differs from the server hostname.
-  // The transform keeps path/query/fragment intact and only swaps host+scheme.
-  const addRules = kws
-    .filter(k => k !== serverHost)
-    .map((keyword, i) => ({
-      id: i + 1,
-      priority: 1,
-      action: {
-        type: 'redirect',
-        redirect: { transform: { scheme, host: serverHost } },
-      },
-      condition: {
-        regexFilter: `^https?://${keyword.replace(/\./g, '\\.')}(/.*)?$`,
-        resourceTypes: ['main_frame'],
-      },
-    }));
+    // One rule per keyword that differs from the server hostname.
+    // The transform keeps path/query/fragment intact and only swaps host+scheme.
+    const addRules = kws
+      .filter(k => k !== serverHost)
+      .map((keyword, i) => ({
+        id: i + 1,
+        priority: 1,
+        action: {
+          type: 'redirect',
+          redirect: { transform: { scheme, host: serverHost } },
+        },
+        condition: {
+          regexFilter: `^https?://${keyword.replace(/\./g, '\\.')}(/.*)?$`,
+          resourceTypes: ['main_frame'],
+        },
+      }));
 
-  const existing = await chrome.declarativeNetRequest.getDynamicRules();
-  await chrome.declarativeNetRequest.updateDynamicRules({
-    removeRuleIds: existing.map(r => r.id),
-    addRules,
-  });
+    const existing = await chrome.declarativeNetRequest.getDynamicRules();
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: existing.map(r => r.id),
+      addRules,
+    });
+  } catch {
+    // declarativeNetRequest not available in this browser version — no-op.
+  }
 }
 
 // Governing: SPEC-0008 REQ "Keyword Host Discovery", REQ "API Key Authentication"
@@ -134,13 +141,16 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   });
   const kws = Array.isArray(keywords) ? keywords : DEFAULTS.keywords;
   const serverHost = new URL(baseURL).hostname;
+  // Short alias from the first hostname label (e.g. 'go' from 'go.stump.rocks').
+  const serverKeyword = serverHost.split('.')[0];
 
   // Build the redirect URL for a keyword+slug pair.
-  // If the keyword IS the server hostname (DNS configured), use it directly.
-  // Otherwise route through the server via path-based keyword routing.
+  // If the keyword matches the server hostname or its short alias, route directly to
+  // baseURL/slug — avoids a double-prefix (e.g. /go/slack on a go.stump.rocks server).
+  // Otherwise use path-based keyword routing: baseURL/keyword/slug.
   function redirectFor(keyword, slug) {
-    return keyword === serverHost
-      ? `http://${keyword}/${slug}`
+    return (keyword === serverHost || keyword === serverKeyword)
+      ? `${baseURL}/${slug}`
       : `${baseURL}/${keyword}/${slug}`;
   }
 
@@ -150,7 +160,8 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (query) {
     const match = query.match(KEYWORD_RE);
     if (match) {
-      const [, keyword, slug] = match;
+      const [, rawKeyword, slug] = match;
+      const keyword = rawKeyword.toLowerCase();
       if (kws.includes(keyword)) {
         chrome.tabs.update(details.tabId, { url: redirectFor(keyword, slug) });
         return;
