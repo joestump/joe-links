@@ -23,7 +23,6 @@ type DashboardPage struct {
 	Tag       string // current tag filter slug
 	Filter    string // "shared" for shared-with-me view
 	Flash     *Flash
-	Keyword   string // first configured keyword (e.g. "go") for slug prefix display
 	ShowTitle      bool // show Title column
 	ShowOwner      bool // show Owner(s) column
 	ShowTags       bool // show Tags column
@@ -91,12 +90,6 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 	// Load all tags for the tag filter chips
 	allTags, _ := h.tags.ListAll(r.Context())
 
-	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
-	keyword := ""
-	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
-		keyword = kws[0].Keyword
-	}
-
 	data := DashboardPage{
 		BasePage:    newBasePage(r, user),
 		User:        user,
@@ -105,7 +98,6 @@ func (h *DashboardHandler) Show(w http.ResponseWriter, r *http.Request) {
 		Query:       query,
 		Tag:         tagSlug,
 		Filter:      filter,
-		Keyword:     keyword,
 		ShowActions: true,
 	}
 

@@ -31,6 +31,9 @@ Go + HTMX + DaisyUI/Tailwind. Single binary.
 | `JOE_OIDC_CLIENT_SECRET` | — | OAuth2 client secret |
 | `JOE_OIDC_REDIRECT_URL` | — | Callback URL (e.g. `https://joe.example.com/auth/callback`) |
 | `JOE_ADMIN_EMAIL` | — | Email granted `admin` role on first login |
+| `JOE_OIDC_ADMIN_GROUPS` | — | Comma-separated OIDC group names that grant the `admin` role |
+| `JOE_OIDC_GROUPS_CLAIM` | `groups` | OIDC claim name containing the user's groups |
+| `JOE_SHORT_KEYWORD` | *(hostname first label)* | Override the short-link prefix shown in the UI (e.g. `go`); defaults to the first DNS label of the server hostname |
 | `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (30 days) |
 
 ## Key Conventions

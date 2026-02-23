@@ -33,7 +33,6 @@ type TagDetailPage struct {
 	BasePage
 	Tag            *store.Tag
 	Links          []*store.Link
-	Keyword        string
 	ShowVisibility bool
 	ShowActions    bool
 	ShowTitle      bool
@@ -69,17 +68,10 @@ func (h *TagsHandler) Detail(w http.ResponseWriter, r *http.Request) {
 	}
 	links, _ := h.links.ListByTag(r.Context(), slug)
 
-	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
-	keyword := ""
-	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
-		keyword = kws[0].Keyword
-	}
-
 	data := TagDetailPage{
 		BasePage:       newBasePage(r, user),
 		Tag:            tag,
 		Links:          links,
-		Keyword:        keyword,
 		ShowVisibility: true,
 		ShowActions:    true,
 		ShowTitle:      true,

@@ -47,7 +47,6 @@ type LinkFormPage struct {
 	Form    LinkForm
 	Error   string
 	Flash   *Flash
-	Keyword string // first configured keyword (e.g. "go") for slug prefix display
 }
 
 // LinkDetailPage is the template data for the link detail view.
@@ -97,13 +96,7 @@ func (h *LinksHandler) New(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	form := LinkForm{Slug: r.URL.Query().Get("slug")}
 
-	// Load first keyword for slug prefix display (e.g. "go" → "go/slug")
-	keyword := ""
-	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
-		keyword = kws[0].Keyword
-	}
-
-	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Keyword: keyword}
+	data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form}
 	if isHTMX(r) {
 		renderFragment(w, "new_link_modal", data)
 		return

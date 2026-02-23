@@ -51,7 +51,6 @@ type AdminLinksPage struct {
 	Links          []*store.AdminLink
 	Query          string
 	Tag            string // unused in admin, present for shared link_list partial compatibility
-	Keyword        string // first configured keyword for slug prefix display
 	ShowTitle      bool   // show Title column
 	ShowOwner      bool   // show Owner(s) column
 	ShowTags       bool   // show Tags column
@@ -124,17 +123,10 @@ func (h *AdminHandler) Links(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query().Get("q")
 	allLinks, _ := h.links.ListAllAdmin(r.Context(), q)
 
-	// Load first keyword for slug prefix display
-	keyword := ""
-	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
-		keyword = kws[0].Keyword
-	}
-
 	data := AdminLinksPage{
 		BasePage:       newBasePage(r, user),
 		Links:          allLinks,
 		Query:          q,
-		Keyword:        keyword,
 		ShowTitle:      true,
 		ShowOwner:      true,
 		ShowTags:       true,

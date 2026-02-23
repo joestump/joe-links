@@ -24,6 +24,7 @@ type BasePage struct {
 	User           *store.User // nil for unauthenticated pages
 	IsAdminPage    bool        // true when current path starts with /admin
 	SiteURL        string      // scheme://host of this server (e.g. "https://go.stump.rocks")
+	ShortKeyword   string      // first label of server hostname (e.g. "go" from "go.stump.rocks")
 	BuildVersion   string      // e.g. "v0.2.15" or "dev"
 	BuildCommit    string      // short commit SHA, e.g. "abc1234"
 	BuildBranch    string      // e.g. "main"
@@ -43,11 +44,20 @@ func newBasePage(r *http.Request, user *store.User) BasePage {
 	if len(commit) > 7 {
 		commit = commit[:7]
 	}
+	shortKeyword := configuredShortKeyword
+	if shortKeyword == "" {
+		host := r.Host
+		if h, _, ok := strings.Cut(host, ":"); ok {
+			host = h
+		}
+		shortKeyword = strings.SplitN(host, ".", 2)[0]
+	}
 	return BasePage{
 		Theme:        themeFromRequest(r),
 		User:         user,
 		IsAdminPage:  strings.HasPrefix(r.URL.Path, "/admin"),
 		SiteURL:      scheme + "://" + r.Host,
+		ShortKeyword: shortKeyword,
 		BuildVersion: build.Version,
 		BuildCommit:  commit,
 		BuildBranch:  build.Branch,
@@ -67,6 +77,10 @@ func themeFromRequest(r *http.Request) string {
 	}
 	return ""
 }
+
+// configuredShortKeyword is an optional override set at startup via Deps.ShortKeyword.
+// When empty, newBasePage derives the keyword from the HTTP Host header.
+var configuredShortKeyword string
 
 // pageCache maps a render key (e.g. "dashboard.html", "tags/index.html") to a
 // compiled template set containing base.html + partials + that one page file.

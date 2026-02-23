@@ -26,6 +26,7 @@ type Config struct {
 	AdminEmail      string
 	AdminGroups     []string // OIDC group names that grant the admin role
 	GroupsClaim     string   // OIDC claim name containing the user's groups (default: "groups")
+	ShortKeyword    string   // override the short keyword prefix (default: first label of HTTP host)
 	SessionLifetime time.Duration
 	InsecureCookies bool
 }
@@ -65,6 +66,7 @@ func Load() (*Config, error) {
 	if cfg.GroupsClaim == "" {
 		cfg.GroupsClaim = "groups"
 	}
+	cfg.ShortKeyword = v.GetString("short_keyword")
 
 	lifetime, err := time.ParseDuration(v.GetString("session.lifetime"))
 	if err != nil {

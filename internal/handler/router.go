@@ -32,12 +32,17 @@ type Deps struct {
 	UserStore      *store.UserStore
 	TokenStore     auth.TokenStore
 	KeywordStore   *store.KeywordStore
+	ShortKeyword   string // optional override (e.g. "go"); defaults to first label of HTTP host
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.
 // Governing: SPEC-0004 REQ "Route Registration and Priority" — named routes registered
 // before catch-all slug resolver; reserved prefixes take precedence.
 func NewRouter(deps Deps) http.Handler {
+	if deps.ShortKeyword != "" {
+		configuredShortKeyword = deps.ShortKeyword
+	}
+
 	r := chi.NewRouter()
 
 	// Standard middleware

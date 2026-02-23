@@ -19,7 +19,6 @@ type PublicLinksPage struct {
 	Links          []*store.AdminLink
 	Query          string
 	Tag            string // unused; present for link_list partial compatibility
-	Keyword        string // unused; present for link_list partial compatibility
 	Page           int
 	TotalPages     int
 	Total          int
@@ -75,16 +74,10 @@ func (h *PublicLinksHandler) Index(w http.ResponseWriter, r *http.Request) {
 		totalPages = 1
 	}
 
-	keyword := ""
-	if kws, _ := h.keywords.List(r.Context()); len(kws) > 0 {
-		keyword = kws[0].Keyword
-	}
-
 	data := PublicLinksPage{
 		BasePage:       newBasePage(r, user),
 		Links:          links,
 		Query:          query,
-		Keyword:        keyword,
 		Page:           page,
 		TotalPages:     totalPages,
 		Total:          total,
