@@ -22,16 +22,24 @@ type BasePage struct {
 	Theme       string      // "joe-light", "joe-dark", or "" (let inline script decide)
 	User        *store.User // nil for unauthenticated pages
 	IsAdminPage bool        // true when current path starts with /admin
+	SiteURL     string      // scheme://host of this server (e.g. "https://go.stump.rocks")
 }
 
 // newBasePage constructs a BasePage from the current request, setting theme,
 // user, and admin-page state.
 // Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section"
 func newBasePage(r *http.Request, user *store.User) BasePage {
+	scheme := "https"
+	if proto := r.Header.Get("X-Forwarded-Proto"); proto != "" {
+		scheme = proto
+	} else if r.TLS == nil {
+		scheme = "http"
+	}
 	return BasePage{
 		Theme:       themeFromRequest(r),
 		User:        user,
 		IsAdminPage: strings.HasPrefix(r.URL.Path, "/admin"),
+		SiteURL:     scheme + "://" + r.Host,
 	}
 }
 

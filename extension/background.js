@@ -82,9 +82,12 @@ async function refreshKeywords() {
     if (!res.ok) return;
     const data = await res.json();
     if (!Array.isArray(data)) return;
-    // Always include the canonical hostname from the base URL.
+    // Always include the canonical hostname and its short first-label alias
+    // (e.g. 'go.stump.rocks' and 'go') so declarativeNetRequest rules are
+    // created even when no keyword templates are configured on the server.
     const canonical = new URL(baseURL).hostname;
-    const merged = [...new Set([canonical, ...data])];
+    const serverKeyword = canonical.split('.')[0];
+    const merged = [...new Set([canonical, serverKeyword, ...data])];
     await chrome.storage.local.set({ keywords: merged });
   } catch {
     // Server unreachable — keep existing keyword list; no error surfaced to user.

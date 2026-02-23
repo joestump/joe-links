@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "joe-links",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Navigate to go/slug links without typing http://",
   "background": {
     "service_worker": "background.js",
@@ -37,7 +37,7 @@
     "open_in_tab": true
   },
   "content_security_policy": {
-    "extension_pages": "default-src 'self'; connect-src http: https:;"
+    "extension_pages": "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src http: https:;"
   },
   "browser_specific_settings": {
     "gecko": {
