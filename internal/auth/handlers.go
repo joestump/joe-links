@@ -2,6 +2,7 @@
 package auth
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -94,6 +95,7 @@ func (h *Handlers) Callback(w http.ResponseWriter, r *http.Request) {
 	// Upsert user record
 	user, err := h.users.Upsert(r.Context(), idToken.Issuer, claims.Subject, claims.Email, claims.Name, h.adminEmail)
 	if err != nil {
+		log.Printf("auth callback: upsert user (issuer=%s subject=%s email=%s): %v", idToken.Issuer, claims.Subject, claims.Email, err)
 		http.Error(w, "user record error", http.StatusInternalServerError)
 		return
 	}

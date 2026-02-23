@@ -48,6 +48,25 @@ joe-links serve    # run migrations + start HTTP server
 joe-links migrate  # run migrations and exit
 ```
 
+## Release Process
+
+Always use `gh release` when tagging releases — never push a bare tag without release notes.
+
+The CI auto-creates a minimal release when a tag is pushed. Update it with proper notes immediately after:
+
+```bash
+git tag vX.Y.Z && git push origin vX.Y.Z
+gh release edit vX.Y.Z --notes "$(cat <<'EOF'
+## Summary line
+
+### Category
+- Bullet points describing changes
+
+**Full Changelog**: https://github.com/joestump/joe-links/compare/vX.Y.W...vX.Y.Z
+EOF
+)"
+```
+
 ## Design Plugin Skills
 
 | Skill | Purpose |
