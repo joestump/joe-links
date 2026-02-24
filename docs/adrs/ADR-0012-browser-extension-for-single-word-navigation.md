@@ -147,7 +147,7 @@ sequenceDiagram
 * The canonical go-links hostname (`go`) is always included in the extension's host list,
   even before any keyword hosts are configured.
 * For Chrome, the extension can be distributed as an unpacked load from the repo directory.
-  For Safari, `xcrun safari-web-extension-converter extension/` produces an Xcode project
+  For Safari, `xcrun safari-web-extension-converter integrations/extension/` produces an Xcode project
   that can be built and sideloaded with a free Apple Developer account.
 * Related: ADR-0011 (root forward keywords), ADR-0007 (routing).
 * Web Extensions specification: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions

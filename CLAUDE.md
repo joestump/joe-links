@@ -70,6 +70,13 @@ EOF
 )"
 ```
 
+## Integrations
+
+Third-party integrations live under `integrations/` to avoid polluting the repo root:
+
+- `integrations/extension/` — Manifest V3 browser extension (Chrome, Firefox)
+- `integrations/apple/` — Safari Web Extension Xcode project (iOS 15+, macOS 12+); future Apple-platform apps go here too
+
 ## Design Plugin Skills
 
 | Skill | Purpose |

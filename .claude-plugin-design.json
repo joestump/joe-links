@@ -16,7 +16,8 @@
       "user-profiles-public-browsing": 57,
       "link-visibility": 58,
       "link-list-consistency": 60,
-      "browser-extension": 61
+      "browser-extension": 61,
+      "safari-extension-testflight": 63
     },
     "views": [
       "All Work",

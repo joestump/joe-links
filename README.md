@@ -134,11 +134,11 @@ make dev
 
 ## Browser Extension
 
-The `extension/` directory contains a Manifest V3 browser extension that intercepts `keyword/slug` navigations and redirects to your joe-links server. It also provides a popup for creating short links with one click.
+The `integrations/extension/` directory contains a Manifest V3 browser extension that intercepts `keyword/slug` navigations and redirects to your joe-links server. It also provides a popup for creating short links with one click.
 
 ### Setup
 
-1. Open the extension options (click the extension icon → kebab menu → Options, or load `extension/options.html` directly)
+1. Open the extension options (click the extension icon → kebab menu → Options, or load `integrations/extension/options.html` directly)
 2. Set the **Server base URL** to your joe-links instance (e.g. `http://localhost:8080` for local dev, `https://go.example.com` for production)
 3. Paste a **Personal Access Token** (created from Dashboard → Settings → API Tokens) into the API key field — needed to create links via the popup
 
@@ -146,7 +146,7 @@ The `extension/` directory contains a Manifest V3 browser extension that interce
 
 1. Go to `chrome://extensions`
 2. Enable **Developer mode** (toggle, top-right)
-3. Click **Load unpacked** → select the `extension/` directory
+3. Click **Load unpacked** → select the `integrations/extension/` directory
 
 After code changes: click the **↺** (reload) icon on the extension card.
 
@@ -154,7 +154,7 @@ After code changes: click the **↺** (reload) icon on the extension card.
 
 1. Go to `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on...**
-3. Select `extension/manifest.json`
+3. Select `integrations/extension/manifest.json`
 
 > ⚠️ **Heads up!** Temporary add-ons vanish when Firefox quits — poof! 💨 For a permanent install, package the extension as a signed `.xpi`.
 
@@ -162,14 +162,12 @@ After code changes: click **Reload** next to the extension in `about:debugging`.
 
 ### Loading in Safari
 
-1. Install Xcode from the Mac App Store
-2. Convert the extension:
-   ```bash
-   xcrun safari-web-extension-converter extension/
-   ```
-3. Build and run the generated Xcode project (⌘R)
-4. In Safari: **Settings → Extensions** → enable joe-links
-   - If the extension doesn't appear: **Develop → Allow Unsigned Extensions** first
+The Xcode project at `integrations/apple/` wraps the extension for Safari on iOS and macOS and is distributed via TestFlight.
+
+1. Open `integrations/apple/joe-links.xcodeproj` in Xcode
+2. Build and run the iOS or macOS scheme (⌘R)
+3. In Safari: **Settings → Extensions** → enable joe-links
+   - If the extension doesn't appear on macOS: **Develop → Allow Unsigned Extensions** first
    - If the Develop menu isn't visible: **Settings → Advanced → Show features for web developers**
 
 > 💡 **Tip:** Chrome is faster for day-to-day development iteration. Re-run the converter after any extension code changes before testing in Safari.

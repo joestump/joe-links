@@ -37,10 +37,10 @@ jobs:
 
       - name: Validate extension
         run: |
-          node -e "JSON.parse(require('fs').readFileSync('extension/manifest.json','utf8')); console.log('manifest.json OK')"
-          node --check extension/background.js
-          node --check extension/options.js
-          test -f extension/icons/icon-16.png && test -f extension/icons/icon-48.png && test -f extension/icons/icon-128.png
+          node -e "JSON.parse(require('fs').readFileSync('integrations/extension/manifest.json','utf8')); console.log('manifest.json OK')"
+          node --check integrations/extension/background.js
+          node --check integrations/extension/options.js
+          test -f integrations/extension/icons/icon-16.png && test -f integrations/extension/icons/icon-48.png && test -f integrations/extension/icons/icon-128.png
           echo "Extension OK"
 
   test:
@@ -98,8 +98,8 @@ jobs:
 
       - name: Package browser extension
         run: |
-          cd extension
-          zip -r ../dist/joe-links-extension.zip \
+          cd integrations/extension
+          zip -r ../../dist/joe-links-extension.zip \
             manifest.json background.js options.html options.js popup.html popup.js icons/
           echo "Packaged extension"
 

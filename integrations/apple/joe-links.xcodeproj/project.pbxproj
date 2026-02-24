@@ -1,0 +1,975 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B348C67C2F4DA17700A192FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C67B2F4DA17700A192FF /* AppDelegate.swift */; };
+		B348C67E2F4DA17700A192FF /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C67D2F4DA17700A192FF /* SceneDelegate.swift */; };
+		B348C6812F4DA17700A192FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B348C67F2F4DA17700A192FF /* LaunchScreen.storyboard */; };
+		B348C6842F4DA17700A192FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B348C6822F4DA17700A192FF /* Main.storyboard */; };
+		B348C68D2F4DA17700A192FF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C68C2F4DA17700A192FF /* AppDelegate.swift */; };
+		B348C6902F4DA17700A192FF /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B348C68E2F4DA17700A192FF /* Main.storyboard */; };
+		B348C6982F4DA17700A192FF /* joe-links Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B348C6972F4DA17700A192FF /* joe-links Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B348C6A22F4DA17700A192FF /* joe-links Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B348C6A12F4DA17700A192FF /* joe-links Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B348C6A82F4DA17700A192FF /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C66B2F4DA17600A192FF /* Main.html */; };
+		B348C6A92F4DA17700A192FF /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C66B2F4DA17600A192FF /* Main.html */; };
+		B348C6AA2F4DA17700A192FF /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = B348C66D2F4DA17600A192FF /* Icon.png */; };
+		B348C6AB2F4DA17700A192FF /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = B348C66D2F4DA17600A192FF /* Icon.png */; };
+		B348C6AC2F4DA17700A192FF /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = B348C66E2F4DA17600A192FF /* Style.css */; };
+		B348C6AD2F4DA17700A192FF /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = B348C66E2F4DA17600A192FF /* Style.css */; };
+		B348C6AE2F4DA17700A192FF /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C66F2F4DA17600A192FF /* Script.js */; };
+		B348C6AF2F4DA17700A192FF /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C66F2F4DA17600A192FF /* Script.js */; };
+		B348C6B02F4DA17700A192FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C6702F4DA17600A192FF /* ViewController.swift */; };
+		B348C6B12F4DA17700A192FF /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C6702F4DA17600A192FF /* ViewController.swift */; };
+		B348C6B22F4DA17700A192FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B348C6712F4DA17700A192FF /* Assets.xcassets */; };
+		B348C6B32F4DA17700A192FF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B348C6712F4DA17700A192FF /* Assets.xcassets */; };
+		B348C6B42F4DA17700A192FF /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C6732F4DA17700A192FF /* SafariWebExtensionHandler.swift */; };
+		B348C6B52F4DA17700A192FF /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B348C6732F4DA17700A192FF /* SafariWebExtensionHandler.swift */; };
+		B348C6CF2F4DA17700A192FF /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C72F4DA17700A192FF /* popup.js */; };
+		B348C6D02F4DA17700A192FF /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C82F4DA17700A192FF /* background.js */; };
+		B348C6D12F4DA17700A192FF /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C92F4DA17700A192FF /* popup.html */; };
+		B348C6D22F4DA17700A192FF /* options.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CA2F4DA17700A192FF /* options.js */; };
+		B348C6D32F4DA17700A192FF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CB2F4DA17700A192FF /* README.md */; };
+		B348C6D42F4DA17700A192FF /* icons in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CC2F4DA17700A192FF /* icons */; };
+		B348C6D52F4DA17700A192FF /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CD2F4DA17700A192FF /* manifest.json */; };
+		B348C6D62F4DA17700A192FF /* options.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CE2F4DA17700A192FF /* options.html */; };
+		B348C6D72F4DA17700A192FF /* popup.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C72F4DA17700A192FF /* popup.js */; };
+		B348C6D82F4DA17700A192FF /* background.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C82F4DA17700A192FF /* background.js */; };
+		B348C6D92F4DA17700A192FF /* popup.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C6C92F4DA17700A192FF /* popup.html */; };
+		B348C6DA2F4DA17700A192FF /* options.js in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CA2F4DA17700A192FF /* options.js */; };
+		B348C6DB2F4DA17700A192FF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CB2F4DA17700A192FF /* README.md */; };
+		B348C6DC2F4DA17700A192FF /* icons in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CC2F4DA17700A192FF /* icons */; };
+		B348C6DD2F4DA17700A192FF /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CD2F4DA17700A192FF /* manifest.json */; };
+		B348C6DE2F4DA17700A192FF /* options.html in Resources */ = {isa = PBXBuildFile; fileRef = B348C6CE2F4DA17700A192FF /* options.html */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B348C6992F4DA17700A192FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B348C6652F4DA17600A192FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B348C6962F4DA17700A192FF;
+			remoteInfo = "joe-links Extension (iOS)";
+		};
+		B348C6A32F4DA17700A192FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B348C6652F4DA17600A192FF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B348C6A02F4DA17700A192FF;
+			remoteInfo = "joe-links Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B348C6BB2F4DA17700A192FF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B348C6982F4DA17700A192FF /* joe-links Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6C22F4DA17700A192FF /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B348C6A22F4DA17700A192FF /* joe-links Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B348C66C2F4DA17600A192FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		B348C66D2F4DA17600A192FF /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		B348C66E2F4DA17600A192FF /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		B348C66F2F4DA17600A192FF /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		B348C6702F4DA17600A192FF /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		B348C6712F4DA17700A192FF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B348C6732F4DA17700A192FF /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		B348C6782F4DA17700A192FF /* joe-links.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "joe-links.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B348C67B2F4DA17700A192FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B348C67D2F4DA17700A192FF /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		B348C6802F4DA17700A192FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		B348C6832F4DA17700A192FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B348C6852F4DA17700A192FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B348C68A2F4DA17700A192FF /* joe-links.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "joe-links.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B348C68C2F4DA17700A192FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B348C68F2F4DA17700A192FF /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B348C6912F4DA17700A192FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B348C6922F4DA17700A192FF /* joe-links.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "joe-links.entitlements"; sourceTree = "<group>"; };
+		B348C6972F4DA17700A192FF /* joe-links Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "joe-links Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B348C69C2F4DA17700A192FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B348C6A12F4DA17700A192FF /* joe-links Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "joe-links Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B348C6A62F4DA17700A192FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B348C6A72F4DA17700A192FF /* joe-links.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "joe-links.entitlements"; sourceTree = "<group>"; };
+		B348C6C72F4DA17700A192FF /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../extension/popup.js; sourceTree = "<group>"; };
+		B348C6C82F4DA17700A192FF /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../extension/background.js; sourceTree = "<group>"; };
+		B348C6C92F4DA17700A192FF /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../extension/popup.html; sourceTree = "<group>"; };
+		B348C6CA2F4DA17700A192FF /* options.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = options.js; path = ../extension/options.js; sourceTree = "<group>"; };
+		B348C6CB2F4DA17700A192FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../extension/README.md; sourceTree = "<group>"; };
+		B348C6CC2F4DA17700A192FF /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../extension/icons; sourceTree = "<group>"; };
+		B348C6CD2F4DA17700A192FF /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../extension/manifest.json; sourceTree = "<group>"; };
+		B348C6CE2F4DA17700A192FF /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = ../extension/options.html; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B348C6752F4DA17700A192FF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6872F4DA17700A192FF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6942F4DA17700A192FF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C69E2F4DA17700A192FF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B348C6642F4DA17600A192FF = {
+			isa = PBXGroup;
+			children = (
+				B348C6692F4DA17600A192FF /* Shared (App) */,
+				B348C6722F4DA17700A192FF /* Shared (Extension) */,
+				B348C67A2F4DA17700A192FF /* iOS (App) */,
+				B348C68B2F4DA17700A192FF /* macOS (App) */,
+				B348C69B2F4DA17700A192FF /* iOS (Extension) */,
+				B348C6A52F4DA17700A192FF /* macOS (Extension) */,
+				B348C6792F4DA17700A192FF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B348C6692F4DA17600A192FF /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C6702F4DA17600A192FF /* ViewController.swift */,
+				B348C6712F4DA17700A192FF /* Assets.xcassets */,
+				B348C66A2F4DA17600A192FF /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		B348C66A2F4DA17600A192FF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B348C66B2F4DA17600A192FF /* Main.html */,
+				B348C66D2F4DA17600A192FF /* Icon.png */,
+				B348C66E2F4DA17600A192FF /* Style.css */,
+				B348C66F2F4DA17600A192FF /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B348C6722F4DA17700A192FF /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C6C62F4DA17700A192FF /* Resources */,
+				B348C6732F4DA17700A192FF /* SafariWebExtensionHandler.swift */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		B348C6792F4DA17700A192FF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B348C6782F4DA17700A192FF /* joe-links.app */,
+				B348C68A2F4DA17700A192FF /* joe-links.app */,
+				B348C6972F4DA17700A192FF /* joe-links Extension.appex */,
+				B348C6A12F4DA17700A192FF /* joe-links Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B348C67A2F4DA17700A192FF /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C67B2F4DA17700A192FF /* AppDelegate.swift */,
+				B348C67D2F4DA17700A192FF /* SceneDelegate.swift */,
+				B348C67F2F4DA17700A192FF /* LaunchScreen.storyboard */,
+				B348C6822F4DA17700A192FF /* Main.storyboard */,
+				B348C6852F4DA17700A192FF /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		B348C68B2F4DA17700A192FF /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C68C2F4DA17700A192FF /* AppDelegate.swift */,
+				B348C68E2F4DA17700A192FF /* Main.storyboard */,
+				B348C6912F4DA17700A192FF /* Info.plist */,
+				B348C6922F4DA17700A192FF /* joe-links.entitlements */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		B348C69B2F4DA17700A192FF /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C69C2F4DA17700A192FF /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		B348C6A52F4DA17700A192FF /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				B348C6A62F4DA17700A192FF /* Info.plist */,
+				B348C6A72F4DA17700A192FF /* joe-links.entitlements */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+		B348C6C62F4DA17700A192FF /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B348C6C72F4DA17700A192FF /* popup.js */,
+				B348C6C82F4DA17700A192FF /* background.js */,
+				B348C6C92F4DA17700A192FF /* popup.html */,
+				B348C6CA2F4DA17700A192FF /* options.js */,
+				B348C6CB2F4DA17700A192FF /* README.md */,
+				B348C6CC2F4DA17700A192FF /* icons */,
+				B348C6CD2F4DA17700A192FF /* manifest.json */,
+				B348C6CE2F4DA17700A192FF /* options.html */,
+			);
+			name = Resources;
+			path = "Shared (Extension)";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B348C6772F4DA17700A192FF /* joe-links (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B348C6BC2F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links (iOS)" */;
+			buildPhases = (
+				B348C6742F4DA17700A192FF /* Sources */,
+				B348C6752F4DA17700A192FF /* Frameworks */,
+				B348C6762F4DA17700A192FF /* Resources */,
+				B348C6BB2F4DA17700A192FF /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B348C69A2F4DA17700A192FF /* PBXTargetDependency */,
+			);
+			name = "joe-links (iOS)";
+			packageProductDependencies = (
+			);
+			productName = "joe-links (iOS)";
+			productReference = B348C6782F4DA17700A192FF /* joe-links.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B348C6892F4DA17700A192FF /* joe-links (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B348C6C32F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links (macOS)" */;
+			buildPhases = (
+				B348C6862F4DA17700A192FF /* Sources */,
+				B348C6872F4DA17700A192FF /* Frameworks */,
+				B348C6882F4DA17700A192FF /* Resources */,
+				B348C6C22F4DA17700A192FF /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B348C6A42F4DA17700A192FF /* PBXTargetDependency */,
+			);
+			name = "joe-links (macOS)";
+			packageProductDependencies = (
+			);
+			productName = "joe-links (macOS)";
+			productReference = B348C68A2F4DA17700A192FF /* joe-links.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B348C6962F4DA17700A192FF /* joe-links Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B348C6B82F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links Extension (iOS)" */;
+			buildPhases = (
+				B348C6932F4DA17700A192FF /* Sources */,
+				B348C6942F4DA17700A192FF /* Frameworks */,
+				B348C6952F4DA17700A192FF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "joe-links Extension (iOS)";
+			packageProductDependencies = (
+			);
+			productName = "joe-links Extension (iOS)";
+			productReference = B348C6972F4DA17700A192FF /* joe-links Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		B348C6A02F4DA17700A192FF /* joe-links Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B348C6BF2F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links Extension (macOS)" */;
+			buildPhases = (
+				B348C69D2F4DA17700A192FF /* Sources */,
+				B348C69E2F4DA17700A192FF /* Frameworks */,
+				B348C69F2F4DA17700A192FF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "joe-links Extension (macOS)";
+			packageProductDependencies = (
+			);
+			productName = "joe-links Extension (macOS)";
+			productReference = B348C6A12F4DA17700A192FF /* joe-links Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B348C6652F4DA17600A192FF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					B348C6772F4DA17700A192FF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					B348C6892F4DA17700A192FF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					B348C6962F4DA17700A192FF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					B348C6A02F4DA17700A192FF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+				};
+			};
+			buildConfigurationList = B348C6682F4DA17600A192FF /* Build configuration list for PBXProject "joe-links" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B348C6642F4DA17600A192FF;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B348C6792F4DA17700A192FF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B348C6772F4DA17700A192FF /* joe-links (iOS) */,
+				B348C6892F4DA17700A192FF /* joe-links (macOS) */,
+				B348C6962F4DA17700A192FF /* joe-links Extension (iOS) */,
+				B348C6A02F4DA17700A192FF /* joe-links Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B348C6762F4DA17700A192FF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6AA2F4DA17700A192FF /* Icon.png in Resources */,
+				B348C6812F4DA17700A192FF /* LaunchScreen.storyboard in Resources */,
+				B348C6A82F4DA17700A192FF /* Main.html in Resources */,
+				B348C6AE2F4DA17700A192FF /* Script.js in Resources */,
+				B348C6B22F4DA17700A192FF /* Assets.xcassets in Resources */,
+				B348C6842F4DA17700A192FF /* Main.storyboard in Resources */,
+				B348C6AC2F4DA17700A192FF /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6882F4DA17700A192FF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6AB2F4DA17700A192FF /* Icon.png in Resources */,
+				B348C6AD2F4DA17700A192FF /* Style.css in Resources */,
+				B348C6902F4DA17700A192FF /* Main.storyboard in Resources */,
+				B348C6AF2F4DA17700A192FF /* Script.js in Resources */,
+				B348C6B32F4DA17700A192FF /* Assets.xcassets in Resources */,
+				B348C6A92F4DA17700A192FF /* Main.html in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6952F4DA17700A192FF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6D82F4DA17700A192FF /* background.js in Resources */,
+				B348C6DD2F4DA17700A192FF /* manifest.json in Resources */,
+				B348C6DA2F4DA17700A192FF /* options.js in Resources */,
+				B348C6DE2F4DA17700A192FF /* options.html in Resources */,
+				B348C6DB2F4DA17700A192FF /* README.md in Resources */,
+				B348C6DC2F4DA17700A192FF /* icons in Resources */,
+				B348C6D92F4DA17700A192FF /* popup.html in Resources */,
+				B348C6D72F4DA17700A192FF /* popup.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C69F2F4DA17700A192FF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6D02F4DA17700A192FF /* background.js in Resources */,
+				B348C6D52F4DA17700A192FF /* manifest.json in Resources */,
+				B348C6D22F4DA17700A192FF /* options.js in Resources */,
+				B348C6D62F4DA17700A192FF /* options.html in Resources */,
+				B348C6D32F4DA17700A192FF /* README.md in Resources */,
+				B348C6D42F4DA17700A192FF /* icons in Resources */,
+				B348C6D12F4DA17700A192FF /* popup.html in Resources */,
+				B348C6CF2F4DA17700A192FF /* popup.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B348C6742F4DA17700A192FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6B02F4DA17700A192FF /* ViewController.swift in Sources */,
+				B348C67C2F4DA17700A192FF /* AppDelegate.swift in Sources */,
+				B348C67E2F4DA17700A192FF /* SceneDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6862F4DA17700A192FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6B12F4DA17700A192FF /* ViewController.swift in Sources */,
+				B348C68D2F4DA17700A192FF /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C6932F4DA17700A192FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6B42F4DA17700A192FF /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B348C69D2F4DA17700A192FF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B348C6B52F4DA17700A192FF /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B348C69A2F4DA17700A192FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B348C6962F4DA17700A192FF /* joe-links Extension (iOS) */;
+			targetProxy = B348C6992F4DA17700A192FF /* PBXContainerItemProxy */;
+		};
+		B348C6A42F4DA17700A192FF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B348C6A02F4DA17700A192FF /* joe-links Extension (macOS) */;
+			targetProxy = B348C6A32F4DA17700A192FF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		B348C66B2F4DA17600A192FF /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B348C66C2F4DA17600A192FF /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		B348C67F2F4DA17700A192FF /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B348C6802F4DA17700A192FF /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		B348C6822F4DA17700A192FF /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B348C6832F4DA17700A192FF /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		B348C68E2F4DA17700A192FF /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B348C68F2F4DA17700A192FF /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		B348C6B62F4DA17700A192FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B348C6B72F4DA17700A192FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		B348C6B92F4DA17700A192FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links.Extension";
+				PRODUCT_NAME = "joe-links Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B348C6BA2F4DA17700A192FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links.Extension";
+				PRODUCT_NAME = "joe-links Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B348C6BD2F4DA17700A192FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links";
+				PRODUCT_NAME = "joe-links";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B348C6BE2F4DA17700A192FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links";
+				PRODUCT_NAME = "joe-links";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B348C6C02F4DA17700A192FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/joe-links.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links.Extension";
+				PRODUCT_NAME = "joe-links Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B348C6C12F4DA17700A192FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "macOS (Extension)/joe-links.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links.Extension";
+				PRODUCT_NAME = "joe-links Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B348C6C42F4DA17700A192FF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/joe-links.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links";
+				PRODUCT_NAME = "joe-links";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B348C6C52F4DA17700A192FF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "macOS (App)/joe-links.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "joe-links";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "net.joestump.joe-links";
+				PRODUCT_NAME = "joe-links";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B348C6682F4DA17600A192FF /* Build configuration list for PBXProject "joe-links" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B348C6B62F4DA17700A192FF /* Debug */,
+				B348C6B72F4DA17700A192FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B348C6B82F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B348C6B92F4DA17700A192FF /* Debug */,
+				B348C6BA2F4DA17700A192FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B348C6BC2F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B348C6BD2F4DA17700A192FF /* Debug */,
+				B348C6BE2F4DA17700A192FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B348C6BF2F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B348C6C02F4DA17700A192FF /* Debug */,
+				B348C6C12F4DA17700A192FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B348C6C32F4DA17700A192FF /* Build configuration list for PBXNativeTarget "joe-links (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B348C6C42F4DA17700A192FF /* Debug */,
+				B348C6C52F4DA17700A192FF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B348C6652F4DA17600A192FF /* Project object */;
+}

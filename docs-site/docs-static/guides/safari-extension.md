@@ -37,10 +37,10 @@ If you just want the extension on your own machine:
    cd joe-links
    make ext-safari
    ```
-   This runs `xcrun safari-web-extension-converter` and outputs an Xcode project to `safari-extension/`.
+   This runs `xcrun safari-web-extension-converter` and outputs an Xcode project to `integrations/apple/`.
 
 4. **Build and run in Xcode**:
-   - Open `safari-extension/joe-links/joe-links.xcodeproj`
+   - Open `integrations/apple/joe-links/joe-links.xcodeproj`
    - Select the **joe-links (macOS)** scheme
    - Press **⌘R** to build and run — this installs the app bundle containing the extension
 
@@ -56,7 +56,7 @@ If you want to share the extension with a few people (e.g. your household or tea
 
 ### 1. Configure signing in Xcode
 
-1. Open `safari-extension/joe-links/joe-links.xcodeproj`
+1. Open `integrations/apple/joe-links/joe-links.xcodeproj`
 2. Select the project root → **Signing & Capabilities** tab
 3. Under **Team**, choose your Apple Developer account
 4. Set **Bundle Identifier** to something unique, e.g. `com.yourname.joe-links`
@@ -65,7 +65,7 @@ If you want to share the extension with a few people (e.g. your household or tea
 ### 2. Build an archive
 
 ```bash
-cd safari-extension/joe-links
+cd integrations/apple/joe-links
 xcodebuild archive \
   -scheme "joe-links (macOS)" \
   -archivePath build/joe-links.xcarchive \
@@ -183,7 +183,7 @@ safari:
     - name: Convert and build Safari extension
       run: |
         make ext-safari
-        cd safari-extension/joe-links
+        cd integrations/apple/joe-links
         xcodebuild archive \
           -scheme "joe-links (macOS)" \
           -archivePath $RUNNER_TEMP/joe-links.xcarchive \
@@ -199,7 +199,7 @@ safari:
         xcodebuild -exportArchive \
           -archivePath $RUNNER_TEMP/joe-links.xcarchive \
           -exportPath dist/safari \
-          -exportOptionsPlist safari-extension/ExportOptions.plist
+          -exportOptionsPlist integrations/apple/ExportOptions.plist
         # Notarize
         xcrun notarytool submit dist/safari/joe-links.dmg \
           --apple-id "$APPLE_ID" \
@@ -224,11 +224,11 @@ The `ExportOptions.plist` file controls distribution method (Developer ID vs App
 
 When the extension source changes (new features, bug fixes):
 
-1. Re-run `make ext-safari` — this regenerates the Xcode project from the latest `extension/` directory
+1. Re-run `make ext-safari` — this regenerates the Xcode project from the latest `integrations/extension/` directory
 2. Open Xcode, bump the version number (app target → General → Version)
 3. Archive, notarize, and distribute as above
 4. For App Store builds: create a new version in App Store Connect, attach the new build, re-submit
 
 :::caution
-`make ext-safari` regenerates the Xcode project each time, which **overwrites any manual Xcode project edits**. Keep all extension logic in the `extension/` directory and avoid editing the generated Xcode project directly.
+`make ext-safari` regenerates the Xcode project each time, which **overwrites any manual Xcode project edits**. Keep all extension logic in the `integrations/extension/` directory and avoid editing the generated Xcode project directly.
 :::

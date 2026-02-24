@@ -8,7 +8,7 @@ sidebar_position: 2
 
 The joe-links browser extension intercepts bare-hostname navigation — so typing `go/slack` in your address bar redirects through your joe-links server without needing a trailing slash or `http://` prefix.
 
-Extensions are available for **Chrome/Chromium**, **Firefox**, and **Safari** (via `xcrun safari-web-extension-converter`). The source lives in the `extension/` directory of the repository as a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) extension.
+Extensions are available for **Chrome/Chromium**, **Firefox**, and **Safari** (via `xcrun safari-web-extension-converter`). The source lives in the `integrations/integrations/extension/` directory of the repository as a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) extension.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ Before loading the extension you need:
 
 1. A running joe-links server (see [Getting Started](/guides/getting-started))
 2. An API token — Dashboard → **Settings** → **API Tokens** → Create
-3. The `extension/` directory from the repo:
+3. The `integrations/extension/` directory from the repo:
    ```bash
    git clone https://github.com/joestump/joe-links.git
    ```
@@ -30,7 +30,7 @@ Any Chromium-based browser can load the extension unpacked.
 1. Open **chrome://extensions** (or `edge://extensions`, `brave://extensions`, etc.)
 2. Enable **Developer mode** (toggle in the top-right corner)
 3. Click **Load unpacked**
-4. Select the `extension/` folder from the repository root
+4. Select the `integrations/extension/` folder from the repository root
 5. The joe-links extension appears in your toolbar
 
 ### Configure the extension
@@ -61,7 +61,7 @@ Firefox only supports loading unsigned extensions temporarily — they are remov
 1. Open **about:debugging** in Firefox
 2. Click **This Firefox** in the left sidebar
 3. Click **Load Temporary Add-on…**
-4. Navigate to the `extension/` folder and select **manifest.json**
+4. Navigate to the `integrations/extension/` folder and select **manifest.json**
 5. The extension appears in your toolbar
 
 ### Configure the extension
