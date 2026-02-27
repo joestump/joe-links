@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS link_clicks (
     ip_hash TEXT NOT NULL,
     user_agent TEXT,
     referrer TEXT,
-    clicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    clicked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_link_clicks_link_id_clicked_at ON link_clicks(link_id, clicked_at DESC);
