@@ -59,6 +59,7 @@ type LinkDetailPage struct {
 	Tags   []*store.Tag
 	Owners []*store.OwnerInfo
 	Shares []ShareUser
+	Error  string
 }
 
 // ShareUser combines share record with user display info for templates.

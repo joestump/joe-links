@@ -75,7 +75,7 @@ func (h *TagsHandler) Detail(w http.ResponseWriter, r *http.Request) {
 		ShowVisibility: true,
 		ShowActions:    true,
 		ShowTitle:      true,
-		ShowOwner:      user != nil && user.IsAdmin(),
+		ShowOwner:      false,
 		ShowTags:       false,
 	}
 	if isHTMX(r) {
