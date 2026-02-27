@@ -266,3 +266,11 @@ func (s *UserStore) DeleteUserWithLinks(ctx context.Context, targetID, adminID, 
 
 	return tx.Commit()
 }
+
+// CountAll returns the total number of users.
+// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+func (s *UserStore) CountAll(ctx context.Context) (int64, error) {
+	var count int64
+	err := s.db.GetContext(ctx, &count, s.q(`SELECT COUNT(*) FROM users`))
+	return count, err
+}

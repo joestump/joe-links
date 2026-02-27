@@ -629,6 +629,14 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 	return links, total, nil
 }
 
+// CountAll returns the total number of links.
+// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+func (s *LinkStore) CountAll(ctx context.Context) (int64, error) {
+	var count int64
+	err := s.db.GetContext(ctx, &count, s.q(`SELECT COUNT(*) FROM links`))
+	return count, err
+}
+
 // ListShares returns all users with access to a link.
 // Governing: SPEC-0010 REQ "Link Shares Table"
 func (s *LinkStore) ListShares(ctx context.Context, linkID string) ([]ShareRecord, error) {
