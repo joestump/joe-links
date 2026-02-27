@@ -19,6 +19,7 @@ type testEnv struct {
 	OwnershipStore *store.OwnershipStore
 	UserStore      *store.UserStore
 	TokenStore     *auth.SQLTokenStore
+	ClickStore     *store.ClickStore
 }
 
 // newTestEnv creates an in-memory SQLite test database, runs migrations,
@@ -32,6 +33,7 @@ func newTestEnv(t *testing.T) *testEnv {
 	ls := store.NewLinkStore(db, owns, tags)
 	us := store.NewUserStore(db)
 	ts := auth.NewSQLTokenStore(db)
+	cs := store.NewClickStore(db)
 
 	bearerMW := auth.NewBearerTokenMiddleware(ts, us)
 
@@ -42,6 +44,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		OwnershipStore:   owns,
 		TagStore:         tags,
 		UserStore:        us,
+		ClickStore:       cs,
 	}
 
 	router := api.NewAPIRouter(deps)
@@ -52,6 +55,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		OwnershipStore: owns,
 		UserStore:      us,
 		TokenStore:     ts,
+		ClickStore:     cs,
 	}
 }
 
