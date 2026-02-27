@@ -1,0 +1,63 @@
+{{template "base" .}}
+{{define "title"}}{{if .Link}}{{.Link.Slug}} — Analytics{{end}} — Joe Links{{end}}
+{{define "content"}}
+<!-- Governing: SPEC-0016 REQ "Link Stats Dashboard Page", ADR-0016 -->
+{{if .Link}}
+<div class="max-w-5xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/dashboard/links/{{.Link.ID}}" class="btn btn-ghost btn-sm">&larr; Back to link</a>
+        <h1 class="text-2xl font-bold"><span class="font-mono">{{.Link.Slug}}</span> &mdash; Analytics</h1>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="stat bg-base-200 rounded-box shadow">
+            <div class="stat-title">All Time</div>
+            <div class="stat-value">{{.Stats.Total}}</div>
+            <div class="stat-desc">total clicks</div>
+        </div>
+        <div class="stat bg-base-200 rounded-box shadow">
+            <div class="stat-title">Last 7 Days</div>
+            <div class="stat-value">{{.Stats.Last7d}}</div>
+            <div class="stat-desc">clicks this week</div>
+        </div>
+        <div class="stat bg-base-200 rounded-box shadow">
+            <div class="stat-title">Last 30 Days</div>
+            <div class="stat-value">{{.Stats.Last30d}}</div>
+            <div class="stat-desc">clicks this month</div>
+        </div>
+    </div>
+
+    <!-- Recent clicks table -->
+    <div class="card bg-base-200 shadow">
+        <div class="card-body">
+            <h2 class="card-title text-lg mb-4">Recent Clicks</h2>
+            {{if .RecentClicks}}
+            <div class="overflow-x-auto">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Referrer</th>
+                            <th>User</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .RecentClicks}}
+                        <tr>
+                            <td class="whitespace-nowrap">{{.ClickedAt.Format "Jan 2, 2006 3:04 PM"}}</td>
+                            <td class="truncate max-w-xs">{{if .Referrer}}{{.Referrer}}{{else}}<span class="text-base-content/40">direct</span>{{end}}</td>
+                            <td>{{if .DisplayName}}{{.DisplayName}}{{else}}<span class="text-base-content/40">anonymous</span>{{end}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{else}}
+            <p class="text-base-content/50">No clicks recorded yet.</p>
+            {{end}}
+        </div>
+    </div>
+</div>
+{{end}}
+{{end}}
