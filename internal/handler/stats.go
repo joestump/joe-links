@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"net/url"
 
@@ -49,8 +50,14 @@ func (h *StatsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check ownership: user must be owner/co-owner or admin
+	// Governing: SPEC-0016 REQ "Link Stats Dashboard Page"
 	if !user.IsAdmin() {
-		isOwner, _ := h.owns.IsOwner(link.ID, user.ID)
+		isOwner, err := h.owns.IsOwner(link.ID, user.ID)
+		if err != nil {
+			log.Printf("stats: IsOwner check failed for link %s user %s: %v", link.ID, user.ID, err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 		if !isOwner {
 			w.WriteHeader(http.StatusForbidden)
 			render(w, "403.html", newBasePage(r, user))

@@ -45,7 +45,7 @@
                     <tbody>
                         {{range .RecentClicks}}
                         <tr>
-                            <td class="whitespace-nowrap">{{.ClickedAt.Format "Jan 2, 2006 3:04 PM"}}</td>
+                            <td class="whitespace-nowrap">{{.ClickedAt.Format "Jan 2, 2006 3:04 PM UTC"}}</td>
                             <td class="truncate max-w-xs">{{if .Referrer}}{{.Referrer}}{{else}}<span class="text-base-content/40">direct</span>{{end}}</td>
                             <td>{{if .DisplayName}}{{.DisplayName}}{{else}}<span class="text-base-content/40">anonymous</span>{{end}}</td>
                         </tr>
