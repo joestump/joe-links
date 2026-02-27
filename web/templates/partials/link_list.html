@@ -44,8 +44,14 @@
                 </td>{{end}}
                 <td class="text-sm text-base-content/60">{{.Description}}</td>
                 <td class="text-sm text-base-content/60">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
-                <!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — Edit and Delete actions only (no View) -->
+                <!-- Governing: SPEC-0014 REQ "Abstract Link Widget", SPEC-0016 REQ "Link Stats Dashboard Page" -->
                 {{if $.ShowActions}}<td class="flex gap-1 justify-end">
+                    <a class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="Stats"
+                            href="/dashboard/links/{{.ID}}/stats">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                    </a>
                     <button class="btn btn-xs btn-ghost tooltip tooltip-left" data-tip="Edit"
                             hx-get="/dashboard/links/{{.ID}}/edit"
                             hx-target="#modal"

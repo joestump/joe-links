@@ -7,6 +7,7 @@
     <div class="flex items-center justify-between mb-4">
         <h1 class="text-2xl font-bold font-mono">{{.Link.Slug}}</h1>
         <div class="flex gap-2">
+            <a href="/dashboard/links/{{.Link.ID}}/stats" class="btn btn-sm btn-ghost">Stats</a>
             <a href="/dashboard/links/{{.Link.ID}}/edit" class="btn btn-sm btn-primary">Edit</a>
             <!-- Governing: SPEC-0004 REQ "Delete Link" — DaisyUI confirm modal (inline) -->
             <button class="btn btn-sm btn-error btn-outline"
