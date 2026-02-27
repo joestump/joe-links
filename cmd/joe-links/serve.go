@@ -1,16 +1,18 @@
 // Governing: SPEC-0001 REQ "CLI Entrypoint", "Go HTTP Server", ADR-0004
-// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+// Governing: SPEC-0016 REQ "Click Recording", REQ "Prometheus Metrics Endpoint", ADR-0016
 package main
 
 import (
 	"context"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/config"
 	"github.com/joestump/joe-links/internal/db"
 	"github.com/joestump/joe-links/internal/handler"
+	"github.com/joestump/joe-links/internal/metrics"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -55,6 +57,9 @@ func newServeCmd() *cobra.Command {
 			clickStore := store.NewClickStore(database)
 			go runClickWriter(ctx, clickCh, clickStore)
 
+			// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+			go runGaugeUpdater(ctx, linkStore, userStore)
+
 			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail, cfg.AdminGroups, cfg.GroupsClaim, !cfg.InsecureCookies)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
@@ -91,6 +96,9 @@ func runClickWriter(ctx context.Context, ch <-chan store.ClickEvent, cs *store.C
 			}
 			if err := cs.RecordClick(ctx, e); err != nil {
 				log.Printf("click write error: %v", err)
+				metrics.ClicksRecordErrorsTotal.Inc()
+			} else {
+				metrics.ClicksRecordedTotal.Inc()
 			}
 		case <-ctx.Done():
 			// Drain remaining events.
@@ -102,11 +110,38 @@ func runClickWriter(ctx context.Context, ch <-chan store.ClickEvent, cs *store.C
 					}
 					if err := cs.RecordClick(context.Background(), e); err != nil {
 						log.Printf("click drain error: %v", err)
+						metrics.ClicksRecordErrorsTotal.Inc()
+					} else {
+						metrics.ClicksRecordedTotal.Inc()
 					}
 				default:
 					return
 				}
 			}
+		}
+	}
+}
+
+// runGaugeUpdater periodically updates the links_total and users_total gauges.
+// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+func runGaugeUpdater(ctx context.Context, ls *store.LinkStore, us *store.UserStore) {
+	update := func() {
+		if n, err := ls.CountAll(ctx); err == nil {
+			metrics.LinksTotal.Set(float64(n))
+		}
+		if n, err := us.CountAll(ctx); err == nil {
+			metrics.UsersTotal.Set(float64(n))
+		}
+	}
+	update() // initial population
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			update()
 		}
 	}
 }

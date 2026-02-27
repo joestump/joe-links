@@ -4,6 +4,7 @@
 // Governing: SPEC-0005 REQ "API Router Mounting", ADR-0008
 // Governing: SPEC-0007 REQ "Swagger UI Endpoint", ADR-0010
 // Governing: SPEC-0012 REQ "User Profile Route Priority"
+// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
 package handler
 
 import (
@@ -18,6 +19,7 @@ import (
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
 	_ "github.com/joestump/joe-links/docs/swagger"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
@@ -178,6 +180,10 @@ func NewRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
 	publicLinks := NewPublicLinksHandler(deps.LinkStore, deps.KeywordStore)
 	r.With(deps.AuthMiddleware.OptionalUser).Get("/links", publicLinks.Index)
+
+	// Prometheus metrics endpoint — no auth required; MUST be before slug catch-all.
+	// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+	r.Get("/metrics", promhttp.Handler().ServeHTTP)
 
 	// Slug resolver -- catch-all, must be last.
 	// Resolver does not require auth (links are publicly accessible).
