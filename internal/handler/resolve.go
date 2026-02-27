@@ -7,6 +7,7 @@
 package handler
 
 import (
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -238,7 +239,15 @@ func (h *ResolveHandler) redirect(w http.ResponseWriter, r *http.Request, linkID
 		if len(ua) > 512 {
 			ua = ua[:512]
 		}
+		// Governing: SPEC-0016 REQ "Click Data Schema" — strip query/fragment to prevent token leakage
 		ref := r.Referer()
+		if ref != "" {
+			if u, err := url.Parse(ref); err == nil {
+				u.RawQuery = ""
+				u.Fragment = ""
+				ref = u.String()
+			}
+		}
 		if len(ref) > 2048 {
 			ref = ref[:2048]
 		}
@@ -250,23 +259,15 @@ func (h *ResolveHandler) redirect(w http.ResponseWriter, r *http.Request, linkID
 			UserAgent: ua,
 			Referrer:  ref,
 		}:
-		default: // channel full, drop
+		default: // Governing: SPEC-0016 REQ "Click Recording"
+			log.Printf("analytics: click channel full, dropping event for link %s", linkID)
 		}
 	}
 }
 
-// realIP extracts the client IP from the request, checking X-Real-IP,
-// then the first segment of X-Forwarded-For, then r.RemoteAddr (port stripped).
+// realIP extracts the client IP from r.RemoteAddr (port stripped).
+// Chi's middleware.RealIP already rewrites r.RemoteAddr from X-Real-IP / X-Forwarded-For.
 func realIP(r *http.Request) string {
-	if ip := r.Header.Get("X-Real-IP"); ip != "" {
-		return ip
-	}
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		if comma := strings.IndexByte(xff, ','); comma > 0 {
-			return strings.TrimSpace(xff[:comma])
-		}
-		return strings.TrimSpace(xff)
-	}
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr

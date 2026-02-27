@@ -4,8 +4,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/joestump/joe-links/internal/auth"
@@ -39,7 +43,10 @@ func newServeCmd() *cobra.Command {
 
 			sessionManager := auth.NewSessionManager(database, cfg.DB.Driver, cfg.SessionLifetime, !cfg.InsecureCookies)
 
-			ctx := context.Background()
+			// Governing: SPEC-0016 REQ "Click Recording" — graceful shutdown with signal handling
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+
 			oidcProvider, err := auth.NewProvider(ctx, cfg)
 			if err != nil {
 				return err
@@ -78,46 +85,38 @@ func newServeCmd() *cobra.Command {
 				ShortKeyword:   cfg.ShortKeyword,
 			})
 
+			srv := &http.Server{
+				Addr:    cfg.HTTP.Addr,
+				Handler: router,
+			}
+
+			go func() {
+				<-ctx.Done()
+				shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+				close(clickCh) // signal writer to drain
+				_ = srv.Shutdown(shutdownCtx)
+			}()
+
 			log.Printf("listening on %s", cfg.HTTP.Addr)
-			return http.ListenAndServe(cfg.HTTP.Addr, router)
+			if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				return err
+			}
+			return nil
 		},
 	}
 }
 
 // runClickWriter reads click events from the channel and persists them.
-// On context cancellation it drains remaining events before returning.
+// It drains all remaining events when the channel is closed, then returns.
 // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
-func runClickWriter(ctx context.Context, ch <-chan store.ClickEvent, cs *store.ClickStore) {
-	for {
-		select {
-		case e, ok := <-ch:
-			if !ok {
-				return
-			}
-			if err := cs.RecordClick(ctx, e); err != nil {
-				log.Printf("click write error: %v", err)
-				metrics.ClicksRecordErrorsTotal.Inc()
-			} else {
-				metrics.ClicksRecordedTotal.Inc()
-			}
-		case <-ctx.Done():
-			// Drain remaining events.
-			for {
-				select {
-				case e, ok := <-ch:
-					if !ok {
-						return
-					}
-					if err := cs.RecordClick(context.Background(), e); err != nil {
-						log.Printf("click drain error: %v", err)
-						metrics.ClicksRecordErrorsTotal.Inc()
-					} else {
-						metrics.ClicksRecordedTotal.Inc()
-					}
-				default:
-					return
-				}
-			}
+func runClickWriter(_ context.Context, ch <-chan store.ClickEvent, cs *store.ClickStore) {
+	for e := range ch {
+		if err := cs.RecordClick(context.Background(), e); err != nil {
+			log.Printf("click write error: %v", err)
+			metrics.ClicksRecordErrorsTotal.Inc()
+		} else {
+			metrics.ClicksRecordedTotal.Inc()
 		}
 	}
 }
