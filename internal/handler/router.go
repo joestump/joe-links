@@ -32,6 +32,8 @@ type Deps struct {
 	UserStore      *store.UserStore
 	TokenStore     auth.TokenStore
 	KeywordStore   *store.KeywordStore
+	ClickStore     *store.ClickStore   // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+	ClickCh        chan<- store.ClickEvent // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 	ShortKeyword   string // optional override (e.g. "go"); defaults to first label of HTTP host
 }
 
@@ -183,7 +185,7 @@ func NewRouter(deps Deps) http.Handler {
 	// Governing: SPEC-0004 REQ "Route Registration and Priority" — catch-all AFTER named routes
 	// Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", ADR-0013 — wildcard for multi-segment paths
 	// Governing: SPEC-0010 REQ "Secure Link Resolution" — resolver needs OwnershipStore for access checks
-	resolver := NewResolveHandler(deps.LinkStore, deps.KeywordStore, deps.OwnershipStore)
+	resolver := NewResolveHandler(deps.LinkStore, deps.KeywordStore, deps.OwnershipStore, deps.ClickCh)
 	r.With(deps.AuthMiddleware.OptionalUser).Get("/{slug}*", resolver.Resolve)
 
 	return r
