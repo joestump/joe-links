@@ -3,9 +3,11 @@
 // Governing: SPEC-0004 REQ "Slug Resolver and 404 Page"
 // Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", REQ "Variable Substitution and Redirect", ADR-0013
 // Governing: SPEC-0010 REQ "Secure Link Resolution", REQ "Public Link Resolution", REQ "Private Link Resolution", ADR-0014
+// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 package handler
 
 import (
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -20,15 +22,18 @@ import (
 var varPlaceholderRe = regexp.MustCompile(`\$[a-z][a-z0-9_]*`)
 
 // ResolveHandler handles short link slug resolution and redirection.
+// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 type ResolveHandler struct {
 	links      *store.LinkStore
 	keywords   *store.KeywordStore
 	ownership  *store.OwnershipStore
+	clickCh    chan<- store.ClickEvent
 }
 
 // NewResolveHandler creates a new ResolveHandler.
-func NewResolveHandler(ls *store.LinkStore, ks *store.KeywordStore, os *store.OwnershipStore) *ResolveHandler {
-	return &ResolveHandler{links: ls, keywords: ks, ownership: os}
+// If clickCh is nil, click recording is disabled.
+func NewResolveHandler(ls *store.LinkStore, ks *store.KeywordStore, os *store.OwnershipStore, clickCh chan<- store.ClickEvent) *ResolveHandler {
+	return &ResolveHandler{links: ls, keywords: ks, ownership: os, clickCh: clickCh}
 }
 
 type notFoundPage struct {
@@ -83,7 +88,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 		if !h.checkVisibility(w, r, link) {
 			return
 		}
-		h.redirect(w, r, link.URL)
+		h.redirect(w, r, link.ID, link.URL)
 		return
 	}
 
@@ -110,7 +115,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 			placeholders := varPlaceholderRe.FindAllString(link.URL, -1)
 			if len(placeholders) == 0 {
 				// Static link — redirect as-is.
-				h.redirect(w, r, link.URL)
+				h.redirect(w, r, link.ID, link.URL)
 				return
 			}
 
@@ -136,7 +141,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 				target = strings.ReplaceAll(target, placeholder, url.PathEscape(remaining[j]))
 			}
 
-			h.redirect(w, r, target)
+			h.redirect(w, r, link.ID, target)
 			return
 		}
 	}
@@ -200,13 +205,59 @@ func (h *ResolveHandler) render403(w http.ResponseWriter, r *http.Request) {
 }
 
 // redirect issues a 302 redirect, handling HTMX requests with HX-Redirect header.
-func (h *ResolveHandler) redirect(w http.ResponseWriter, r *http.Request, target string) {
+// It also fires a non-blocking click event if the click channel is configured.
+// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+func (h *ResolveHandler) redirect(w http.ResponseWriter, r *http.Request, linkID, target string) {
 	if isHTMX(r) {
 		w.Header().Set("HX-Redirect", target)
 		w.WriteHeader(http.StatusNoContent)
-		return
+	} else {
+		http.Redirect(w, r, target, http.StatusFound)
 	}
-	http.Redirect(w, r, target, http.StatusFound)
+
+	if h.clickCh != nil {
+		var userID string
+		if u := auth.UserFromContext(r.Context()); u != nil {
+			userID = u.ID
+		}
+		ua := r.UserAgent()
+		if len(ua) > 512 {
+			ua = ua[:512]
+		}
+		ref := r.Referer()
+		if len(ref) > 2048 {
+			ref = ref[:2048]
+		}
+		select {
+		case h.clickCh <- store.ClickEvent{
+			LinkID:    linkID,
+			UserID:    userID,
+			IPHash:    store.HashIP(realIP(r)),
+			UserAgent: ua,
+			Referrer:  ref,
+		}:
+		default: // channel full, drop
+		}
+	}
+}
+
+// realIP extracts the client IP from the request, checking X-Real-IP,
+// then the first segment of X-Forwarded-For, then r.RemoteAddr (port stripped).
+func realIP(r *http.Request) string {
+	if ip := r.Header.Get("X-Real-IP"); ip != "" {
+		return ip
+	}
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		if comma := strings.IndexByte(xff, ','); comma > 0 {
+			return strings.TrimSpace(xff[:comma])
+		}
+		return strings.TrimSpace(xff)
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
 }
 
 // render404 renders the 404 page for a missing slug.

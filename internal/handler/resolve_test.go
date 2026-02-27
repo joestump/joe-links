@@ -34,7 +34,7 @@ func newResolveTestEnv(t *testing.T) *resolveTestEnv {
 		t.Fatalf("seed user: %v", err)
 	}
 
-	rh := NewResolveHandler(ls, ks, owns)
+	rh := NewResolveHandler(ls, ks, owns, nil)
 	return &resolveTestEnv{ls: ls, ks: ks, rh: rh, userID: u.ID}
 }
 

@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "CLI Entrypoint", "Go HTTP Server", ADR-0004
+// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 package main
 
 import (
@@ -49,6 +50,11 @@ func newServeCmd() *cobra.Command {
 			tokenStore := auth.NewSQLTokenStore(database)
 			keywordStore := store.NewKeywordStore(database)
 
+			// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+			clickCh := make(chan store.ClickEvent, 256)
+			clickStore := store.NewClickStore(database)
+			go runClickWriter(ctx, clickCh, clickStore)
+
 			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail, cfg.AdminGroups, cfg.GroupsClaim, !cfg.InsecureCookies)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
@@ -62,11 +68,45 @@ func newServeCmd() *cobra.Command {
 				UserStore:      userStore,
 				TokenStore:     tokenStore,
 				KeywordStore:   keywordStore,
+				ClickStore:     clickStore,
+				ClickCh:        clickCh,
 				ShortKeyword:   cfg.ShortKeyword,
 			})
 
 			log.Printf("listening on %s", cfg.HTTP.Addr)
 			return http.ListenAndServe(cfg.HTTP.Addr, router)
 		},
+	}
+}
+
+// runClickWriter reads click events from the channel and persists them.
+// On context cancellation it drains remaining events before returning.
+// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+func runClickWriter(ctx context.Context, ch <-chan store.ClickEvent, cs *store.ClickStore) {
+	for {
+		select {
+		case e, ok := <-ch:
+			if !ok {
+				return
+			}
+			if err := cs.RecordClick(ctx, e); err != nil {
+				log.Printf("click write error: %v", err)
+			}
+		case <-ctx.Done():
+			// Drain remaining events.
+			for {
+				select {
+				case e, ok := <-ch:
+					if !ok {
+						return
+					}
+					if err := cs.RecordClick(context.Background(), e); err != nil {
+						log.Printf("click drain error: %v", err)
+					}
+				default:
+					return
+				}
+			}
+		}
 	}
 }
