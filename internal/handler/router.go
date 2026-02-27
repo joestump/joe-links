@@ -83,6 +83,8 @@ func NewRouter(deps Deps) http.Handler {
 	links := NewLinksHandler(deps.LinkStore, deps.OwnershipStore, deps.UserStore, deps.KeywordStore)
 	tags := NewTagsHandler(deps.TagStore, deps.LinkStore, deps.KeywordStore)
 	tokensWeb := NewTokensHandler(deps.TokenStore)
+	// Governing: SPEC-0016 REQ "Link Stats Dashboard Page", ADR-0016
+	statsHandler := NewStatsHandler(deps.LinkStore, deps.ClickStore, deps.OwnershipStore)
 
 	r.Group(func(r chi.Router) {
 		r.Use(deps.AuthMiddleware.RequireAuth)
@@ -95,6 +97,8 @@ func NewRouter(deps Deps) http.Handler {
 		r.Post("/dashboard/links", links.Create)
 		r.Get("/dashboard/links/{id}", links.Detail)
 		r.Get("/dashboard/links/{id}/edit", links.Edit)
+		// Governing: SPEC-0016 REQ "Link Stats Dashboard Page", ADR-0016
+		r.Get("/dashboard/links/{id}/stats", statsHandler.Show)
 		// Governing: SPEC-0013 REQ "DaisyUI Delete Confirmation Modal"
 		r.Get("/dashboard/links/{id}/confirm-delete", links.ConfirmDelete)
 		r.Put("/dashboard/links/{id}", links.Update)
