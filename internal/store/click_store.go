@@ -126,6 +126,46 @@ func (s *ClickStore) ListRecentClicks(ctx context.Context, linkID string, limit 
 	return clicks, nil
 }
 
+// ListRecentClicksBefore returns clicks for a link strictly before the given time, newest first.
+// If before is zero, returns from the most recent.
+// Governing: SPEC-0016 REQ "REST API Clicks Endpoint", ADR-0016
+func (s *ClickStore) ListRecentClicksBefore(ctx context.Context, linkID string, before time.Time, limit int) ([]RecentClick, error) {
+	var clicks []RecentClick
+	if before.IsZero() {
+		err := s.db.SelectContext(ctx, &clicks, s.q(`
+			SELECT c.clicked_at,
+			       COALESCE(c.referrer, '') AS referrer,
+			       COALESCE(c.user_id, '') AS user_id,
+			       COALESCE(u.display_name, '') AS display_name
+			FROM link_clicks c
+			LEFT JOIN users u ON u.id = c.user_id
+			WHERE c.link_id = ?
+			ORDER BY c.clicked_at DESC
+			LIMIT ?
+		`), linkID, limit)
+		if err != nil {
+			return nil, err
+		}
+		return clicks, nil
+	}
+
+	err := s.db.SelectContext(ctx, &clicks, s.q(`
+		SELECT c.clicked_at,
+		       COALESCE(c.referrer, '') AS referrer,
+		       COALESCE(c.user_id, '') AS user_id,
+		       COALESCE(u.display_name, '') AS display_name
+		FROM link_clicks c
+		LEFT JOIN users u ON u.id = c.user_id
+		WHERE c.link_id = ? AND c.clicked_at < ?
+		ORDER BY c.clicked_at DESC
+		LIMIT ?
+	`), linkID, before, limit)
+	if err != nil {
+		return nil, err
+	}
+	return clicks, nil
+}
+
 // HashIP computes SHA-256(ip + ":" + YYYYMMDD_UTC) for the current day.
 // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 func HashIP(ip string) string {

@@ -18,6 +18,7 @@ type Deps struct {
 	TagStore         *store.TagStore
 	UserStore        *store.UserStore
 	KeywordStore     *store.KeywordStore
+	ClickStore       *store.ClickStore
 }
 
 // NewAPIRouter creates and returns a chi router for /api/v1.
@@ -63,6 +64,12 @@ func NewAPIRouter(deps Deps) http.Handler {
 		// Link share management routes.
 		// Governing: SPEC-0010 REQ "Link Share Management API Endpoints"
 		registerShareRoutes(r, deps.LinkStore, deps.OwnershipStore, deps.UserStore)
+
+		// Link analytics routes (stats + click events).
+		// Governing: SPEC-0016 REQ "REST API Stats Endpoint", REQ "REST API Clicks Endpoint", ADR-0016
+		statsH := newStatsAPIHandler(deps.LinkStore, deps.ClickStore, deps.OwnershipStore)
+		r.Get("/links/{id}/stats", statsH.GetStats)
+		r.Get("/links/{id}/clicks", statsH.ListClicks)
 
 		// Admin-only routes behind role-check middleware group.
 		// Governing: SPEC-0005 REQ "Admin Endpoints", ADR-0008
