@@ -17,7 +17,8 @@
       "link-visibility": 58,
       "link-list-consistency": 60,
       "browser-extension": 61,
-      "safari-extension-testflight": 63
+      "safari-extension-testflight": 63,
+      "link-analytics": 64
     },
     "views": [
       "All Work",
