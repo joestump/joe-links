@@ -3,7 +3,7 @@
 // Governing: SPEC-0004 REQ "Slug Resolver and 404 Page"
 // Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", REQ "Variable Substitution and Redirect", ADR-0013
 // Governing: SPEC-0010 REQ "Secure Link Resolution", REQ "Public Link Resolution", REQ "Private Link Resolution", ADR-0014
-// Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+// Governing: SPEC-0016 REQ "Click Recording", REQ "Prometheus Metrics Endpoint", ADR-0016
 package handler
 
 import (
@@ -12,8 +12,10 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/metrics"
 	"github.com/joestump/joe-links/internal/store"
 )
 
@@ -47,10 +49,15 @@ type notFoundPage struct {
 // Governing: SPEC-0001 REQ "HTMX Hypermedia Interactions"
 // Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", ADR-0013
 func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
+	// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+	start := time.Now()
+	defer func() { metrics.RedirectDuration.Observe(time.Since(start).Seconds()) }()
+
 	// Extract the full path after the leading "/".
 	// Governing: SPEC-0009 REQ "Multi-Segment Path Resolution", ADR-0013
 	fullPath := strings.TrimPrefix(r.URL.Path, "/")
 	if fullPath == "" {
+		metrics.RedirectsTotal.WithLabelValues("not_found").Inc()
 		h.render404(w, r, "")
 		return
 	}
@@ -65,6 +72,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	if len(parts) == 2 && parts[1] != "" && parts[0] != host {
 		if kw, err := h.keywords.GetByKeyword(r.Context(), parts[0]); err == nil {
 			target := strings.ReplaceAll(kw.URLTemplate, "{slug}", parts[1])
+			metrics.RedirectsTotal.WithLabelValues("found").Inc()
 			http.Redirect(w, r, target, http.StatusFound)
 			return
 		}
@@ -75,6 +83,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 	if kwErr == nil {
 		// Substitute {slug} in the URL template and redirect.
 		target := strings.ReplaceAll(kw.URLTemplate, "{slug}", fullPath)
+		metrics.RedirectsTotal.WithLabelValues("found").Inc()
 		http.Redirect(w, r, target, http.StatusFound)
 		return
 	}
@@ -88,6 +97,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 		if !h.checkVisibility(w, r, link) {
 			return
 		}
+		metrics.RedirectsTotal.WithLabelValues("found").Inc()
 		h.redirect(w, r, link.ID, link.URL)
 		return
 	}
@@ -115,6 +125,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 			placeholders := varPlaceholderRe.FindAllString(link.URL, -1)
 			if len(placeholders) == 0 {
 				// Static link — redirect as-is.
+				metrics.RedirectsTotal.WithLabelValues("found").Inc()
 				h.redirect(w, r, link.ID, link.URL)
 				return
 			}
@@ -131,6 +142,7 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 
 			// Arity check: remaining segments must equal unique placeholder count.
 			if len(remaining) != len(unique) {
+				metrics.RedirectsTotal.WithLabelValues("not_found").Inc()
 				h.render404(w, r, fullPath)
 				return
 			}
@@ -141,12 +153,14 @@ func (h *ResolveHandler) Resolve(w http.ResponseWriter, r *http.Request) {
 				target = strings.ReplaceAll(target, placeholder, url.PathEscape(remaining[j]))
 			}
 
+			metrics.RedirectsTotal.WithLabelValues("found").Inc()
 			h.redirect(w, r, link.ID, target)
 			return
 		}
 	}
 
 	// No match found → 404.
+	metrics.RedirectsTotal.WithLabelValues("not_found").Inc()
 	h.render404(w, r, fullPath)
 }
 
