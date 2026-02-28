@@ -65,11 +65,7 @@ type openaiResponse struct {
 }
 
 func (o *openaiSuggester) Suggest(ctx context.Context, req SuggestRequest) (*SuggestResponse, error) {
-	prompt, err := renderPrompt(o.promptCustom, PromptData{
-		URL:         req.URL,
-		Title:       req.Title,
-		Description: req.Description,
-	})
+	prompt, err := renderPrompt(o.promptCustom, PromptData(req))
 	if err != nil {
 		return nil, fmt.Errorf("render prompt: %w", err)
 	}

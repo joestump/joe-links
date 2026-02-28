@@ -57,11 +57,7 @@ type anthropicResponse struct {
 }
 
 func (a *anthropicSuggester) Suggest(ctx context.Context, req SuggestRequest) (*SuggestResponse, error) {
-	prompt, err := renderPrompt(a.promptCustom, PromptData{
-		URL:         req.URL,
-		Title:       req.Title,
-		Description: req.Description,
-	})
+	prompt, err := renderPrompt(a.promptCustom, PromptData(req))
 	if err != nil {
 		return nil, fmt.Errorf("render prompt: %w", err)
 	}
