@@ -1,4 +1,5 @@
 // Governing: SPEC-0001 REQ "CLI Entrypoint", "OIDC-Only Authentication", "Server-Side Sessions", ADR-0003, ADR-0004
+// Governing: SPEC-0017 REQ "LLM Provider Configuration", ADR-0017
 package config
 
 import (
@@ -29,6 +30,13 @@ type Config struct {
 	ShortKeyword    string   // override the short keyword prefix (default: first label of HTTP host)
 	SessionLifetime time.Duration
 	InsecureCookies bool
+	LLM             struct {
+		Provider string // "anthropic", "openai", or "openai-compatible"; empty = disabled
+		APIKey   string
+		Model    string
+		BaseURL  string // override for openai-compatible providers
+		Prompt   string // custom prompt template text (overrides built-in default)
+	}
 }
 
 // Load reads config from environment (JOE_ prefix) and optional joe-links.yaml.
@@ -67,6 +75,12 @@ func Load() (*Config, error) {
 		cfg.GroupsClaim = "groups"
 	}
 	cfg.ShortKeyword = v.GetString("short_keyword")
+
+	cfg.LLM.Provider = v.GetString("llm.provider")
+	cfg.LLM.APIKey = v.GetString("llm.api_key")
+	cfg.LLM.Model = v.GetString("llm.model")
+	cfg.LLM.BaseURL = v.GetString("llm.base_url")
+	cfg.LLM.Prompt = v.GetString("llm.prompt")
 
 	lifetime, err := time.ParseDuration(v.GetString("session.lifetime"))
 	if err != nil {

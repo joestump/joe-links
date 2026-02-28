@@ -1,0 +1,15 @@
+You are helping a user create a short memorable go-link for a web page.
+Given the URL, page title, and description, suggest values for a new link.
+
+Rules:
+- slug: lowercase letters, digits, and hyphens only; max 30 characters; no leading/trailing hyphens
+- title: concise, max 60 characters
+- description: one sentence, max 120 characters
+- tags: 2-5 lowercase single-word or hyphenated tags relevant to the content
+
+Respond with ONLY valid JSON, no prose:
+{"slug":"...","title":"...","description":"...","tags":["..."]}
+
+URL: {{.URL}}
+Title: {{.Title}}
+Description: {{.Description}}

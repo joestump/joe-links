@@ -96,10 +96,10 @@ func (s *UserStore) resolveUniqueSlug(ctx context.Context, displayName, excludeU
 }
 
 // Upsert creates or updates a user record on OIDC login.
-// adminEmail: if non-empty and matches email on INSERT, role is set to "admin".
+// role is applied on INSERT (new user). For existing users the role column is
+// intentionally not updated here — callers promote via UpdateRole after Upsert
+// so that manual role changes made through the admin UI are preserved across logins.
 // Governing: SPEC-0012 REQ "Display Name Slug Derivation and Lookup", ADR-0002
-// Upsert creates or updates a user record. The role is determined by the caller
-// (typically from adminEmail / OIDC group membership) and is enforced on every login.
 func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displayName, role string) (*User, error) {
 	id := uuid.New().String()
 	now := time.Now().UTC()
