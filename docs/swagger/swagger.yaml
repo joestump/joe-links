@@ -101,6 +101,28 @@ definitions:
       user_id:
         type: string
     type: object
+  internal_api.SuggestRequest:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  internal_api.SuggestResponseBody:
+    properties:
+      description:
+        type: string
+      slug:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+    type: object
   internal_api.TagListResponse:
     properties:
       next_cursor:
@@ -777,6 +799,47 @@ paths:
       summary: Remove a share
       tags:
       - Shares
+  /links/suggest:
+    post:
+      consumes:
+      - application/json
+      description: Uses an LLM to suggest slug, title, description, and tags for a
+        URL.
+      parameters:
+      - description: URL to generate suggestions for
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api.SuggestRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api.SuggestResponseBody'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "502":
+          description: LLM provider error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "503":
+          description: LLM not configured
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - BearerToken: []
+      summary: Suggest link metadata
+      tags:
+      - Links
   /tags:
     get:
       consumes:

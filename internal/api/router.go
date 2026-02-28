@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/llm"
 	"github.com/joestump/joe-links/internal/store"
 )
 
@@ -19,6 +20,7 @@ type Deps struct {
 	UserStore        *store.UserStore
 	KeywordStore     *store.KeywordStore
 	ClickStore       *store.ClickStore
+	Suggester        llm.Suggester // nil when LLM is not configured
 }
 
 // NewAPIRouter creates and returns a chi router for /api/v1.
@@ -56,6 +58,11 @@ func NewAPIRouter(deps Deps) http.Handler {
 		// User profile routes.
 		// Governing: SPEC-0005 REQ "User Profile"
 		registerUserRoutes(r)
+
+		// LLM-powered link metadata suggestions.
+		// Governing: SPEC-0017 REQ "Suggest API Endpoint", ADR-0017
+		suggestH := &suggestAPIHandler{suggester: deps.Suggester}
+		r.Post("/links/suggest", suggestH.Suggest)
 
 		// Link and co-owner management routes.
 		// Governing: SPEC-0005 REQ "Links Collection", REQ "Link Resource", REQ "Co-Owner Management"
