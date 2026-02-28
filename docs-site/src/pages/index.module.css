@@ -53,9 +53,16 @@
 .heroTagline {
   font-size: 1.2rem;
   color: var(--ifm-color-emphasis-700);
-  max-width: 480px;
+  max-width: 520px;
   margin: 0 auto 2rem;
   line-height: 1.65;
+}
+
+.heroSubTagline {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-600);
 }
 
 .buttons {
@@ -66,10 +73,77 @@
   flex-wrap: wrap;
 }
 
+/* ── Screenshot Section ──────────────────────────────────────────────────── */
+
+.screenshotSection {
+  padding: 2.5rem 0 0;
+  background: linear-gradient(180deg, transparent 0%, var(--ifm-background-surface-color) 100%);
+}
+
+.screenshotWrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.screenshot {
+  width: 100%;
+  border-radius: 14px;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.07),
+    0 12px 32px rgba(0, 0, 0, 0.12),
+    0 32px 64px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+  display: block;
+  transform: translateY(0);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.screenshot:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.08),
+    0 20px 48px rgba(0, 0, 0, 0.16),
+    0 48px 80px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme='dark'] .screenshot {
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.3),
+    0 12px 32px rgba(0, 0, 0, 0.4),
+    0 32px 64px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+[data-theme='dark'] .screenshot:hover {
+  box-shadow:
+    0 8px 12px rgba(0, 0, 0, 0.35),
+    0 20px 48px rgba(168, 85, 247, 0.2),
+    0 48px 80px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
 /* ── Features Section ────────────────────────────────────────────────────── */
 
 .features {
-  padding: 3rem 0;
+  padding: 3.5rem 0 3rem;
+}
+
+.featuresHeading {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 0.6rem;
+}
+
+.featuresSubheading {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--ifm-color-emphasis-600);
+  max-width: 580px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.6;
 }
 
 .featureCol {
@@ -127,8 +201,7 @@
   text-align: center;
   font-size: 0.75rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   color: var(--ifm-color-emphasis-500);
   margin-bottom: 1rem;
 }

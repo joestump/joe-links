@@ -4,6 +4,7 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import Heading from '@theme/Heading';
 
+import screenshot from '../screenshots/joe-links-my-links.png';
 import styles from './index.module.css';
 
 // ─── Feature list ────────────────────────────────────────────────────────────
@@ -16,64 +17,69 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    emoji: '🔗',
-    title: 'Short Links',
+    emoji: '📱',
+    title: 'Stop Texting That URL',
     description: (
       <>
-        Create memorable slugs like <code>go/slack</code> or <code>go/deploy</code>{' '}
-        that redirect to any URL. Share them across your team instantly.
+        <code>go/plex</code>. <code>go/photos</code>. <code>go/nas</code>.
+        Your brother-in-law will still ask for the streaming link, but now you
+        can say two words and hang up.
       </>
     ),
   },
   {
-    emoji: '🌐',
-    title: 'Browser Extension',
+    emoji: '👋',
+    title: 'Onboard Your New "Users"',
     description: (
       <>
-        Type <code>go/jira</code> directly in Chrome, Firefox, or Safari. The
-        extension intercepts bare-hostname navigation without a trailing slash or
-        protocol prefix.
+        New friend? Partner? Someone who just got Tailscale access? Drop them a
+        link to <code>go/start</code> and they'll figure the rest out.
+        Probably.
       </>
     ),
   },
   {
-    emoji: '⌨️',
-    title: 'Keyword Templates',
+    emoji: '🔄',
+    title: "URLs Change. Shortcuts Don't.",
     description: (
       <>
-        Parameterized links let <code>go/jira/&#123;ticket&#125;</code> expand to
-        your full Jira URL with the ticket filled in — just like Google's internal
-        go links.
+        Migrated from Nginx to Caddy? Rebuilt your NAS? Your friends won't
+        notice — the go-links still work. Just update the URL behind the slug.
+        Zero retraining required.
       </>
     ),
   },
   {
-    emoji: '🔑',
-    title: 'REST API & PATs',
+    emoji: '🏷️',
+    title: 'Tag Your Entire Self-Hosted Empire',
     description: (
       <>
-        Full REST API secured with Personal Access Tokens. Script link management,
-        integrate with CI/CD, or build your own tooling on top of joe&#x2011;links.
-      </>
-    ),
-  },
-  {
-    emoji: '🔒',
-    title: 'Visibility Controls',
-    description: (
-      <>
-        Links can be public, private, or secure. Secure links are only accessible
-        to specific users you invite — perfect for sensitive destinations.
+        Organize links by service, project, or level of personal embarrassment.
+        Browse by tag to find that obscure Gitea webhook you set up at 2am and
+        never documented.
       </>
     ),
   },
   {
     emoji: '👥',
-    title: 'Co-ownership',
+    title: 'Co-Owners (Both of You)',
     description: (
       <>
-        Multiple users can own and manage any link. Shared team shortcuts stay
-        up&#x2011;to&#x2011;date without a single point of failure.
+        Share ownership of a link with your one trusted co-admin. If you ever
+        get hit by a bus, <code>go/homelab</code> will still work for the
+        remaining five users of your platform.
+      </>
+    ),
+  },
+  {
+    emoji: '⌨️',
+    title: 'Parameterized Shortcuts',
+    description: (
+      <>
+        <code>go/jellyfin/&#123;show&#125;</code>,{' '}
+        <code>go/gh/&#123;repo&#125;</code> — because{' '}
+        <em>technically</em> you only have one user asking for these, but
+        making it a template felt really cool.
       </>
     ),
   },
@@ -87,15 +93,15 @@ type TechItem = {
 };
 
 const TechList: TechItem[] = [
-  { name: 'Go',          label: 'Language'    },
-  { name: 'chi',         label: 'Router'      },
-  { name: 'HTMX',        label: 'Frontend'    },
-  { name: 'DaisyUI',     label: 'CSS'         },
-  { name: 'SQLite',      label: 'Database'    },
-  { name: 'PostgreSQL',  label: 'Database'    },
-  { name: 'MySQL',       label: 'Database'    },
-  { name: 'OIDC',        label: 'Auth'        },
-  { name: 'Single Binary', label: 'Deploy'   },
+  { name: 'Go',            label: 'Language'  },
+  { name: 'chi',           label: 'Router'    },
+  { name: 'HTMX',          label: 'Frontend'  },
+  { name: 'DaisyUI',       label: 'CSS'       },
+  { name: 'SQLite',        label: 'Database'  },
+  { name: 'PostgreSQL',    label: 'Database'  },
+  { name: 'MySQL',         label: 'Database'  },
+  { name: 'OIDC',          label: 'Auth'      },
+  { name: 'Single Binary', label: 'Deploy'    },
 ];
 
 // ─── Components ──────────────────────────────────────────────────────────────
@@ -118,14 +124,18 @@ function HomepageHeader() {
   return (
     <header className={styles.heroBanner}>
       <div className="container">
-        <div className={styles.heroBadge}>Self-hosted go-links</div>
+        <div className={styles.heroBadge}>Enterprise-grade · For your 15 closest contacts</div>
         <Heading as="h1" className={styles.heroTitle}>
           joe&#x2011;links
         </Heading>
         <p className={styles.heroTagline}>
-          Short memorable URLs for your homelab or team.
+          The same go-link technology used by Fortune 500 companies —
+          now available for your homelab and the small group of people
+          who actually have Tailscale access.
           <br />
-          Single binary. OIDC auth. No drama.
+          <span className={styles.heroSubTagline}>
+            Self-hosted. Single binary. Your friends still won't use it.
+          </span>
         </p>
         <div className={styles.buttons}>
           <Link
@@ -146,10 +156,34 @@ function HomepageHeader() {
   );
 }
 
+function HomepageScreenshot(): JSX.Element {
+  return (
+    <section className={styles.screenshotSection}>
+      <div className="container">
+        <div className={styles.screenshotWrapper}>
+          <img
+            src={screenshot}
+            alt="joe-links dashboard — a surprisingly professional UI for something only you will use"
+            className={styles.screenshot}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function HomepageFeatures(): JSX.Element {
   return (
     <section className={styles.features}>
       <div className="container">
+        <Heading as="h2" className={styles.featuresHeading}>
+          Streamline your organization's link infrastructure
+        </Heading>
+        <p className={styles.featuresSubheading}>
+          Studies show that knowledge workers spend 19% of their day searching
+          for information. Your friends spend 100% of their day asking you
+          what the Jellyfin URL is. We can fix one of those.
+        </p>
         <div className="row">
           {FeatureList.map((props, idx) => (
             <Feature key={idx} {...props} />
@@ -164,7 +198,7 @@ function TechStack(): JSX.Element {
   return (
     <section className={styles.techStack}>
       <div className="container">
-        <p className={styles.techStackLabel}>Built with</p>
+        <p className={styles.techStackLabel}>Powered by a stack your friends will never appreciate</p>
         <div className={styles.techList}>
           {TechList.map(({ name, label }) => (
             <div key={name} className={styles.techChip}>
@@ -238,11 +272,12 @@ export default function Home(): JSX.Element {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="Self-hosted go-links"
-      description="Self-hosted go-links service. Short memorable URLs for your homelab or team. Single binary, OIDC auth, browser extensions for Chrome, Firefox, and Safari."
+      title="Self-hosted go-links for your homelab"
+      description="Enterprise-grade go-links for your homelab and the 15 people who have Tailscale access. Self-hosted, single binary, OIDC auth, browser extensions for Chrome, Firefox, and Safari."
     >
       <HomepageHeader />
       <main>
+        <HomepageScreenshot />
         <HomepageFeatures />
         <TechStack />
         <QuickStart />
