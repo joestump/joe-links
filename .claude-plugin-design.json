@@ -18,7 +18,8 @@
       "link-list-consistency": 60,
       "browser-extension": 61,
       "safari-extension-testflight": 63,
-      "link-analytics": 64
+      "link-analytics": 64,
+      "llm-metadata-suggestions": 66
     },
     "views": [
       "All Work",
