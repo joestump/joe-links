@@ -113,14 +113,14 @@
 		B348C6A12F4DA17700A192FF /* joe-links Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "joe-links Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B348C6A62F4DA17700A192FF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B348C6A72F4DA17700A192FF /* joe-links.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "joe-links.entitlements"; sourceTree = "<group>"; };
-		B348C6C72F4DA17700A192FF /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../extension/popup.js; sourceTree = "<group>"; };
-		B348C6C82F4DA17700A192FF /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../extension/background.js; sourceTree = "<group>"; };
-		B348C6C92F4DA17700A192FF /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../extension/popup.html; sourceTree = "<group>"; };
-		B348C6CA2F4DA17700A192FF /* options.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = options.js; path = ../extension/options.js; sourceTree = "<group>"; };
-		B348C6CB2F4DA17700A192FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../extension/README.md; sourceTree = "<group>"; };
-		B348C6CC2F4DA17700A192FF /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../extension/icons; sourceTree = "<group>"; };
-		B348C6CD2F4DA17700A192FF /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../extension/manifest.json; sourceTree = "<group>"; };
-		B348C6CE2F4DA17700A192FF /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = ../extension/options.html; sourceTree = "<group>"; };
+		B348C6C72F4DA17700A192FF /* popup.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = popup.js; path = ../../extension/popup.js; sourceTree = "<group>"; };
+		B348C6C82F4DA17700A192FF /* background.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = background.js; path = ../../extension/background.js; sourceTree = "<group>"; };
+		B348C6C92F4DA17700A192FF /* popup.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = popup.html; path = ../../extension/popup.html; sourceTree = "<group>"; };
+		B348C6CA2F4DA17700A192FF /* options.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = options.js; path = ../../extension/options.js; sourceTree = "<group>"; };
+		B348C6CB2F4DA17700A192FF /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../../extension/README.md; sourceTree = "<group>"; };
+		B348C6CC2F4DA17700A192FF /* icons */ = {isa = PBXFileReference; lastKnownFileType = folder; name = icons; path = ../../extension/icons; sourceTree = "<group>"; };
+		B348C6CD2F4DA17700A192FF /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../extension/manifest.json; sourceTree = "<group>"; };
+		B348C6CE2F4DA17700A192FF /* options.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = options.html; path = ../../extension/options.html; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
