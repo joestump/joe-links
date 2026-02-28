@@ -302,9 +302,9 @@ document.getElementById('create').addEventListener('click', async () => {
 
       // Auto-copy short link to clipboard.
       // Governing: SPEC-0008 REQ "Browser Action — Create Link" scenario "successful link creation"
-      navigator.clipboard.writeText(shortLink).catch(() => {});
+      const copied = await navigator.clipboard.writeText(shortLink).then(() => true).catch(() => false);
 
-      showSuccess(shortLink);
+      showSuccess(shortLink, copied);
       slugInput.value = '';
       // Clear tags after successful creation.
       tagList.length = 0;
@@ -329,14 +329,14 @@ function clearStatus() {
   el.style.display = 'none';
 }
 
-function showSuccess(shortLink) {
+function showSuccess(shortLink, copied = false) {
   const el  = document.getElementById('status');
   const box = document.createElement('div');
   box.className = 'status-box success';
 
   const label = document.createElement('span');
   label.className   = 'status-label';
-  label.textContent = 'Link created';
+  label.textContent = copied ? 'Link created — copied to clipboard!' : 'Link created';
 
   const row = document.createElement('div');
   row.className = 'status-link-row';

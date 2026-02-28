@@ -22,7 +22,7 @@ joe-links is configured via environment variables (prefixed with `JOE_`) or a `j
 | `JOE_ADMIN_EMAIL` | -- | No | Email address permanently granted the `admin` role on every login |
 | `JOE_OIDC_ADMIN_GROUPS` | -- | No | Comma-separated OIDC group names whose members are granted the `admin` role (see below) |
 | `JOE_OIDC_GROUPS_CLAIM` | `groups` | No | OIDC token claim that contains the user's group list |
-| `JOE_SHORT_KEYWORD` | *(hostname first label)* | No | Short-link prefix shown in the UI and used by the browser extension (e.g. `go`). Defaults to the first DNS label of the server hostname |
+| `JOE_SHORT_KEYWORD` | *(first DNS label of server hostname)* | No | Short-link prefix used in the UI and browser extension. Derived from the server hostname at request time — `go` from `go.example.com`, `links` from `links.example.com`, `localhost` from `localhost:8080`. Set explicitly if your hostname doesn't match your desired keyword |
 | `JOE_SESSION_LIFETIME` | `720h` | No | Session absolute expiry as a Go duration string |
 | `JOE_INSECURE_COOKIES` | `false` | No | Set to `true` to disable the `Secure` cookie flag (for local HTTP development) |
 

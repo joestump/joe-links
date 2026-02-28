@@ -45,7 +45,7 @@ All configuration uses environment variables prefixed with `JOE_`. You can also 
 | `JOE_ADMIN_EMAIL` | -- | Email address permanently granted the `admin` role on every login |
 | `JOE_OIDC_ADMIN_GROUPS` | -- | Comma-separated OIDC group names whose members are granted the `admin` role |
 | `JOE_OIDC_GROUPS_CLAIM` | `groups` | OIDC token claim that contains the user's group list |
-| `JOE_SHORT_KEYWORD` | *(hostname first label)* | Short-link prefix shown in the UI and used by the browser extension (e.g. `go`) |
+| `JOE_SHORT_KEYWORD` | *(first DNS label of server hostname)* | Short-link prefix used in the UI and browser extension. Defaults to the first part of the server hostname (e.g. `go` from `go.example.com`). Set this explicitly if your hostname doesn't match your desired keyword (e.g. `JOE_SHORT_KEYWORD=go`) |
 | `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (Go duration, default 30 days) |
 | `JOE_INSECURE_COOKIES` | `false` | Disable `Secure` flag on cookies (for local HTTP dev) |
 
