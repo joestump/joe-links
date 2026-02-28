@@ -132,6 +132,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (tabURL)   document.getElementById('url').value   = tabURL;
   if (tabTitle) document.getElementById('title').value = tabTitle;
 
+  document.getElementById('slug').focus();
+
   if (!apiKey || !tabURL) return;
 
   const headers = { Authorization: `Bearer ${apiKey}` };
