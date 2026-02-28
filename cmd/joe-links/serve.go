@@ -16,6 +16,7 @@ import (
 	"github.com/joestump/joe-links/internal/config"
 	"github.com/joestump/joe-links/internal/db"
 	"github.com/joestump/joe-links/internal/handler"
+	"github.com/joestump/joe-links/internal/llm"
 	"github.com/joestump/joe-links/internal/metrics"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/spf13/cobra"
@@ -67,6 +68,15 @@ func newServeCmd() *cobra.Command {
 			// Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
 			go runGaugeUpdater(ctx, linkStore, userStore)
 
+			// Governing: SPEC-0017 REQ "LLM Provider Configuration", ADR-0017
+			suggester, err := llm.New(cfg)
+			if err != nil {
+				return err
+			}
+			if suggester != nil {
+				log.Printf("LLM suggestions enabled (provider: %s)", cfg.LLM.Provider)
+			}
+
 			authHandlers := auth.NewHandlers(oidcProvider, sessionManager, userStore, cfg.AdminEmail, cfg.AdminGroups, cfg.GroupsClaim, !cfg.InsecureCookies)
 			authMiddleware := auth.NewMiddleware(sessionManager, userStore)
 
@@ -82,6 +92,7 @@ func newServeCmd() *cobra.Command {
 				KeywordStore:   keywordStore,
 				ClickStore:     clickStore,
 				ClickCh:        clickCh,
+				Suggester:      suggester,
 				ShortKeyword:   cfg.ShortKeyword,
 			})
 

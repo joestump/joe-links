@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/llm"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
 	_ "github.com/joestump/joe-links/docs/swagger"
@@ -36,6 +37,7 @@ type Deps struct {
 	KeywordStore   *store.KeywordStore
 	ClickStore     *store.ClickStore   // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 	ClickCh        chan<- store.ClickEvent // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+	Suggester      llm.Suggester          // Governing: SPEC-0017 REQ "Suggest API Endpoint", ADR-0017; nil when LLM is not configured
 	ShortKeyword   string // optional override (e.g. "go"); defaults to first label of HTTP host
 }
 
@@ -173,6 +175,7 @@ func NewRouter(deps Deps) http.Handler {
 		UserStore:        deps.UserStore,
 		KeywordStore:     deps.KeywordStore,
 		ClickStore:       deps.ClickStore,
+		Suggester:        deps.Suggester,
 	})
 	r.Mount("/api/v1", apiRouter)
 
