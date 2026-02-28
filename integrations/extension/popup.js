@@ -96,6 +96,158 @@ function setupTagInput() {
   container.addEventListener('click', () => input.focus());
 }
 
+// Governing: SPEC-0017 REQ "Extension Meta Extraction"
+async function extractPageMeta(tabId) {
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => ({
+        title: document.title || '',
+        description: document.querySelector('meta[name="description"]')?.content || '',
+      }),
+    });
+    return results?.[0]?.result || {};
+  } catch {
+    // Fails on chrome:// pages, privileged pages, etc. — fall back to empty
+    return {};
+  }
+}
+
+// Governing: SPEC-0017 REQ "Extension Suggestion Strip"
+async function fetchSuggestions(baseURL, apiKey, tabURL, tabTitle, tabId) {
+  try {
+    const meta = await extractPageMeta(tabId);
+    const title = meta.title || tabTitle || '';
+    const description = meta.description || '';
+
+    const res = await fetch(`${baseURL}/api/v1/links/suggest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ url: tabURL, title, description }),
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      renderSuggestionStrip(data);
+    }
+    // Non-200 or network error — silently do nothing
+  } catch {
+    // Silently ignore errors (503 no LLM, 502 LLM failure, network, timeout)
+  }
+}
+
+// Governing: SPEC-0017 REQ "Extension Suggestion Strip"
+function renderSuggestionStrip(suggestions) {
+  if (!suggestions) return;
+
+  const fields = [];
+  if (suggestions.slug) fields.push({ key: 'slug', label: 'Slug', value: suggestions.slug });
+  if (suggestions.title) fields.push({ key: 'title', label: 'Title', value: suggestions.title });
+  if (suggestions.description) fields.push({ key: 'desc', label: 'Desc', value: suggestions.description });
+  if (suggestions.tags && suggestions.tags.length > 0) fields.push({ key: 'tags', label: 'Tags', value: suggestions.tags.join(', ') });
+
+  if (fields.length === 0) return;
+
+  const container = document.getElementById('suggest-container');
+  const strip = document.createElement('div');
+  strip.className = 'suggest-strip';
+
+  // Header row
+  const header = document.createElement('div');
+  header.className = 'suggest-strip-header';
+
+  const label = document.createElement('span');
+  label.className = 'suggest-strip-label';
+  label.textContent = '\u2726 Suggested';
+
+  const dismiss = document.createElement('button');
+  dismiss.className = 'suggest-dismiss';
+  dismiss.innerHTML = '\u00d7';
+  dismiss.title = 'Dismiss suggestions';
+  dismiss.addEventListener('click', () => strip.remove());
+
+  header.appendChild(label);
+  header.appendChild(dismiss);
+  strip.appendChild(header);
+
+  // One row per field
+  for (const f of fields) {
+    const row = document.createElement('div');
+    row.className = 'suggest-row';
+
+    const fieldLabel = document.createElement('span');
+    fieldLabel.className = 'suggest-field-label';
+    fieldLabel.textContent = f.label;
+
+    const fieldValue = document.createElement('span');
+    fieldValue.className = 'suggest-field-value';
+    fieldValue.textContent = f.value;
+    fieldValue.title = f.value;
+
+    const useBtn = document.createElement('button');
+    useBtn.className = 'suggest-use-btn';
+    useBtn.textContent = 'Use';
+    useBtn.addEventListener('click', () => applySuggestion(f.key, suggestions));
+
+    row.appendChild(fieldLabel);
+    row.appendChild(fieldValue);
+    row.appendChild(useBtn);
+    strip.appendChild(row);
+  }
+
+  container.appendChild(strip);
+}
+
+function applySuggestion(key, suggestions) {
+  if (key === 'slug') {
+    document.getElementById('slug').value = suggestions.slug;
+  } else if (key === 'title') {
+    document.getElementById('title').value = suggestions.title;
+    // Auto-expand the "More details" section so the user can see the filled value
+    document.getElementById('more-details').open = true;
+  } else if (key === 'desc') {
+    document.getElementById('description').value = suggestions.description;
+    document.getElementById('more-details').open = true;
+  } else if (key === 'tags') {
+    // Clear existing tags
+    tagList.length = 0;
+    document.querySelectorAll('.tag-pill').forEach(p => p.remove());
+    // Add each suggested tag using the same logic as setupTagInput
+    const container = document.getElementById('tags-container');
+    const input = document.getElementById('tags-input');
+    for (const raw of suggestions.tags) {
+      const tag = raw.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      if (!tag || tagList.includes(tag)) continue;
+      tagList.push(tag);
+
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill';
+
+      const text = document.createElement('span');
+      text.textContent = tag;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tag-pill-remove';
+      removeBtn.innerHTML = '\u00d7';
+      removeBtn.title = 'Remove';
+      removeBtn.type = 'button';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        tagList.splice(tagList.indexOf(tag), 1);
+        pill.remove();
+      });
+
+      pill.appendChild(text);
+      pill.appendChild(removeBtn);
+      container.insertBefore(pill, input);
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   setupTagInput();
 
@@ -135,6 +287,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('slug').focus();
 
   if (!apiKey || !tabURL) return;
+
+  // Governing: SPEC-0017 REQ "Extension Suggestion Strip"
+  // Fire suggest request asynchronously — do NOT await, form stays interactive immediately
+  const tabId = tabs[0]?.id;
+  fetchSuggestions(baseURL, apiKey, tabURL, tabTitle, tabId);
 
   const headers = { Authorization: `Bearer ${apiKey}` };
 
