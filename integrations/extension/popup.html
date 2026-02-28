@@ -372,6 +372,81 @@
     }
     .copy-btn:hover { opacity: 1; }
     .status-msg { font-size: 0.82rem; }
+    /* Governing: SPEC-0017 REQ "Extension Suggestion Strip" */
+    .suggest-strip {
+      border: 1px solid var(--base-300);
+      border-radius: var(--radius);
+      background: var(--base-200);
+      overflow: hidden;
+      margin-bottom: 2px;
+    }
+    .suggest-strip-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 10px 3px;
+    }
+    .suggest-strip-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .suggest-dismiss {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .suggest-dismiss:hover { color: var(--base-content); }
+    .suggest-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-top: 1px solid var(--base-300);
+      font-size: 0.82rem;
+    }
+    .suggest-field-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+      width: 42px;
+    }
+    .suggest-field-value {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .suggest-use-btn {
+      flex-shrink: 0;
+      background: none;
+      border: 1px solid var(--base-300);
+      border-radius: 3px;
+      cursor: pointer;
+      color: var(--primary);
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 1px 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .suggest-use-btn:hover {
+      background: var(--primary);
+      color: var(--primary-content);
+      border-color: var(--primary);
+    }
   </style>
 </head>
 <body>
@@ -394,6 +469,8 @@
     <div id="existing-links"></div>
     <!-- Keyword shortcuts that match this URL — populated by popup.js -->
     <div id="keyword-suggestions"></div>
+    <!-- Governing: SPEC-0017 REQ "Extension Suggestion Strip" -->
+    <div id="suggest-container"></div>
     <div class="field">
       <div class="label-row">
         <label for="url">Destination URL</label>
