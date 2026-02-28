@@ -110,7 +110,7 @@ definitions:
       url:
         type: string
     type: object
-  internal_api.SuggestResponseBody:
+  internal_api.SuggestResponse:
     properties:
       description:
         type: string
@@ -803,12 +803,12 @@ paths:
     post:
       consumes:
       - application/json
-      description: Uses an LLM to suggest slug, title, description, and tags for a
-        URL.
+      description: Uses the configured LLM to suggest slug, title, description, and
+        tags for a URL
       parameters:
-      - description: URL to generate suggestions for
+      - description: URL to get suggestions for
         in: body
-        name: body
+        name: request
         required: true
         schema:
           $ref: '#/definitions/internal_api.SuggestRequest'
@@ -818,7 +818,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_api.SuggestResponseBody'
+            $ref: '#/definitions/internal_api.SuggestResponse'
         "400":
           description: Bad Request
           schema:
@@ -828,11 +828,11 @@ paths:
           schema:
             $ref: '#/definitions/internal_api.ErrorResponse'
         "502":
-          description: LLM provider error
+          description: Bad Gateway
           schema:
             $ref: '#/definitions/internal_api.ErrorResponse'
         "503":
-          description: LLM not configured
+          description: Service Unavailable
           schema:
             $ref: '#/definitions/internal_api.ErrorResponse'
       security:

@@ -291,7 +291,7 @@ const docTemplate = `{
                         "BearerToken": []
                     }
                 ],
-                "description": "Uses an LLM to suggest slug, title, description, and tags for a URL.",
+                "description": "Uses the configured LLM to suggest slug, title, description, and tags for a URL",
                 "consumes": [
                     "application/json"
                 ],
@@ -304,8 +304,8 @@ const docTemplate = `{
                 "summary": "Suggest link metadata",
                 "parameters": [
                     {
-                        "description": "URL to generate suggestions for",
-                        "name": "body",
+                        "description": "URL to get suggestions for",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -317,7 +317,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api.SuggestResponseBody"
+                            "$ref": "#/definitions/internal_api.SuggestResponse"
                         }
                     },
                     "400": {
@@ -333,13 +333,13 @@ const docTemplate = `{
                         }
                     },
                     "502": {
-                        "description": "LLM provider error",
+                        "description": "Bad Gateway",
                         "schema": {
                             "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "503": {
-                        "description": "LLM not configured",
+                        "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
@@ -1410,7 +1410,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api.SuggestResponseBody": {
+        "internal_api.SuggestResponse": {
             "type": "object",
             "properties": {
                 "description": {

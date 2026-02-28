@@ -145,3 +145,20 @@ type CreateTokenRequest struct {
 	Name      string     `json:"name"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
 }
+
+// SuggestRequest is the body for POST /api/v1/links/suggest.
+// Governing: SPEC-0017 REQ "Suggest API Endpoint"
+type SuggestRequest struct {
+	URL         string `json:"url"`
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// SuggestResponse is the response for POST /api/v1/links/suggest.
+// Governing: SPEC-0017 REQ "Suggest API Endpoint"
+type SuggestResponse struct {
+	Slug        string   `json:"slug"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
+}
