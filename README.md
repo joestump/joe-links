@@ -42,7 +42,10 @@ All configuration uses environment variables prefixed with `JOE_`. You can also 
 | `JOE_OIDC_CLIENT_ID` | -- | OAuth2 client ID |
 | `JOE_OIDC_CLIENT_SECRET` | -- | OAuth2 client secret |
 | `JOE_OIDC_REDIRECT_URL` | -- | OAuth2 callback URL (e.g. `https://go.example.com/auth/callback`) |
-| `JOE_ADMIN_EMAIL` | -- | Email address granted `admin` role on first login |
+| `JOE_ADMIN_EMAIL` | -- | Email address permanently granted the `admin` role on every login |
+| `JOE_OIDC_ADMIN_GROUPS` | -- | Comma-separated OIDC group names whose members are granted the `admin` role |
+| `JOE_OIDC_GROUPS_CLAIM` | `groups` | OIDC token claim that contains the user's group list |
+| `JOE_SHORT_KEYWORD` | *(hostname first label)* | Short-link prefix shown in the UI and used by the browser extension (e.g. `go`) |
 | `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (Go duration, default 30 days) |
 | `JOE_INSECURE_COOKIES` | `false` | Disable `Secure` flag on cookies (for local HTTP dev) |
 
