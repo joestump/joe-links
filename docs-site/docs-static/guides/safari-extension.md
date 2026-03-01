@@ -31,16 +31,14 @@ If you just want the extension on your own machine:
 
 2. **Allow unsigned extensions**: Develop menu → **Allow Unsigned Extensions** (you'll need to re-enable this after each macOS update).
 
-3. **Convert the extension**:
+3. **Clone the repo**:
    ```bash
    git clone https://github.com/joestump/joe-links.git
    cd joe-links
-   make ext-safari
    ```
-   This runs `xcrun safari-web-extension-converter` and outputs an Xcode project to `integrations/apple/`.
 
 4. **Build and run in Xcode**:
-   - Open `integrations/apple/joe-links/joe-links.xcodeproj`
+   - Open `integrations/apple/joe-links.xcodeproj`
    - Select the **joe-links (macOS)** scheme
    - Press **⌘R** to build and run — this installs the app bundle containing the extension
 
@@ -56,7 +54,7 @@ If you want to share the extension with a few people (e.g. your household or tea
 
 ### 1. Configure signing in Xcode
 
-1. Open `integrations/apple/joe-links/joe-links.xcodeproj`
+1. Open `integrations/apple/joe-links.xcodeproj`
 2. Select the project root → **Signing & Capabilities** tab
 3. Under **Team**, choose your Apple Developer account
 4. Set **Bundle Identifier** to something unique, e.g. `com.yourname.joe-links`
@@ -180,10 +178,9 @@ safari:
           -k $KEYCHAIN_PATH -T /usr/bin/codesign
         security list-keychain -d user -s $KEYCHAIN_PATH
 
-    - name: Convert and build Safari extension
+    - name: Build Safari extension
       run: |
-        make ext-safari
-        cd integrations/apple/joe-links
+        cd integrations/apple
         xcodebuild archive \
           -scheme "joe-links (macOS)" \
           -archivePath $RUNNER_TEMP/joe-links.xcarchive \
@@ -224,11 +221,13 @@ The `ExportOptions.plist` file controls distribution method (Developer ID vs App
 
 When the extension source changes (new features, bug fixes):
 
-1. Re-run `make ext-safari` — this regenerates the Xcode project from the latest `integrations/extension/` directory
-2. Open Xcode, bump the version number (app target → General → Version)
-3. Archive, notarize, and distribute as above
-4. For App Store builds: create a new version in App Store Connect, attach the new build, re-submit
+1. Pull the latest code:
+   ```bash
+   git pull origin main
+   ```
+2. Open `integrations/apple/joe-links.xcodeproj` in Xcode
+3. Bump the version number: select the app target → **General** → **Version**
+4. Press **⌘R** to build and run (for local testing), or archive and distribute as above
+5. For App Store builds: create a new version in App Store Connect, attach the new build, re-submit
 
-:::caution
-`make ext-safari` regenerates the Xcode project each time, which **overwrites any manual Xcode project edits**. Keep all extension logic in the `integrations/extension/` directory and avoid editing the generated Xcode project directly.
-:::
+The Xcode project is maintained in the repository — no conversion step is needed. All extension logic lives in `integrations/extension/`; the Xcode project references those files directly.

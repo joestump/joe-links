@@ -173,7 +173,7 @@ The Xcode project at `integrations/apple/` wraps the extension for Safari on iOS
    - If the extension doesn't appear on macOS: **Develop → Allow Unsigned Extensions** first
    - If the Develop menu isn't visible: **Settings → Advanced → Show features for web developers**
 
-> 💡 **Tip:** Chrome is faster for day-to-day development iteration. Re-run the converter after any extension code changes before testing in Safari.
+**To update after a code change:** `git pull origin main` then rebuild in Xcode (⌘R). No conversion step needed — the Xcode project references `integrations/extension/` directly.
 
 ### Using the popup
 
