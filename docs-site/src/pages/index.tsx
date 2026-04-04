@@ -224,16 +224,39 @@ function QuickStart(): JSX.Element {
             <div className={styles.codeBlock}>
               <pre>
                 <code>
-                  {`# Run with Docker Compose
-cp .env.example .env
-# Edit .env with your OIDC provider details
-docker compose up -d
-# Visit http://localhost:8080
+                  {`# Create a project directory
+mkdir joe-links && cd joe-links
 
-# Or download the binary
-curl -L https://github.com/joestump/joe-links/releases/latest/\\
-download/joe-links-linux-amd64 -o joe-links && chmod +x joe-links
-JOE_DB_DRIVER=sqlite3 JOE_DB_DSN=./joe-links.db ./joe-links serve`}
+# Create docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+services:
+  app:
+    image: ghcr.io/joestump/joe-links:latest
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - joe-data:/data
+    restart: unless-stopped
+
+volumes:
+  joe-data:
+EOF
+
+# Create .env with your OIDC provider details
+cat > .env << 'EOF'
+JOE_DB_DRIVER=sqlite3
+JOE_DB_DSN=/data/joe-links.db
+JOE_OIDC_ISSUER=https://your-oidc-provider
+JOE_OIDC_CLIENT_ID=your-client-id
+JOE_OIDC_CLIENT_SECRET=your-client-secret
+JOE_OIDC_REDIRECT_URL=https://go.example.com/auth/callback
+JOE_ADMIN_EMAIL=you@example.com
+EOF
+
+# Start joe-links
+docker compose up -d
+# Visit http://localhost:8080`}
                 </code>
               </pre>
             </div>

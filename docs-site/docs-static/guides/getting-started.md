@@ -99,7 +99,24 @@ JOE_DB_DSN=postgres://joe:changeme@postgres:5432/joe_links?sslmode=disable
 
 ## OIDC Setup
 
-joe-links requires an OpenID Connect provider for authentication. Below are examples for two common providers.
+joe-links requires an OpenID Connect provider for authentication. Below are examples for common providers.
+
+### Pocket ID
+
+[Pocket ID](https://github.com/stonith404/pocket-id) is a lightweight, self-hosted OIDC provider — perfect for homelabs that don't need a full-blown identity platform.
+
+1. In the Pocket ID admin UI, create a new **OIDC Client**.
+2. Set the callback URL to `https://your-domain.com/auth/callback`.
+3. Note the client ID and client secret.
+4. Set these environment variables:
+
+```bash
+JOE_OIDC_ISSUER=https://pocket-id.your-domain.com
+JOE_OIDC_CLIENT_ID=your-pocket-id-client-id
+JOE_OIDC_CLIENT_SECRET=your-pocket-id-client-secret
+JOE_OIDC_REDIRECT_URL=https://your-domain.com/auth/callback
+JOE_ADMIN_EMAIL=you@example.com
+```
 
 ### Google
 
