@@ -8,25 +8,94 @@ sidebar_position: 1
 
 joe-links is a self-hosted "go links" service. It turns short, memorable slugs like `go/slack` or `go/wiki` into instant redirects to any URL.
 
-## Installation (Docker)
+## Quick Start (Docker Compose)
 
-The fastest way to run joe-links is with Docker Compose.
+The fastest way to run joe-links is with Docker Compose using the published image. No need to clone the repository.
 
-1. Clone the repository and create your environment file:
+1. Create a project directory and add two files:
 
 ```bash
-git clone https://github.com/joestump/joe-links.git
-cd joe-links
-cp .env.example .env
+mkdir joe-links && cd joe-links
 ```
 
-2. Edit `.env` with your OIDC provider details (see below), then start the service:
+2. Create a `docker-compose.yml`:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/joestump/joe-links:latest
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - joe-data:/data
+    restart: unless-stopped
+
+volumes:
+  joe-data:
+```
+
+3. Create a `.env` file with your configuration:
+
+```bash
+# Database — SQLite (simplest, no extra services needed)
+JOE_DB_DRIVER=sqlite3
+JOE_DB_DSN=/data/joe-links.db
+
+# OIDC Authentication (required — see provider examples below)
+JOE_OIDC_ISSUER=
+JOE_OIDC_CLIENT_ID=
+JOE_OIDC_CLIENT_SECRET=
+JOE_OIDC_REDIRECT_URL=https://go.example.com/auth/callback
+
+# Admin — this email gets the admin role on first login
+JOE_ADMIN_EMAIL=you@example.com
+```
+
+4. Fill in the OIDC fields (see [OIDC Setup](#oidc-setup) below), then start the service:
 
 ```bash
 docker compose up -d
 ```
 
-3. Visit `http://localhost:8080` and sign in.
+5. Visit `http://localhost:8080` and sign in.
+
+:::tip Using PostgreSQL instead of SQLite
+Add a Postgres service to your `docker-compose.yml` and update `.env`:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/joestump/joe-links:latest
+    ports:
+      - "8080:8080"
+    env_file: .env
+    volumes:
+      - joe-data:/data
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: joe_links
+      POSTGRES_USER: joe
+      POSTGRES_PASSWORD: changeme
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  joe-data:
+  pg-data:
+```
+
+```bash
+JOE_DB_DRIVER=postgres
+JOE_DB_DSN=postgres://joe:changeme@postgres:5432/joe_links?sslmode=disable
+```
+:::
 
 ## OIDC Setup
 
