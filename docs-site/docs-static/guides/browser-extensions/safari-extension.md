@@ -1,7 +1,7 @@
 ---
 title: "Safari Extension"
-sidebar_label: "Safari Extension"
-sidebar_position: 5
+sidebar_label: "Safari"
+sidebar_position: 3
 ---
 
 # Safari Extension

@@ -1,0 +1,8 @@
+{
+  "label": "Browser Extensions",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "guides/browser-extensions/index"
+  }
+}

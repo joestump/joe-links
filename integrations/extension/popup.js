@@ -6,16 +6,21 @@ const DEFAULTS = { baseURL: 'http://go', apiKey: '' };
 const ICON_CLIPBOARD = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>`;
 const ICON_CHECK     = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
 
+// Parse an SVG string into a DOM node (avoids innerHTML for AMO compliance).
+function svgNode(svgStr) {
+  return new DOMParser().parseFromString(svgStr, 'image/svg+xml').documentElement;
+}
+
 // Return a copy button that copies text and briefly shows a checkmark.
 function makeCopyBtn(text) {
   const btn = document.createElement('button');
   btn.className = 'copy-btn';
-  btn.innerHTML = ICON_CLIPBOARD;
+  btn.replaceChildren(svgNode(ICON_CLIPBOARD));
   btn.title = 'Copy';
   btn.addEventListener('click', () => {
     navigator.clipboard.writeText(text).then(() => {
-      btn.innerHTML = ICON_CHECK;
-      setTimeout(() => { btn.innerHTML = ICON_CLIPBOARD; }, 1500);
+      btn.replaceChildren(svgNode(ICON_CHECK));
+      setTimeout(() => { btn.replaceChildren(svgNode(ICON_CLIPBOARD)); }, 1500);
     }).catch(() => {});
   });
   return btn;
@@ -54,7 +59,7 @@ function setupTagInput() {
 
     const removeBtn = document.createElement('button');
     removeBtn.className = 'tag-pill-remove';
-    removeBtn.innerHTML = '×';
+    removeBtn.textContent = '\u00d7';
     removeBtn.title = 'Remove';
     removeBtn.type = 'button';
     removeBtn.addEventListener('click', (e) => {
@@ -166,7 +171,7 @@ function renderSuggestionStrip(suggestions) {
 
   const dismiss = document.createElement('button');
   dismiss.className = 'suggest-dismiss';
-  dismiss.innerHTML = '\u00d7';
+  dismiss.textContent = '\u00d7';
   dismiss.title = 'Dismiss suggestions';
   dismiss.addEventListener('click', () => strip.remove());
 
@@ -232,7 +237,7 @@ function applySuggestion(key, suggestions) {
 
       const removeBtn = document.createElement('button');
       removeBtn.className = 'tag-pill-remove';
-      removeBtn.innerHTML = '\u00d7';
+      removeBtn.textContent = '\u00d7';
       removeBtn.title = 'Remove';
       removeBtn.type = 'button';
       removeBtn.addEventListener('click', (e) => {
@@ -359,7 +364,7 @@ function renderExistingLinks(links, serverKeyword, baseURL) {
 
     const editBtn = document.createElement('button');
     editBtn.className = 'copy-btn';
-    editBtn.innerHTML = ICON_EDIT;
+    editBtn.replaceChildren(svgNode(ICON_EDIT));
     editBtn.title = 'Edit link';
     editBtn.addEventListener('click', () => {
       chrome.tabs.create({ url: `${baseURL}/dashboard/links/${link.id}/edit` });
@@ -484,7 +489,7 @@ document.getElementById('create').addEventListener('click', async () => {
 
 function clearStatus() {
   const el = document.getElementById('status');
-  el.innerHTML     = '';
+  el.replaceChildren();
   el.style.display = 'none';
 }
 

@@ -1,14 +1,14 @@
 ---
 title: "Browser Extensions"
-sidebar_label: "Browser Extensions"
-sidebar_position: 2
+sidebar_label: "Overview"
+sidebar_position: 1
 ---
 
 # Browser Extensions
 
 The joe-links browser extension intercepts bare-hostname navigation — so typing `go/slack` in your address bar redirects through your joe-links server without needing a trailing slash or `http://` prefix.
 
-Extensions are available for **Chrome/Chromium**, **Firefox**, and **Safari** (via `xcrun safari-web-extension-converter`). The source lives in the `integrations/integrations/extension/` directory of the repository as a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) extension.
+Extensions are available for **Chrome/Chromium**, **Firefox**, and **Safari** (via `xcrun safari-web-extension-converter`). The source lives in the `integrations/extension/` directory of the repository as a [Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3) extension.
 
 ## Prerequisites
 
@@ -92,23 +92,22 @@ Safari requires extensions to be packaged as native macOS apps. The simplest pat
 
 2. **Allow unsigned extensions**: Develop → **Allow Unsigned Extensions** (re-enable after each macOS update)
 
-3. **Convert and build the extension**:
-   ```bash
-   cd joe-links
-   make ext-safari
-   ```
-   This runs `xcrun safari-web-extension-converter` and creates an Xcode project at `safari-extension/`.
-
-4. **Build and install from Xcode**:
-   - Open `safari-extension/joe-links/joe-links.xcodeproj`
+3. **Build and run in Xcode**:
+   - Open `integrations/apple/joe-links.xcodeproj`
    - Select the **joe-links (macOS)** scheme
    - Press **⌘R** — Xcode builds and installs the wrapper app
 
-5. **Enable in Safari**: Safari → Settings → Extensions → check **joe-links**. Grant the requested permissions.
+4. **Enable in Safari**: Safari → Settings → Extensions → check **joe-links**. Grant the requested permissions.
 
-6. **Configure the extension**: Click the toolbar icon → set your **Server URL** and **API Key**, click **Save**.
+5. **Configure the extension**: Click the toolbar icon → set your **Server URL** and **API Key**, click **Save**.
 
-For distribution options (ad-hoc signing, TestFlight, App Store), see the [Safari Extension](/guides/safari-extension) guide.
+For signing, TestFlight distribution, App Store publishing, and CI automation, see the [Safari Extension](./safari-extension) guide.
+
+---
+
+## Store Publishing
+
+The extension is available on the [Chrome Web Store](https://chrome.google.com/webstore) and [Firefox Add-ons](https://addons.mozilla.org). For automated CI/CD publishing on tag pushes, see the [Auto-Publishing](./auto-publishing) guide.
 
 ---
 
