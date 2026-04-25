@@ -77,12 +77,12 @@ Third-party integrations live under `integrations/` to avoid polluting the repo 
 - `integrations/extension/` — Manifest V3 browser extension (Chrome, Firefox)
 - `integrations/apple/` — Safari Web Extension Xcode project (iOS 15+, macOS 12+); future Apple-platform apps go here too
 
-## Design Plugin Skills
+## SDD Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `/design:adr` | Create a new Architecture Decision Record |
-| `/design:spec` | Create a new specification |
-| `/design:check` | Quick-check code against ADRs and specs for drift |
-| `/design:audit` | Comprehensive design artifact alignment audit |
-| `/design:prime` | Load architecture context into session |
+| `/sdd:adr` | Create a new Architecture Decision Record |
+| `/sdd:spec` | Create a new specification |
+| `/sdd:check` | Quick-check code against ADRs and specs for drift |
+| `/sdd:audit` | Comprehensive design artifact alignment audit |
+| `/sdd:prime` | Load architecture context into session |
