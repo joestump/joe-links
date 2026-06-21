@@ -175,7 +175,8 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   await refreshKeywords();
   await updateRedirectRules();
   await setActionIcon();
-  chrome.alarms.create('keyword-refresh', { periodInMinutes: 5 });
+  // Governing: SPEC-0008 REQ "Keyword Host Discovery" — default refresh interval is 60 minutes.
+  chrome.alarms.create('keyword-refresh', { periodInMinutes: 60 });
 });
 
 chrome.runtime.onStartup.addListener(async () => {

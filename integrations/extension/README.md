@@ -24,7 +24,7 @@ The extension uses Manifest V3 and works across modern Chromium and Gecko browse
 
 Firefox requires a stable `browser_specific_settings.gecko.id` in `manifest.json`, which is already included. Note that temporary add-ons are removed when Firefox restarts; for persistent installation, package the extension as an `.xpi` and install via `about:addons`.
 
-Firefox 109+ is required (first stable release with MV3 support).
+Firefox 113+ is required — this is the `strict_min_version` enforced by `manifest.json`. (MV3 first shipped in Firefox 109, but this extension targets 113 as its minimum.)
 
 ### Safari
 
@@ -35,4 +35,4 @@ Safari requires converting the extension using Xcode's tooling:
 3. Build and run the generated Xcode project
 4. Enable the extension in Safari > Settings > Extensions
 
-See SPEC-0008 REQ "Firefox Compatibility" and ADR-0012 for architectural context.
+See SPEC-0008 REQ "Cross-Browser Packaging" and ADR-0012 for architectural context.
