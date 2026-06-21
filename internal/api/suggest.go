@@ -3,12 +3,19 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/llm"
+	"github.com/joestump/joe-links/internal/store"
 )
+
+// maxRawLogBytes bounds how much of a malformed LLM response we log, to avoid
+// flooding the logs with a pathologically large model response.
+// Governing: SPEC-0017 REQ "Default Prompt Template" scenario "LLM returns malformed JSON"
+const maxRawLogBytes = 2048
 
 // SuggestRequest is the body for POST /api/v1/links/suggest.
 // Governing: SPEC-0017 REQ "Suggest API Endpoint"
@@ -78,15 +85,51 @@ func (h *suggestAPIHandler) Suggest(w http.ResponseWriter, r *http.Request) {
 		Description: req.Description,
 	})
 	if err != nil {
-		log.Printf("api: LLM suggest error: %v", err)
+		// Governing: SPEC-0017 REQ "Default Prompt Template" scenario "LLM returns malformed JSON"
+		// On a JSON parse failure the server MUST log the RAW LLM response text.
+		var malformed *llm.MalformedResponseError
+		if errors.As(err, &malformed) {
+			raw := malformed.Raw
+			if len(raw) > maxRawLogBytes {
+				raw = raw[:maxRawLogBytes] + "...(truncated)"
+			}
+			log.Printf("api: LLM suggest malformed response: %v; raw=%q", malformed.Err, raw)
+		} else {
+			log.Printf("api: LLM suggest error: %v", err)
+		}
 		writeError(w, http.StatusBadGateway, "LLM provider error", "LLM_ERROR")
 		return
 	}
 
+	// Governing: SPEC-0017 REQ "Default Prompt Template"
+	// Suggested slugs MUST follow the same validation rules as user-supplied slugs.
+	// Degrade gracefully: if the model returns an invalid slug, blank it out rather
+	// than failing the whole request — the other suggested fields are still useful.
+	slug := resp.Slug
+	if slug != "" {
+		if err := store.ValidateSlugFormat(slug); err != nil {
+			log.Printf("api: LLM suggested invalid slug %q, omitting: %v", slug, err)
+			slug = ""
+		}
+	}
+
+	// Likewise drop title/description that violate length limits rather than
+	// rejecting the whole suggestion. Validate each field independently so an
+	// over-long title doesn't mask an over-long description (and vice versa).
+	title, description := resp.Title, resp.Description
+	if err := store.ValidateLinkText(title, ""); err != nil {
+		log.Printf("api: LLM suggested title failed validation, omitting: %v", err)
+		title = ""
+	}
+	if err := store.ValidateLinkText("", description); err != nil {
+		log.Printf("api: LLM suggested description failed validation, omitting: %v", err)
+		description = ""
+	}
+
 	writeJSON(w, http.StatusOK, SuggestResponseBody{
-		Slug:        resp.Slug,
-		Title:       resp.Title,
-		Description: resp.Description,
+		Slug:        slug,
+		Title:       title,
+		Description: description,
 		Tags:        resp.Tags,
 	})
 }

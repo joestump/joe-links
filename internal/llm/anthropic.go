@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	anthropicAPIURL     = "https://api.anthropic.com/v1/messages"
-	anthropicVersion    = "2023-06-01"
+	anthropicAPIURL       = "https://api.anthropic.com/v1/messages"
+	anthropicVersion      = "2023-06-01"
 	defaultAnthropicModel = "claude-haiku-4-5-20251001"
 )
 
@@ -22,6 +22,7 @@ type anthropicSuggester struct {
 	apiKey       string
 	model        string
 	promptCustom string
+	apiURL       string // overridable for testing; defaults to anthropicAPIURL
 	client       *http.Client
 }
 
@@ -34,6 +35,7 @@ func newAnthropicSuggester(cfg *config.Config) *anthropicSuggester {
 		apiKey:       cfg.LLM.APIKey,
 		model:        model,
 		promptCustom: cfg.LLM.Prompt,
+		apiURL:       anthropicAPIURL,
 		client:       &http.Client{},
 	}
 }
@@ -72,7 +74,7 @@ func (a *anthropicSuggester) Suggest(ctx context.Context, req SuggestRequest) (*
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, anthropicAPIURL, bytes.NewReader(payload))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.apiURL, bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
@@ -105,8 +107,10 @@ func (a *anthropicSuggester) Suggest(ctx context.Context, req SuggestRequest) (*
 	}
 
 	var suggestion SuggestResponse
+	// Governing: SPEC-0017 REQ "Default Prompt Template" scenario "LLM returns malformed JSON"
+	// Carry the raw model output out via a typed error so the handler can log it.
 	if err := json.Unmarshal([]byte(apiResp.Content[0].Text), &suggestion); err != nil {
-		return nil, fmt.Errorf("decode suggestion JSON: %w", err)
+		return nil, &MalformedResponseError{Raw: apiResp.Content[0].Text, Err: err}
 	}
 
 	return &suggestion, nil

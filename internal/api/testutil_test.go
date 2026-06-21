@@ -7,6 +7,7 @@ import (
 
 	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
+	"github.com/joestump/joe-links/internal/llm"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/internal/testutil"
 )
@@ -25,6 +26,14 @@ type testEnv struct {
 // newTestEnv creates an in-memory SQLite test database, runs migrations,
 // and wires up the full API router with real stores.
 func newTestEnv(t *testing.T) *testEnv {
+	t.Helper()
+	return newTestEnvWithSuggester(t, nil)
+}
+
+// newTestEnvWithSuggester is like newTestEnv but also injects an llm.Suggester
+// into the API router (nil means LLM suggestions are disabled).
+// Governing: SPEC-0017 REQ "Suggest API Endpoint"
+func newTestEnvWithSuggester(t *testing.T, suggester llm.Suggester) *testEnv {
 	t.Helper()
 	db := testutil.NewTestDB(t)
 
@@ -45,6 +54,7 @@ func newTestEnv(t *testing.T) *testEnv {
 		TagStore:         tags,
 		UserStore:        us,
 		ClickStore:       cs,
+		Suggester:        suggester,
 	}
 
 	router := api.NewAPIRouter(deps)

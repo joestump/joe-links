@@ -86,7 +86,12 @@ func (o *openaiSuggester) Suggest(ctx context.Context, req SuggestRequest) (*Sug
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+o.apiKey)
+	// Governing: SPEC-0017 REQ "LLM Provider Configuration" scenario "Ollama / custom endpoint"
+	// Only send the Authorization header when an API key is configured; keyless
+	// providers (e.g. local Ollama) reject or are confused by an empty bearer.
+	if o.apiKey != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+o.apiKey)
+	}
 
 	resp, err := o.client.Do(httpReq)
 	if err != nil {
@@ -113,8 +118,10 @@ func (o *openaiSuggester) Suggest(ctx context.Context, req SuggestRequest) (*Sug
 	}
 
 	var suggestion SuggestResponse
+	// Governing: SPEC-0017 REQ "Default Prompt Template" scenario "LLM returns malformed JSON"
+	// Carry the raw model output out via a typed error so the handler can log it.
 	if err := json.Unmarshal([]byte(apiResp.Choices[0].Message.Content), &suggestion); err != nil {
-		return nil, fmt.Errorf("decode suggestion JSON: %w", err)
+		return nil, &MalformedResponseError{Raw: apiResp.Choices[0].Message.Content, Err: err}
 	}
 
 	return &suggestion, nil
