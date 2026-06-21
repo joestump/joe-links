@@ -36,9 +36,9 @@ type ShareRecord struct {
 // LinkStore is the sqlx-backed implementation of LinkStoreIface.
 // Governing: SPEC-0002 REQ "Link Store Interface"
 type LinkStore struct {
-	db    *sqlx.DB
-	owns  *OwnershipStore
-	tags  *TagStore
+	db   *sqlx.DB
+	owns *OwnershipStore
+	tags *TagStore
 }
 
 func NewLinkStore(db *sqlx.DB, owns *OwnershipStore, tags *TagStore) *LinkStore {
@@ -69,6 +69,10 @@ func (s *LinkStore) aggAll(col string) string {
 // Create inserts a new link and registers ownerID as the primary owner.
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description, visibility string) (*Link, error) {
+	// Governing: SPEC-0002 REQ "Links Table" — reject over-length title/description before insert
+	if err := ValidateLinkText(title, description); err != nil {
+		return nil, err
+	}
 	if visibility == "" {
 		visibility = "public"
 	}
@@ -223,6 +227,10 @@ func (s *LinkStore) ListByOwnerAndTag(ctx context.Context, ownerID, tagSlug stri
 // Governing: SPEC-0001 REQ "Short Link Management" — slug is immutable after creation.
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 func (s *LinkStore) Update(ctx context.Context, id, url, title, description, visibility string) (*Link, error) {
+	// Governing: SPEC-0002 REQ "Links Table" — reject over-length title/description before update
+	if err := ValidateLinkText(title, description); err != nil {
+		return nil, err
+	}
 	now := time.Now().UTC()
 	_, err := s.db.ExecContext(ctx, s.q(`
 		UPDATE links SET url = ?, title = ?, description = ?, visibility = ?, updated_at = ? WHERE id = ?
@@ -258,7 +266,6 @@ func (s *LinkStore) ListByOwnerOrShared(ctx context.Context, userID string) ([]*
 	}
 	return links, nil
 }
-
 
 // ListByURL returns links whose URL exactly matches the given string.
 // Admins see all matches; regular users see owned, shared, or public links.

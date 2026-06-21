@@ -42,11 +42,11 @@ type LinkForm struct {
 // LinkFormPage is the template data for the new/edit link forms.
 type LinkFormPage struct {
 	BasePage
-	User    *store.User
-	Link    *store.Link
-	Form    LinkForm
-	Error   string
-	Flash   *Flash
+	User  *store.User
+	Link  *store.Link
+	Form  LinkForm
+	Error string
+	Flash *Flash
 }
 
 // LinkDetailPage is the template data for the link detail view.
@@ -162,6 +162,17 @@ func (h *LinksHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	if err := store.ValidateURLVariables(form.URL); err != nil {
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "new_link_modal", data)
+			return
+		}
+		render(w, "new.html", data)
+		return
+	}
+
+	// Governing: SPEC-0002 REQ "Links Table" — title max 200, description max 2000 characters
+	if err := store.ValidateLinkText(form.Title, form.Description); err != nil {
 		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Form: form, Error: err.Error()}
 		if isHTMX(r) {
 			renderFragment(w, "new_link_modal", data)
@@ -294,6 +305,17 @@ func (h *LinksHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	if err := store.ValidateURLVariables(form.URL); err != nil {
+		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: err.Error()}
+		if isHTMX(r) {
+			renderFragment(w, "edit_link_modal", data)
+			return
+		}
+		render(w, "edit.html", data)
+		return
+	}
+
+	// Governing: SPEC-0002 REQ "Links Table" — title max 200, description max 2000 characters
+	if err := store.ValidateLinkText(form.Title, form.Description); err != nil {
 		data := LinkFormPage{BasePage: newBasePage(r, user), User: user, Link: link, Form: form, Error: err.Error()}
 		if isHTMX(r) {
 			renderFragment(w, "edit_link_modal", data)

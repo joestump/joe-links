@@ -4,6 +4,7 @@ package store
 
 import (
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -111,6 +112,41 @@ func TestValidateURLVariables(t *testing.T) {
 			}
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("ValidateURLVariables(%q) = %v, want error wrapping %v", tt.url, err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// Governing: SPEC-0002 REQ "Links Table" scenarios "Title/Description Exceeds Maximum Length"
+func TestValidateLinkText(t *testing.T) {
+	tests := []struct {
+		name        string
+		title       string
+		description string
+		wantErr     error
+	}{
+		{name: "both empty", title: "", description: "", wantErr: nil},
+		{name: "short values", title: "Docs", description: "The team docs", wantErr: nil},
+		{name: "title at limit", title: strings.Repeat("a", MaxTitleLength), description: "", wantErr: nil},
+		{name: "description at limit", title: "", description: strings.Repeat("b", MaxDescriptionLength), wantErr: nil},
+		{name: "title over limit", title: strings.Repeat("a", MaxTitleLength+1), description: "", wantErr: ErrTitleTooLong},
+		{name: "description over limit", title: "", description: strings.Repeat("b", MaxDescriptionLength+1), wantErr: ErrDescriptionTooLong},
+		// Length is counted in runes, not bytes: 200 multi-byte chars are valid.
+		{name: "multibyte title at limit", title: strings.Repeat("é", MaxTitleLength), description: "", wantErr: nil},
+		{name: "multibyte title over limit", title: strings.Repeat("é", MaxTitleLength+1), description: "", wantErr: ErrTitleTooLong},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateLinkText(tt.title, tt.description)
+			if tt.wantErr == nil {
+				if err != nil {
+					t.Errorf("ValidateLinkText(...) = %v, want nil", err)
+				}
+				return
+			}
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("ValidateLinkText(...) = %v, want %v", err, tt.wantErr)
 			}
 		})
 	}

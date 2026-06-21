@@ -143,6 +143,12 @@ func (h *linksAPIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0002 REQ "Links Table" — title max 200, description max 2000 characters
+	if err := store.ValidateLinkText(req.Title, req.Description); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_FIELD_LENGTH")
+		return
+	}
+
 	// Governing: SPEC-0010 REQ "REST API Visibility Field" — defaults to "public"
 	visibility := req.Visibility
 	if visibility == "" {
@@ -312,6 +318,12 @@ func (h *linksAPIHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Governing: SPEC-0009 REQ "Variable Placeholder Syntax", ADR-0013
 	if err := store.ValidateURLVariables(req.URL); err != nil {
 		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_URL")
+		return
+	}
+
+	// Governing: SPEC-0002 REQ "Links Table" — title max 200, description max 2000 characters
+	if err := store.ValidateLinkText(req.Title, req.Description); err != nil {
+		writeError(w, http.StatusBadRequest, err.Error(), "INVALID_FIELD_LENGTH")
 		return
 	}
 

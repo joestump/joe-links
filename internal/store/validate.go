@@ -5,11 +5,27 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"unicode/utf8"
+)
+
+// Link text length limits.
+// Governing: SPEC-0002 REQ "Links Table" — title max 200, description max 2000 characters
+const (
+	MaxTitleLength       = 200
+	MaxDescriptionLength = 2000
 )
 
 var (
 	// ErrSlugInvalid is returned when a slug does not match the required pattern.
 	ErrSlugInvalid = errors.New("slug must match [a-z0-9][a-z0-9-]*[a-z0-9]")
+
+	// ErrTitleTooLong is returned when a title exceeds MaxTitleLength characters.
+	// Governing: SPEC-0002 REQ "Links Table" scenario "Title Exceeds Maximum Length"
+	ErrTitleTooLong = fmt.Errorf("title must be at most %d characters", MaxTitleLength)
+
+	// ErrDescriptionTooLong is returned when a description exceeds MaxDescriptionLength characters.
+	// Governing: SPEC-0002 REQ "Links Table" scenario "Description Exceeds Maximum Length"
+	ErrDescriptionTooLong = fmt.Errorf("description must be at most %d characters", MaxDescriptionLength)
 
 	// ErrSlugReserved is returned when a slug matches a reserved route prefix.
 	ErrSlugReserved = errors.New("slug is reserved and cannot be used")
@@ -52,6 +68,20 @@ func ValidateSlugFormat(slug string) error {
 	}
 	if reservedSlugs[slug] {
 		return fmt.Errorf("%w: %q", ErrSlugReserved, slug)
+	}
+	return nil
+}
+
+// ValidateLinkText checks that title and description do not exceed their
+// maximum character lengths. Length is measured in Unicode code points (runes),
+// matching the spec's "characters" wording.
+// Governing: SPEC-0002 REQ "Links Table" scenarios "Title/Description Exceeds Maximum Length"
+func ValidateLinkText(title, description string) error {
+	if utf8.RuneCountInString(title) > MaxTitleLength {
+		return ErrTitleTooLong
+	}
+	if utf8.RuneCountInString(description) > MaxDescriptionLength {
+		return ErrDescriptionTooLong
 	}
 	return nil
 }
