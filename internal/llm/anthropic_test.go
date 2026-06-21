@@ -26,7 +26,7 @@ func anthropicEnvelope(text string) string {
 func TestAnthropic_MalformedContent_ReturnsRawError(t *testing.T) {
 	const raw = "<<<not json>>>"
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(anthropicEnvelope(raw)))
+		_, _ = w.Write([]byte(anthropicEnvelope(raw)))
 	}))
 	t.Cleanup(srv.Close)
 

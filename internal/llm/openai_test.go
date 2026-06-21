@@ -41,7 +41,7 @@ func TestOpenAI_NoAPIKey_OmitsAuthorizationHeader(t *testing.T) {
 	sg := newOpenAITestSuggester(t, "openai-compatible", "", func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
 		_, hadAuth = r.Header["Authorization"]
-		w.Write([]byte(openaiEnvelope(`{"slug":"x","title":"","description":"","tags":[]}`)))
+		_, _ = w.Write([]byte(openaiEnvelope(`{"slug":"x","title":"","description":"","tags":[]}`)))
 	})
 
 	_, err := sg.Suggest(context.Background(), SuggestRequest{URL: "https://example.com"})
@@ -58,7 +58,7 @@ func TestOpenAI_WithAPIKey_SetsAuthorizationHeader(t *testing.T) {
 	var gotAuth string
 	sg := newOpenAITestSuggester(t, "openai", "sk-test-123", func(w http.ResponseWriter, r *http.Request) {
 		gotAuth = r.Header.Get("Authorization")
-		w.Write([]byte(openaiEnvelope(`{"slug":"x","title":"","description":"","tags":[]}`)))
+		_, _ = w.Write([]byte(openaiEnvelope(`{"slug":"x","title":"","description":"","tags":[]}`)))
 	})
 
 	_, err := sg.Suggest(context.Background(), SuggestRequest{URL: "https://example.com"})
@@ -75,7 +75,7 @@ func TestOpenAI_WithAPIKey_SetsAuthorizationHeader(t *testing.T) {
 func TestOpenAI_MalformedContent_ReturnsRawError(t *testing.T) {
 	const raw = "definitely not json {oops"
 	sg := newOpenAITestSuggester(t, "openai", "sk", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(openaiEnvelope(raw)))
+		_, _ = w.Write([]byte(openaiEnvelope(raw)))
 	})
 
 	_, err := sg.Suggest(context.Background(), SuggestRequest{URL: "https://example.com"})

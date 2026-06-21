@@ -79,7 +79,7 @@ func TestSuggest_Unauthenticated_401(t *testing.T) {
 	called := false
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
 		called = true
-		w.Write([]byte(openaiContentResponse(`{"slug":"x"}`)))
+		_, _ = w.Write([]byte(openaiContentResponse(`{"slug":"x"}`)))
 	})
 	env := newTestEnvWithSuggester(t, sg)
 
@@ -97,7 +97,7 @@ func TestSuggest_MissingURL_400(t *testing.T) {
 	called := false
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
 		called = true
-		w.Write([]byte(openaiContentResponse(`{"slug":"x"}`)))
+		_, _ = w.Write([]byte(openaiContentResponse(`{"slug":"x"}`)))
 	})
 	env := newTestEnvWithSuggester(t, sg)
 	user := seedUser(t, env, "alice@example.com", "user")
@@ -116,7 +116,7 @@ func TestSuggest_MissingURL_400(t *testing.T) {
 func TestSuggest_ProviderError_502(t *testing.T) {
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error":"boom"}`))
+		_, _ = w.Write([]byte(`{"error":"boom"}`))
 	})
 	env := newTestEnvWithSuggester(t, sg)
 	user := seedUser(t, env, "alice@example.com", "user")
@@ -132,7 +132,7 @@ func TestSuggest_ProviderError_502(t *testing.T) {
 func TestSuggest_MalformedJSON_502(t *testing.T) {
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
 		// Valid OpenAI envelope, but the model's content is not the expected JSON.
-		w.Write([]byte(openaiContentResponse("this is not json at all")))
+		_, _ = w.Write([]byte(openaiContentResponse("this is not json at all")))
 	})
 	env := newTestEnvWithSuggester(t, sg)
 	user := seedUser(t, env, "alice@example.com", "user")
@@ -147,7 +147,7 @@ func TestSuggest_MalformedJSON_502(t *testing.T) {
 // Scenario: Happy path -> 200 with fields populated.
 func TestSuggest_HappyPath_200(t *testing.T) {
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(openaiContentResponse(
+		_, _ = w.Write([]byte(openaiContentResponse(
 			`{"slug":"go-docs","title":"Go Docs","description":"The Go docs.","tags":["go","docs"]}`)))
 	})
 	env := newTestEnvWithSuggester(t, sg)
@@ -182,7 +182,7 @@ func TestSuggest_HappyPath_200(t *testing.T) {
 func TestSuggest_InvalidSlug_Omitted(t *testing.T) {
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
 		// "Go Docs!" has uppercase, spaces, and punctuation — invalid slug.
-		w.Write([]byte(openaiContentResponse(
+		_, _ = w.Write([]byte(openaiContentResponse(
 			`{"slug":"Go Docs!","title":"Go Docs","description":"The Go docs.","tags":["go"]}`)))
 	})
 	env := newTestEnvWithSuggester(t, sg)
@@ -209,7 +209,7 @@ func TestSuggest_InvalidSlug_Omitted(t *testing.T) {
 // Scenario: A reserved slug (e.g. "admin") is also treated as invalid and omitted.
 func TestSuggest_ReservedSlug_Omitted(t *testing.T) {
 	sg := newFakeLLMSuggester(t, func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(openaiContentResponse(
+		_, _ = w.Write([]byte(openaiContentResponse(
 			`{"slug":"admin","title":"Admin","description":"","tags":[]}`)))
 	})
 	env := newTestEnvWithSuggester(t, sg)
