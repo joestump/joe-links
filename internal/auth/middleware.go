@@ -4,6 +4,7 @@ package auth
 import (
 	"context"
 	"net/http"
+	"net/url"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/joestump/joe-links/internal/store"
@@ -30,7 +31,8 @@ func (m *Middleware) RequireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userID := m.sessions.GetString(r.Context(), SessionUserIDKey)
 		if userID == "" {
-			http.Redirect(w, r, "/auth/login?redirect="+r.URL.RequestURI(), http.StatusFound)
+			// Governing: SPEC-0010 REQ "Secure Link Resolution" — login flow reads return_url
+			http.Redirect(w, r, "/auth/login?return_url="+url.QueryEscape(r.URL.RequestURI()), http.StatusFound)
 			return
 		}
 

@@ -34,79 +34,48 @@
 {{template "link_list" .}}
 {{end}}
 
-{{define "admin_link_row"}}
-<!-- Governing: SPEC-0011 REQ "Admin Links Screen" — read-only row with edit/delete actions -->
-<!-- Governing: SPEC-0010 REQ "Admin Visibility Override" — visibility badge -->
-<tr id="admin-link-{{.ID}}">
-    <td>
-        <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary" target="_blank">{{.Slug}}</a>
-    </td>
-    <td class="max-w-xs truncate text-sm">
-        <a href="{{.URL}}" class="link link-hover" target="_blank">{{.URL}}</a>
-    </td>
-    <td class="text-sm text-base-content/70">{{.Title}}</td>
-    <td class="text-sm text-base-content/70">{{.Owners}}</td>
-    <td class="text-sm">
-        {{range .TagList}}<span class="badge badge-sm badge-outline mr-1">{{.}}</span>{{end}}
-    </td>
-    <td class="text-sm">
-        <span class="badge badge-sm {{if eq .Visibility "secure"}}badge-error{{else if eq .Visibility "private"}}badge-warning{{else}}badge-ghost{{end}}">{{.Visibility}}</span>
-    </td>
-    <td class="text-xs text-base-content/50">{{.CreatedAt.Format "Jan 2, 2006"}}</td>
-    <td class="flex gap-1 justify-end">
-        <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" -->
-        <button class="btn btn-xs btn-ghost"
-                hx-get="/admin/links/{{.ID}}/edit"
-                hx-target="#admin-link-{{.ID}}"
-                hx-swap="outerHTML">Edit</button>
-        <!-- Governing: SPEC-0011 REQ "Admin Link Deletion", SPEC-0013 REQ "DaisyUI Delete Confirmation Modal" -->
-        <button class="btn btn-xs btn-error btn-ghost"
-                hx-get="/admin/links/{{.ID}}/confirm-delete"
-                hx-target="#modal"
-                hx-swap="innerHTML">Delete</button>
-    </td>
-</tr>
-{{end}}
-
 {{define "admin_link_edit_row"}}
 <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" — inline edit form replacing read-only row -->
 <!-- Governing: SPEC-0010 REQ "Admin Visibility Override" — visibility selector in edit form -->
-<tr id="admin-link-{{.ID}}">
-    <td>
-        <span class="font-mono font-semibold text-base-content/50">{{.Slug}}</span>
+<!-- Governing: SPEC-0014 REQ "Abstract Link Widget" — row id matches shared link_row (link-{ID}) -->
+{{- $l := .Link -}}
+{{- $ctx := .Ctx -}}
+<tr id="link-{{$l.ID}}">
+    <td class="whitespace-nowrap">
+        <span class="font-mono font-semibold"><span class="font-normal text-base-content/50">{{$ctx.ShortKeyword}}/</span>{{$l.Slug}}</span>
     </td>
     <td>
-        <input type="text" name="url" value="{{.URL}}" form="edit-link-{{.ID}}"
+        <input type="text" name="url" value="{{$l.URL}}" form="edit-link-{{$l.ID}}"
                class="input input-bordered input-xs w-full" required />
     </td>
     <td>
-        <input type="text" name="title" value="{{.Title}}" form="edit-link-{{.ID}}"
+        <input type="text" name="title" value="{{$l.Title}}" form="edit-link-{{$l.ID}}"
                class="input input-bordered input-xs w-full" />
     </td>
-    <td class="text-sm text-base-content/70">{{.Owners}}</td>
+    <td class="text-sm text-base-content/70">{{$l.Owners}}</td>
     <td>
-        <input type="text" name="description" value="{{.Description}}" form="edit-link-{{.ID}}"
+        <input type="text" name="description" value="{{$l.Description}}" form="edit-link-{{$l.ID}}"
                class="input input-bordered input-xs w-full" placeholder="Description" />
     </td>
     <td>
-        <select name="visibility" form="edit-link-{{.ID}}" class="select select-bordered select-xs w-full">
-            <option value="public" {{if eq .Visibility "public"}}selected{{end}}>public</option>
-            <option value="private" {{if eq .Visibility "private"}}selected{{end}}>private</option>
-            <option value="secure" {{if eq .Visibility "secure"}}selected{{end}}>secure</option>
+        <select name="visibility" form="edit-link-{{$l.ID}}" class="select select-bordered select-xs w-full">
+            <option value="public" {{if eq $l.Visibility "public"}}selected{{end}}>public</option>
+            <option value="private" {{if eq $l.Visibility "private"}}selected{{end}}>private</option>
+            <option value="secure" {{if eq $l.Visibility "secure"}}selected{{end}}>secure</option>
         </select>
     </td>
     <td></td>
     <td class="flex gap-1 justify-end">
-        <form id="edit-link-{{.ID}}"
-              hx-put="/admin/links/{{.ID}}"
-              hx-target="#admin-link-{{.ID}}"
+        <form id="edit-link-{{$l.ID}}"
+              hx-put="/admin/links/{{$l.ID}}"
+              hx-target="#link-{{$l.ID}}"
               hx-swap="outerHTML">
             <button type="submit" class="btn btn-xs btn-primary">Save</button>
         </form>
         <!-- Governing: SPEC-0011 REQ "Admin Inline Link Editing" — cancel restores original row -->
         <button class="btn btn-xs btn-ghost"
-                hx-get="/admin/links/{{.ID}}/row"
-                hx-target="#admin-link-{{.ID}}"
+                hx-get="/admin/links/{{$l.ID}}/row"
+                hx-target="#link-{{$l.ID}}"
                 hx-swap="outerHTML">Cancel</button>
     </td>
 </tr>

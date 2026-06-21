@@ -27,10 +27,10 @@ var varPlaceholderRe = regexp.MustCompile(`\$[a-z][a-z0-9_]*`)
 // ResolveHandler handles short link slug resolution and redirection.
 // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 type ResolveHandler struct {
-	links      *store.LinkStore
-	keywords   *store.KeywordStore
-	ownership  *store.OwnershipStore
-	clickCh    chan<- store.ClickEvent
+	links     *store.LinkStore
+	keywords  *store.KeywordStore
+	ownership *store.OwnershipStore
+	clickCh   chan<- store.ClickEvent
 }
 
 // NewResolveHandler creates a new ResolveHandler.
@@ -178,9 +178,9 @@ func (h *ResolveHandler) checkVisibility(w http.ResponseWriter, r *http.Request,
 	case "secure":
 		user := auth.UserFromContext(r.Context())
 		if user == nil {
-			// Governing: SPEC-0010 REQ "Secure Link Resolution" — redirect to login with return URL
+			// Governing: SPEC-0010 REQ "Secure Link Resolution" — redirect to login with return_url
 			returnURL := r.URL.RequestURI()
-			http.Redirect(w, r, "/auth/login?redirect="+url.QueryEscape(returnURL), http.StatusFound)
+			http.Redirect(w, r, "/auth/login?return_url="+url.QueryEscape(returnURL), http.StatusFound)
 			return false
 		}
 		// Governing: SPEC-0010 REQ "Admin Visibility Override" — admins always authorized

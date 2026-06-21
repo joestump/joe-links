@@ -38,7 +38,7 @@ func NewStatsHandler(ls *store.LinkStore, cs *store.ClickStore, os *store.Owners
 func (h *StatsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserFromContext(r.Context())
 	if user == nil {
-		http.Redirect(w, r, "/auth/login?redirect="+url.QueryEscape(r.URL.RequestURI()), http.StatusFound)
+		http.Redirect(w, r, "/auth/login?return_url="+url.QueryEscape(r.URL.RequestURI()), http.StatusFound)
 		return
 	}
 

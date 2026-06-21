@@ -57,15 +57,6 @@ func (s *LinkStore) aggDistinct(col string) string {
 	return "COALESCE(GROUP_CONCAT(DISTINCT " + col + "), '')"
 }
 
-// aggAll returns a dialect-appropriate string aggregation expression (no dedup).
-// PostgreSQL: STRING_AGG(col, ',') — SQLite/MySQL: GROUP_CONCAT(col)
-func (s *LinkStore) aggAll(col string) string {
-	if s.db.DriverName() == "postgres" {
-		return "COALESCE(STRING_AGG(" + col + ", ','), '')"
-	}
-	return "COALESCE(GROUP_CONCAT(" + col + "), '')"
-}
-
 // Create inserts a new link and registers ownerID as the primary owner.
 // Governing: SPEC-0010 REQ "Visibility Selector in Link Forms"
 func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, description, visibility string) (*Link, error) {
@@ -498,45 +489,6 @@ func (s *LinkStore) ListByTag(ctx context.Context, tagSlug string) ([]*Link, err
 	return links, nil
 }
 
-// PublicLink is a Link augmented with owner display name and tags for public views.
-// Governing: SPEC-0012 REQ "Public Link Browser (GET /links)"
-type PublicLink struct {
-	ID               string    `db:"id"`
-	Slug             string    `db:"slug"`
-	URL              string    `db:"url"`
-	Title            string    `db:"title"`
-	Description      string    `db:"description"`
-	Visibility       string    `db:"visibility"`
-	CreatedAt        time.Time `db:"created_at"`
-	OwnerDisplayName string    `db:"owner_display_name"`
-	OwnerSlug        string    `db:"owner_display_name_slug"`
-	TagList          string    `db:"tag_list"` // comma-separated
-}
-
-// Tags returns tag names as a slice for template iteration.
-func (p *PublicLink) Tags() []string {
-	if p.TagList == "" {
-		return nil
-	}
-	return strings.Split(p.TagList, ",")
-}
-
-// TruncatedDescription returns the description truncated to 150 chars with ellipsis.
-func (p *PublicLink) TruncatedDescription() string {
-	if len(p.Description) <= 150 {
-		return p.Description
-	}
-	return p.Description[:150] + "..."
-}
-
-// DisplayTitle returns the title if set, otherwise the URL.
-func (p *PublicLink) DisplayTitle() string {
-	if p.Title != "" {
-		return p.Title
-	}
-	return p.URL
-}
-
 // ListPublic returns paginated public links, optionally filtered by search query.
 // Returns the matching links and total count for pagination.
 // Governing: SPEC-0012 REQ "Public Link Browser (GET /links)", REQ "Public Link Search"
@@ -639,18 +591,14 @@ func (s *LinkStore) RemoveShare(ctx context.Context, linkID, userID string) erro
 	return err
 }
 
-// Excerpt returns the description truncated to maxLen characters.
-func (p *PublicLink) Excerpt(maxLen int) string {
-	if len(p.Description) <= maxLen {
-		return p.Description
-	}
-	return p.Description[:maxLen] + "..."
-}
-
-// ListPublicByOwner returns public links owned by userID with owner and tag info, paginated.
+// ListPublicByOwner returns public links owned by userID as AdminLink rows
+// (owner display name, owner slug, tags) so the shared link_list partial can
+// render them identically to the public link browser. Paginated.
+// currentUserID is used to set IsOwner; pass "" for unauthenticated callers.
 // Returns the links, total count, and any error.
 // Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})"
-func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, perPage int) ([]PublicLink, int, error) {
+// Governing: SPEC-0014 REQ "Abstract Link Widget" — same shape as ListPublic
+func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID, currentUserID string, page, perPage int) ([]*AdminLink, int, error) {
 	// Count total matching links
 	var total int
 	err := s.db.GetContext(ctx, &total, s.q(`
@@ -663,12 +611,15 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 	}
 
 	offset := (page - 1) * perPage
-	var links []PublicLink
+	var links []*AdminLink
 	err = s.db.SelectContext(ctx, &links, s.q(fmt.Sprintf(`
-		SELECT l.id, l.slug, l.url, l.title, l.description, l.visibility, l.created_at,
-		       MAX(u.display_name) AS owner_display_name,
-		       MAX(u.display_name_slug) AS owner_display_name_slug,
-		       %s AS tag_list
+		SELECT l.*,
+		       COALESCE(MAX(u.display_name), '') AS owners,
+		       COALESCE(MAX(u.display_name_slug), '') AS owner_slug,
+		       %s AS tags,
+		       CASE WHEN EXISTS(
+		           SELECT 1 FROM link_owners lo2 WHERE lo2.link_id = l.id AND lo2.user_id = ?
+		       ) THEN 1 ELSE 0 END AS is_owner
 		FROM links l
 		JOIN link_owners lo ON lo.link_id = l.id AND lo.is_primary = 1
 		JOIN users u ON u.id = lo.user_id
@@ -679,7 +630,7 @@ func (s *LinkStore) ListPublicByOwner(ctx context.Context, userID string, page, 
 		GROUP BY l.id
 		ORDER BY l.created_at DESC
 		LIMIT ? OFFSET ?
-	`, s.aggAll("t.name"))), userID, perPage, offset)
+	`, s.aggDistinct("t.name"))), currentUserID, userID, perPage, offset)
 	if err != nil {
 		return nil, 0, err
 	}

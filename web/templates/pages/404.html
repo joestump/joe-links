@@ -15,7 +15,7 @@
             {{if .User}}
             <a href="/dashboard/links/new?slug={{.Slug}}" class="btn btn-primary">Create this link</a>
             {{else}}
-            <a href="/auth/login?redirect=/dashboard/links/new%3Fslug%3D{{.Slug}}" class="btn btn-primary">Sign in to create this link</a>
+            <a href="/auth/login?return_url=/dashboard/links/new%3Fslug%3D{{.Slug}}" class="btn btn-primary">Sign in to create this link</a>
             {{end}}
         </div>
     </div>

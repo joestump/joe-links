@@ -20,33 +20,9 @@
     </div>
 
     <!-- Public links list -->
+    <!-- Governing: SPEC-0012 REQ "User Profile Page", SPEC-0014 REQ "Abstract Link Widget" — shared link_list partial -->
     {{if .Links}}
-    <div class="space-y-4">
-        {{range .Links}}
-        <div class="card bg-base-200 shadow-sm">
-            <div class="card-body p-4">
-                <div class="flex items-start justify-between gap-4">
-                    <div class="min-w-0 flex-1">
-                        <a href="/{{.Slug}}" class="font-mono font-semibold link link-primary text-lg" target="_blank">{{.Slug}}</a>
-                        {{if .Title}}
-                        <h3 class="font-medium mt-1">{{.Title}}</h3>
-                        {{end}}
-                        {{if .Description}}
-                        <p class="text-sm text-base-content/60 mt-1">{{.Excerpt 150}}</p>
-                        {{end}}
-                        {{if .Tags}}
-                        <div class="flex flex-wrap gap-1 mt-2">
-                            {{range .Tags}}
-                            <span class="badge badge-sm badge-outline">{{.}}</span>
-                            {{end}}
-                        </div>
-                        {{end}}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {{end}}
-    </div>
+    {{template "link_list" .}}
 
     <!-- Pagination -->
     {{if gt .TotalPages 1}}

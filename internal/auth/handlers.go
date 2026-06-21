@@ -4,6 +4,7 @@ package auth
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -15,6 +16,17 @@ const (
 	cookieCodeVerifier = "__auth_pkce"
 	cookieRedirect     = "__auth_redirect"
 )
+
+// safeReturnURL returns u only if it is a safe local path (begins with a single
+// "/" and is not protocol-relative), otherwise "/dashboard". This prevents an
+// open redirect via ?return_url=https://evil.com or //evil.com after login.
+// Governing: SPEC-0010 REQ "Secure Link Resolution"
+func safeReturnURL(u string) string {
+	if u == "" || u[0] != '/' || strings.HasPrefix(u, "//") || strings.HasPrefix(u, "/\\") {
+		return "/dashboard"
+	}
+	return u
+}
 
 // Handlers provides HTTP handlers for the OIDC authentication flow.
 type Handlers struct {
@@ -61,12 +73,10 @@ func (h *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	h.setPreAuthCookie(w, cookieState, state)
 	h.setPreAuthCookie(w, cookieCodeVerifier, verifier)
 
-	// Preserve the redirect URL
-	redirect := r.URL.Query().Get("redirect")
-	if redirect == "" {
-		redirect = "/dashboard"
-	}
-	h.setPreAuthCookie(w, cookieRedirect, redirect)
+	// Preserve the return URL.
+	// Governing: SPEC-0010 REQ "Secure Link Resolution" — login flow reads return_url.
+	// Sanitize to a local path to prevent an open redirect after authentication.
+	h.setPreAuthCookie(w, cookieRedirect, safeReturnURL(r.URL.Query().Get("return_url")))
 
 	http.Redirect(w, r, h.provider.AuthCodeURL(state, challenge), http.StatusFound)
 }
@@ -159,7 +169,7 @@ func (h *Handlers) Callback(w http.ResponseWriter, r *http.Request) {
 	redirectCookie, err := r.Cookie(cookieRedirect)
 	redirect := "/dashboard"
 	if err == nil && redirectCookie.Value != "" {
-		redirect = redirectCookie.Value
+		redirect = safeReturnURL(redirectCookie.Value) // defense in depth
 	}
 	clearCookie(w, cookieRedirect)
 

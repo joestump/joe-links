@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -15,19 +16,41 @@ import (
 	"github.com/joestump/joe-links/web"
 )
 
+// templateFuncs are helper functions made available to all templates.
+// Governing: SPEC-0014 REQ "Abstract Link Widget" — dict lets the shared
+// link_row partial receive both the current link and the parent context ($).
+var templateFuncs = template.FuncMap{
+	// dict builds a map from alternating key/value pairs, e.g.
+	// {{template "link_row" (dict "Link" . "Ctx" $)}}.
+	"dict": func(values ...any) (map[string]any, error) {
+		if len(values)%2 != 0 {
+			return nil, errors.New("dict requires an even number of arguments")
+		}
+		m := make(map[string]any, len(values)/2)
+		for i := 0; i < len(values); i += 2 {
+			key, ok := values[i].(string)
+			if !ok {
+				return nil, errors.New("dict keys must be strings")
+			}
+			m[key] = values[i+1]
+		}
+		return m, nil
+	},
+}
+
 // BasePage carries layout-level data available to every template.
 // Governing: SPEC-0003 REQ "Theme Persistence via Cookie"
 // Governing: SPEC-0004 REQ "Shared Base Layout" — User enables conditional admin nav link
 // Governing: SPEC-0013 REQ "Collapsible Admin Sidebar Section" — IsAdminPage drives <details open>
 type BasePage struct {
-	Theme          string      // "joe-light", "joe-dark", or "" (let inline script decide)
-	User           *store.User // nil for unauthenticated pages
-	IsAdminPage    bool        // true when current path starts with /admin
-	SiteURL        string      // scheme://host of this server (e.g. "https://go.stump.rocks")
-	ShortKeyword   string      // first label of server hostname (e.g. "go" from "go.stump.rocks")
-	BuildVersion   string      // e.g. "v0.2.15" or "dev"
-	BuildCommit    string      // short commit SHA, e.g. "abc1234"
-	BuildBranch    string      // e.g. "main"
+	Theme        string      // "joe-light", "joe-dark", or "" (let inline script decide)
+	User         *store.User // nil for unauthenticated pages
+	IsAdminPage  bool        // true when current path starts with /admin
+	SiteURL      string      // scheme://host of this server (e.g. "https://go.stump.rocks")
+	ShortKeyword string      // first label of server hostname (e.g. "go" from "go.stump.rocks")
+	BuildVersion string      // e.g. "v0.2.15" or "dev"
+	BuildCommit  string      // short commit SHA, e.g. "abc1234"
+	BuildBranch  string      // e.g. "main"
 }
 
 // newBasePage constructs a BasePage from the current request, setting theme,
@@ -97,7 +120,7 @@ func init() {
 	}
 
 	// Standalone set for global HTMX fragment rendering (partials only).
-	fragmentTmpl = template.Must(template.New("").ParseFS(web.TemplateFS, partials...))
+	fragmentTmpl = template.Must(template.New("").Funcs(templateFuncs).ParseFS(web.TemplateFS, partials...))
 
 	// Count how many page files share each basename to detect collisions.
 	baseCount := map[string]int{}
@@ -121,7 +144,7 @@ func init() {
 		files = append(files, partials...)
 		files = append(files, p)
 
-		t, err := template.New("").ParseFS(web.TemplateFS, files...)
+		t, err := template.New("").Funcs(templateFuncs).ParseFS(web.TemplateFS, files...)
 		if err != nil {
 			return fmt.Errorf("parse %s: %w", p, err)
 		}

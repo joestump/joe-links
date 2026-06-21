@@ -58,6 +58,32 @@ type AdminLinksPage struct {
 	ShowActions    bool   // show Edit/Delete action buttons
 }
 
+// AdminLinkRowData wraps a single admin link with the display context the shared
+// link_row partial needs (keyword prefix, site URL, column flags). It mirrors the
+// dict("Link" . "Ctx" $) shape used by the link_list range so single-row HTMX
+// swaps render identically to rows in the full list.
+// Governing: SPEC-0014 REQ "Abstract Link Widget"
+type AdminLinkRowData struct {
+	Link *store.AdminLink
+	Ctx  AdminLinksPage
+}
+
+// adminLinkRowData builds the wrapper for a single admin link row swap.
+// Governing: SPEC-0014 REQ "Abstract Link Widget"
+func adminLinkRowData(r *http.Request, link *store.AdminLink) AdminLinkRowData {
+	return AdminLinkRowData{
+		Link: link,
+		Ctx: AdminLinksPage{
+			BasePage:       newBasePage(r, nil),
+			ShowTitle:      true,
+			ShowOwner:      true,
+			ShowTags:       true,
+			ShowVisibility: true,
+			ShowActions:    true,
+		},
+	}
+}
+
 // Dashboard renders the admin overview with summary stats.
 // Governing: SPEC-0004 REQ "Admin Dashboard"
 func (h *AdminHandler) Dashboard(w http.ResponseWriter, r *http.Request) {
@@ -149,7 +175,7 @@ func (h *AdminHandler) EditLinkRow(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	renderPageFragment(w, "admin/links.html", "admin_link_edit_row", link)
+	renderPageFragment(w, "admin/links.html", "admin_link_edit_row", adminLinkRowData(r, link))
 }
 
 // UpdateLink handles PUT /admin/links/{id} — updates url, title, description, visibility and returns the read-only row.
@@ -192,7 +218,8 @@ func (h *AdminHandler) UpdateLink(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "fetch failed", http.StatusInternalServerError)
 		return
 	}
-	renderPageFragment(w, "admin/links.html", "admin_link_row", link)
+	// Governing: SPEC-0014 REQ "Abstract Link Widget" — reuse shared link_row markup
+	renderFragment(w, "link_row", adminLinkRowData(r, link))
 }
 
 // DeleteLink handles DELETE /admin/links/{id} — removes the link and returns an OOB toast.
@@ -218,7 +245,8 @@ func (h *AdminHandler) LinkRow(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	renderPageFragment(w, "admin/links.html", "admin_link_row", link)
+	// Governing: SPEC-0014 REQ "Abstract Link Widget" — reuse shared link_row markup
+	renderFragment(w, "link_row", adminLinkRowData(r, link))
 }
 
 // ConfirmDeleteLink renders the delete confirmation modal for a link.

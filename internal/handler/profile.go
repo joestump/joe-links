@@ -14,15 +14,23 @@ const profilePageSize = 25
 
 // ProfilePage is the template data for the user profile page.
 // Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})"
+// Governing: SPEC-0014 REQ "Abstract Link Widget" — renders via shared link_list partial
 type ProfilePage struct {
 	BasePage
-	ProfileUser *store.User
-	Links       []store.PublicLink
-	Page        int
-	TotalPages  int
-	TotalLinks  int
-	PrevPage    int
-	NextPage    int
+	ProfileUser    *store.User
+	Links          []*store.AdminLink
+	Query          string // unused; present for shared link_list partial compatibility
+	Tag            string // unused; present for shared link_list partial compatibility
+	Page           int
+	TotalPages     int
+	TotalLinks     int
+	PrevPage       int
+	NextPage       int
+	ShowTitle      bool
+	ShowOwner      bool
+	ShowTags       bool
+	ShowVisibility bool
+	ShowActions    bool
 }
 
 // ProfileHandler provides HTTP handlers for public user profile pages.
@@ -65,7 +73,13 @@ func (h *ProfileHandler) Show(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	links, total, err := h.links.ListPublicByOwner(r.Context(), profileUser.ID, page, profilePageSize)
+	viewer := auth.UserFromContext(r.Context())
+	currentUserID := ""
+	if viewer != nil {
+		currentUserID = viewer.ID
+	}
+
+	links, total, err := h.links.ListPublicByOwner(r.Context(), profileUser.ID, currentUserID, page, profilePageSize)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -76,16 +90,18 @@ func (h *ProfileHandler) Show(w http.ResponseWriter, r *http.Request) {
 		totalPages = 1
 	}
 
-	viewer := auth.UserFromContext(r.Context())
 	data := ProfilePage{
-		BasePage:    newBasePage(r, viewer),
-		ProfileUser: profileUser,
-		Links:       links,
-		Page:        page,
-		TotalPages:  totalPages,
-		TotalLinks:  total,
-		PrevPage:    page - 1,
-		NextPage:    page + 1,
+		BasePage:       newBasePage(r, viewer),
+		ProfileUser:    profileUser,
+		Links:          links,
+		Page:           page,
+		TotalPages:     totalPages,
+		TotalLinks:     total,
+		PrevPage:       page - 1,
+		NextPage:       page + 1,
+		ShowOwner:      true,
+		ShowTags:       true,
+		ShowVisibility: true,
 	}
 
 	if isHTMX(r) {
