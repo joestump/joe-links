@@ -100,7 +100,7 @@ project without requiring manual code changes.
 
 #### Scenario: Safari conversion
 
-- **WHEN** a developer runs `xcrun safari-web-extension-converter extension/` on the extension
+- **WHEN** a developer runs `xcrun safari-web-extension-converter integrations/extension/` on the extension
   source directory
 - **THEN** an Xcode project is produced that builds and installs on macOS without requiring
   source modifications beyond standard Xcode project configuration

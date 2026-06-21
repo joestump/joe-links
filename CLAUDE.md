@@ -35,6 +35,7 @@ Go + HTMX + DaisyUI/Tailwind. Single binary.
 | `JOE_OIDC_GROUPS_CLAIM` | `groups` | OIDC claim name containing the user's groups |
 | `JOE_SHORT_KEYWORD` | *(hostname first label)* | Override the short-link prefix shown in the UI (e.g. `go`); defaults to the first DNS label of the server hostname |
 | `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (30 days) |
+| `JOE_INSECURE_COOKIES` | `false` | When `true`, disables the `Secure` flag on session/auth cookies so login works over plain HTTP (local development only — never enable in production) |
 
 ## Key Conventions
 

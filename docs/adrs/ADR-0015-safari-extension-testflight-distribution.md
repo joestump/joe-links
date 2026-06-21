@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-02-24
 decision-makers: joestump
 ---
@@ -41,6 +41,11 @@ Chosen option: **Option A — Apple Developer Program + TestFlight**, because it
 7-day re-signing loop, works on both iOS and macOS with a single Xcode project, integrates
 naturally into the existing GitHub Actions release pipeline, and keeps distribution intentionally
 private (no public App Store listing required).
+
+This decision is accepted, but the CI/TestFlight pipeline implementation is still
+outstanding. The automated `xcodebuild archive` → App Store Connect upload flow is
+tracked in GitHub issue #132 (with stories #133, #134, and #135); until those land,
+TestFlight builds are produced manually from the committed Xcode project.
 
 ### Consequences
 

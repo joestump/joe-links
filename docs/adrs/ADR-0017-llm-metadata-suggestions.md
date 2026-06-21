@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-02-28
 decision-makers: joestump
 ---
@@ -44,7 +44,7 @@ The extension extracts the tab's title and a short content snippet (via `chrome.
 
 ### Confirmation
 
-* `GET /api/v1/links/suggest` endpoint present and documented in Swagger
+* `POST /api/v1/links/suggest` endpoint present and documented in Swagger
 * `JOE_LLM_PROVIDER`, `JOE_LLM_API_KEY`, `JOE_LLM_MODEL`, `JOE_LLM_BASE_URL` wired into `internal/config/config.go`
 * Extension popup shows a "Suggested" section when suggestions are returned, with one-click fill buttons for each field
 * `JOE_LLM_PROVIDER` unset → endpoint returns 503 → popup hides suggestion UI entirely

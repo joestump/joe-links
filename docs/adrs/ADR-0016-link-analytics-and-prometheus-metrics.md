@@ -1,5 +1,5 @@
 ---
-status: proposed
+status: accepted
 date: 2026-02-27
 decision-makers: joestump
 ---

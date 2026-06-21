@@ -105,7 +105,7 @@ registered and updated:
 
 The `joelinks_links_total` and `joelinks_users_total` gauges SHOULD be updated
 on a background interval (e.g., every 60 seconds) rather than on every request.
-No `slug` label MUST be added to any counter or histogram (cardinality concern).
+A `slug` label MUST NOT be added to any counter or histogram (cardinality concern).
 
 #### Scenario: Prometheus scrape
 

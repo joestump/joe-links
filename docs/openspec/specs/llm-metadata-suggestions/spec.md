@@ -8,7 +8,7 @@ When creating a go-link, users must manually supply a slug, title, description, 
 
 ### Requirement: LLM Provider Configuration
 
-The server MUST support configuration of an LLM provider via environment variables. When `JOE_LLM_PROVIDER` is unset, the LLM feature MUST be completely disabled and the server MUST behave identically to a deployment with no LLM config. No code paths that contact an external LLM MUST execute when the feature is disabled.
+The server MUST support configuration of an LLM provider via environment variables. When `JOE_LLM_PROVIDER` is unset, the LLM feature MUST be completely disabled and the server MUST behave identically to a deployment with no LLM config. Code paths that contact an external LLM MUST NOT execute when the feature is disabled.
 
 The following environment variables MUST be supported:
 
@@ -54,7 +54,7 @@ The server MUST expose `POST /api/v1/links/suggest` following the REST conventio
 #### Scenario: LLM call fails
 
 - **WHEN** the configured LLM provider returns an error or times out
-- **THEN** the server returns HTTP 502 Bad Gateway with a JSON error body; the caller SHOULD surface no error to the end-user
+- **THEN** the server returns HTTP 502 Bad Gateway with a JSON error body
 
 #### Scenario: Missing required fields
 
