@@ -230,6 +230,15 @@ paths:
       - application/json
       description: Returns all links system-wide with owners and tags. Requires admin
         role.
+      parameters:
+      - description: Max items to return (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      - description: Opaque pagination cursor from a prior next_cursor
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
@@ -259,6 +268,15 @@ paths:
       consumes:
       - application/json
       description: Returns all users in the system. Requires admin role.
+      parameters:
+      - description: Max items to return (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      - description: Opaque pagination cursor from a prior next_cursor
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
@@ -338,6 +356,15 @@ paths:
       consumes:
       - application/json
       description: Returns links owned by the caller. Admins see all links.
+      parameters:
+      - description: Max items to return (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      - description: Opaque pagination cursor from a prior next_cursor
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
@@ -845,6 +872,15 @@ paths:
       consumes:
       - application/json
       description: Returns all tags that have at least one associated link.
+      parameters:
+      - description: Max items to return (default 50, max 200)
+        in: query
+        name: limit
+        type: integer
+      - description: Opaque pagination cursor from a prior next_cursor
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:

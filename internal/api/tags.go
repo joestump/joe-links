@@ -34,6 +34,8 @@ func registerTagRoutes(r chi.Router, tags *store.TagStore, links *store.LinkStor
 // @Tags         Tags
 // @Accept       json
 // @Produce      json
+// @Param        limit   query     int     false  "Max items to return (default 50, max 200)"
+// @Param        cursor  query     string  false  "Opaque pagination cursor from a prior next_cursor"
 // @Success      200  {object}  TagListResponse
 // @Failure      401  {object}  ErrorResponse
 // @Failure      500  {object}  ErrorResponse
@@ -46,13 +48,26 @@ func (h *tagsAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tagsWithCounts, err := h.tags.ListWithCounts(r.Context())
+	// Governing: SPEC-0005 REQ "Pagination" — ?limit (default 50, max 200) + opaque ?cursor
+	limit := parseLimit(r)
+	cursorName, cursorID := parseCursor(r)
+
+	// Fetch limit+1 to detect whether another page exists.
+	tagsWithCounts, err := h.tags.ListWithCountsPaginated(r.Context(), limit+1, cursorName, cursorID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "internal_error")
 		return
 	}
 
-	resp := &TagListResponse{Tags: make([]*TagResponse, 0, len(tagsWithCounts))}
+	var nextCursor *string
+	if len(tagsWithCounts) > limit {
+		last := tagsWithCounts[limit-1]
+		c := encodeCursor(last.Name, last.ID)
+		nextCursor = &c
+		tagsWithCounts = tagsWithCounts[:limit]
+	}
+
+	resp := &TagListResponse{Tags: make([]*TagResponse, 0, len(tagsWithCounts)), NextCursor: nextCursor}
 	for _, t := range tagsWithCounts {
 		resp.Tags = append(resp.Tags, &TagResponse{
 			Slug:      t.Slug,

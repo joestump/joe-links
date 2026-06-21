@@ -61,6 +61,8 @@ func requireAdmin(next http.Handler) http.Handler {
 // @Tags         Admin
 // @Accept       json
 // @Produce      json
+// @Param        limit   query     int     false  "Max items to return (default 50, max 200)"
+// @Param        cursor  query     string  false  "Opaque pagination cursor from a prior next_cursor"
 // @Success      200  {object}  UserListResponse
 // @Failure      401  {object}  ErrorResponse
 // @Failure      403  {object}  ErrorResponse
@@ -68,13 +70,26 @@ func requireAdmin(next http.Handler) http.Handler {
 // @Security     BearerToken
 // @Router       /admin/users [get]
 func (h *adminAPIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.users.ListAll(r.Context())
+	// Governing: SPEC-0005 REQ "Pagination" — ?limit (default 50, max 200) + opaque ?cursor
+	limit := parseLimit(r)
+	cursorName, cursorID := parseCursor(r)
+
+	// Fetch limit+1 to detect whether another page exists.
+	users, err := h.users.ListAllPaginated(r.Context(), limit+1, cursorName, cursorID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
 	}
 
-	resp := &UserListResponse{Users: make([]*UserResponse, 0, len(users))}
+	var nextCursor *string
+	if len(users) > limit {
+		last := users[limit-1]
+		c := encodeCursor(last.DisplayName, last.ID)
+		nextCursor = &c
+		users = users[:limit]
+	}
+
+	resp := &UserListResponse{Users: make([]*UserResponse, 0, len(users)), NextCursor: nextCursor}
 	for _, u := range users {
 		resp.Users = append(resp.Users, &UserResponse{
 			ID:          u.ID,
@@ -149,6 +164,8 @@ func (h *adminAPIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // @Tags         Admin
 // @Accept       json
 // @Produce      json
+// @Param        limit   query     int     false  "Max items to return (default 50, max 200)"
+// @Param        cursor  query     string  false  "Opaque pagination cursor from a prior next_cursor"
 // @Success      200  {object}  LinkListResponse
 // @Failure      401  {object}  ErrorResponse
 // @Failure      403  {object}  ErrorResponse
@@ -156,13 +173,26 @@ func (h *adminAPIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 // @Security     BearerToken
 // @Router       /admin/links [get]
 func (h *adminAPIHandler) ListLinks(w http.ResponseWriter, r *http.Request) {
-	links, err := h.links.ListAll(r.Context())
+	// Governing: SPEC-0005 REQ "Pagination" — ?limit (default 50, max 200) + opaque ?cursor
+	limit := parseLimit(r)
+	cursorSlug, cursorID := parseCursor(r)
+
+	// Fetch limit+1 to detect whether another page exists.
+	links, err := h.links.ListAllPaginated(r.Context(), limit+1, cursorSlug, cursorID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
 	}
 
-	resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links))}
+	var nextCursor *string
+	if len(links) > limit {
+		last := links[limit-1]
+		c := encodeCursor(last.Slug, last.ID)
+		nextCursor = &c
+		links = links[:limit]
+	}
+
+	resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links)), NextCursor: nextCursor}
 	for _, l := range links {
 		// Build owner list for each link.
 		owners, err := h.ownership.ListOwnerUsers(l.ID)

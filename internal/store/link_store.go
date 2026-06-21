@@ -163,6 +163,57 @@ func (s *LinkStore) ListAll(ctx context.Context) ([]*Link, error) {
 	return links, nil
 }
 
+// ListAllPaginated returns links ordered by (slug, id), starting after the
+// given keyset cursor. It fetches up to limit rows; pass cursorSlug/cursorID
+// from the last row of the previous page (empty for the first page).
+// Governing: SPEC-0005 REQ "Pagination"
+func (s *LinkStore) ListAllPaginated(ctx context.Context, limit int, cursorSlug, cursorID string) ([]*Link, error) {
+	var links []*Link
+	if cursorSlug == "" && cursorID == "" {
+		err := s.db.SelectContext(ctx, &links, s.q(`
+			SELECT * FROM links
+			ORDER BY slug ASC, id ASC
+			LIMIT ?
+		`), limit)
+		return links, err
+	}
+	err := s.db.SelectContext(ctx, &links, s.q(`
+		SELECT * FROM links
+		WHERE slug > ? OR (slug = ? AND id > ?)
+		ORDER BY slug ASC, id ASC
+		LIMIT ?
+	`), cursorSlug, cursorSlug, cursorID, limit)
+	return links, err
+}
+
+// ListByOwnerOrSharedPaginated returns links where userID is an owner or has a
+// share record, ordered by (slug, id) and keyset-paginated.
+// Governing: SPEC-0005 REQ "Pagination", SPEC-0010 REQ "REST API Visibility Field"
+func (s *LinkStore) ListByOwnerOrSharedPaginated(ctx context.Context, userID string, limit int, cursorSlug, cursorID string) ([]*Link, error) {
+	var links []*Link
+	if cursorSlug == "" && cursorID == "" {
+		err := s.db.SelectContext(ctx, &links, s.q(`
+			SELECT DISTINCT l.* FROM links l
+			LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.user_id = ?
+			LEFT JOIN link_shares ls ON ls.link_id = l.id AND ls.user_id = ?
+			WHERE lo.user_id IS NOT NULL OR ls.user_id IS NOT NULL
+			ORDER BY l.slug ASC, l.id ASC
+			LIMIT ?
+		`), userID, userID, limit)
+		return links, err
+	}
+	err := s.db.SelectContext(ctx, &links, s.q(`
+		SELECT DISTINCT l.* FROM links l
+		LEFT JOIN link_owners lo ON lo.link_id = l.id AND lo.user_id = ?
+		LEFT JOIN link_shares ls ON ls.link_id = l.id AND ls.user_id = ?
+		WHERE (lo.user_id IS NOT NULL OR ls.user_id IS NOT NULL)
+		  AND (l.slug > ? OR (l.slug = ? AND l.id > ?))
+		ORDER BY l.slug ASC, l.id ASC
+		LIMIT ?
+	`), userID, userID, cursorSlug, cursorSlug, cursorID, limit)
+	return links, err
+}
+
 // SearchByOwner returns links owned by userID whose slug, url, or description
 // contain the search term (case-insensitive LIKE). Returns all owner links if q is empty.
 // Governing: SPEC-0004 REQ "User Dashboard" — HTMX debounced search

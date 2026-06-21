@@ -46,6 +46,8 @@ func registerLinkRoutes(r chi.Router, links *store.LinkStore, ownership *store.O
 // @Tags         Links
 // @Accept       json
 // @Produce      json
+// @Param        limit   query     int     false  "Max items to return (default 50, max 200)"
+// @Param        cursor  query     string  false  "Opaque pagination cursor from a prior next_cursor"
 // @Success      200  {object}  LinkListResponse
 // @Failure      401  {object}  ErrorResponse
 // @Failure      500  {object}  ErrorResponse
@@ -58,23 +60,54 @@ func (h *linksAPIHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var links []*store.Link
-	var err error
+	// Governing: SPEC-0005 REQ "Pagination" — ?limit (default 50, max 200) + opaque ?cursor
+	limit := parseLimit(r)
+	cursorSlug, cursorID := parseCursor(r)
 
+	// The ?url= filter is an exact-match lookup that returns a bounded set; it is
+	// served unpaginated (next_cursor stays null).
 	// Governing: SPEC-0010 REQ "REST API Visibility Field" — non-admin sees owned + shared
 	if urlFilter := r.URL.Query().Get("url"); urlFilter != "" {
-		links, err = h.links.ListByURL(r.Context(), urlFilter, user.ID, user.Role == "admin")
-	} else if user.Role == "admin" {
-		links, err = h.links.ListAll(r.Context())
+		links, err := h.links.ListByURL(r.Context(), urlFilter, user.ID, user.Role == "admin")
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
+			return
+		}
+		resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links))}
+		for _, l := range links {
+			lr, err := h.toLinkResponse(r.Context(), l)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
+				return
+			}
+			resp.Links = append(resp.Links, lr)
+		}
+		writeJSON(w, http.StatusOK, resp)
+		return
+	}
+
+	// Fetch limit+1 to detect whether another page exists.
+	var links []*store.Link
+	var err error
+	if user.Role == "admin" {
+		links, err = h.links.ListAllPaginated(r.Context(), limit+1, cursorSlug, cursorID)
 	} else {
-		links, err = h.links.ListByOwnerOrShared(r.Context(), user.ID)
+		links, err = h.links.ListByOwnerOrSharedPaginated(r.Context(), user.ID, limit+1, cursorSlug, cursorID)
 	}
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "internal error", "INTERNAL_ERROR")
 		return
 	}
 
-	resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links))}
+	var nextCursor *string
+	if len(links) > limit {
+		last := links[limit-1]
+		c := encodeCursor(last.Slug, last.ID)
+		nextCursor = &c
+		links = links[:limit]
+	}
+
+	resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links)), NextCursor: nextCursor}
 	for _, l := range links {
 		lr, err := h.toLinkResponse(r.Context(), l)
 		if err != nil {

@@ -33,6 +33,20 @@ const docTemplate = `{
                     "Admin"
                 ],
                 "summary": "List all links (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Max items to return (default 50, max 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Opaque pagination cursor from a prior next_cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -79,6 +93,20 @@ const docTemplate = `{
                     "Admin"
                 ],
                 "summary": "List all users (admin)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Max items to return (default 50, max 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Opaque pagination cursor from a prior next_cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -201,6 +229,20 @@ const docTemplate = `{
                     "Links"
                 ],
                 "summary": "List links",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Max items to return (default 50, max 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Opaque pagination cursor from a prior next_cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -980,6 +1022,20 @@ const docTemplate = `{
                     "Tags"
                 ],
                 "summary": "List tags",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Max items to return (default 50, max 200)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Opaque pagination cursor from a prior next_cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

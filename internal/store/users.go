@@ -197,6 +197,29 @@ func (s *UserStore) ListAll(ctx context.Context) ([]*User, error) {
 	return users, nil
 }
 
+// ListAllPaginated returns users ordered by (display_name, id), keyset-paginated.
+// Pass cursorName/cursorID from the last row of the previous page (empty for
+// the first page). Fetches up to limit rows.
+// Governing: SPEC-0005 REQ "Pagination", SPEC-0004 REQ "Admin Dashboard"
+func (s *UserStore) ListAllPaginated(ctx context.Context, limit int, cursorName, cursorID string) ([]*User, error) {
+	var users []*User
+	if cursorName == "" && cursorID == "" {
+		err := s.db.SelectContext(ctx, &users, s.q(`
+			SELECT * FROM users
+			ORDER BY display_name ASC, id ASC
+			LIMIT ?
+		`), limit)
+		return users, err
+	}
+	err := s.db.SelectContext(ctx, &users, s.q(`
+		SELECT * FROM users
+		WHERE display_name > ? OR (display_name = ? AND id > ?)
+		ORDER BY display_name ASC, id ASC
+		LIMIT ?
+	`), cursorName, cursorName, cursorID, limit)
+	return users, err
+}
+
 // UpdateRole sets the role for the given user and returns the updated record.
 // Governing: SPEC-0004 REQ "Admin Dashboard" — inline role toggle
 func (s *UserStore) UpdateRole(ctx context.Context, id, role string) (*User, error) {

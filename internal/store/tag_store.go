@@ -168,6 +168,37 @@ func (s *TagStore) ListWithCounts(ctx context.Context) ([]*TagWithCount, error) 
 	return tags, nil
 }
 
+// ListWithCountsPaginated returns tags with ≥1 link, annotated with their link
+// count, ordered by (name, id) and keyset-paginated. Pass cursorName/cursorID
+// from the last row of the previous page (empty for the first page).
+// Governing: SPEC-0005 REQ "Pagination", SPEC-0004 REQ "Tag Browser"
+func (s *TagStore) ListWithCountsPaginated(ctx context.Context, limit int, cursorName, cursorID string) ([]*TagWithCount, error) {
+	var tags []*TagWithCount
+	if cursorName == "" && cursorID == "" {
+		err := s.db.SelectContext(ctx, &tags, s.q(`
+			SELECT t.*, COUNT(lt.link_id) as link_count
+			FROM tags t
+			INNER JOIN link_tags lt ON lt.tag_id = t.id
+			GROUP BY t.id
+			HAVING COUNT(lt.link_id) >= 1
+			ORDER BY t.name ASC, t.id ASC
+			LIMIT ?
+		`), limit)
+		return tags, err
+	}
+	err := s.db.SelectContext(ctx, &tags, s.q(`
+		SELECT t.*, COUNT(lt.link_id) as link_count
+		FROM tags t
+		INNER JOIN link_tags lt ON lt.tag_id = t.id
+		WHERE t.name > ? OR (t.name = ? AND t.id > ?)
+		GROUP BY t.id
+		HAVING COUNT(lt.link_id) >= 1
+		ORDER BY t.name ASC, t.id ASC
+		LIMIT ?
+	`), cursorName, cursorName, cursorID, limit)
+	return tags, err
+}
+
 // ListAll returns all tags ordered by name.
 func (s *TagStore) ListAll(ctx context.Context) ([]*Tag, error) {
 	var tags []*Tag
