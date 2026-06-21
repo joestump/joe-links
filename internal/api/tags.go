@@ -13,14 +13,15 @@ import (
 // tagsAPIHandler provides REST handlers for tag endpoints.
 // Governing: SPEC-0005 REQ "Tags"
 type tagsAPIHandler struct {
-	tags  *store.TagStore
-	links *store.LinkStore
+	tags      *store.TagStore
+	links     *store.LinkStore
+	ownership *store.OwnershipStore
 }
 
 // registerTagRoutes registers tag routes on r.
 // Governing: SPEC-0005 REQ "Tags"
-func registerTagRoutes(r chi.Router, tags *store.TagStore, links *store.LinkStore) {
-	h := &tagsAPIHandler{tags: tags, links: links}
+func registerTagRoutes(r chi.Router, tags *store.TagStore, links *store.LinkStore, ownership *store.OwnershipStore) {
+	h := &tagsAPIHandler{tags: tags, links: links, ownership: ownership}
 	r.Get("/tags", h.List)
 	r.Get("/tags/{slug}/links", h.ListLinks)
 }
@@ -126,17 +127,15 @@ func (h *tagsAPIHandler) ListLinks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Governing: SPEC-0005 REQ "API Response Structures" — consistent link shape (owners, tags, visibility)
 	resp := &LinkListResponse{Links: make([]*LinkResponse, 0, len(links))}
 	for _, l := range links {
-		resp.Links = append(resp.Links, &LinkResponse{
-			ID:          l.ID,
-			Slug:        l.Slug,
-			URL:         l.URL,
-			Title:       l.Title,
-			Description: l.Description,
-			CreatedAt:   l.CreatedAt,
-			UpdatedAt:   l.UpdatedAt,
-		})
+		lr, err := buildLinkResponse(r.Context(), h.links, h.ownership, l)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "internal error", "internal_error")
+			return
+		}
+		resp.Links = append(resp.Links, lr)
 	}
 
 	writeJSON(w, http.StatusOK, resp)

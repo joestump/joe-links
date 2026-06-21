@@ -665,7 +665,15 @@ func (h *linksAPIHandler) RemoveOwner(w http.ResponseWriter, r *http.Request) {
 
 // toLinkResponse converts a store.Link to an API LinkResponse, including owners and tags.
 func (h *linksAPIHandler) toLinkResponse(ctx context.Context, link *store.Link) (*LinkResponse, error) {
-	owners, err := h.ownership.ListOwnerUsers(link.ID)
+	return buildLinkResponse(ctx, h.links, h.ownership, link)
+}
+
+// buildLinkResponse converts a store.Link to an API LinkResponse, populating
+// owners, tags, and visibility. Shared by every endpoint that returns links so
+// the JSON shape stays consistent.
+// Governing: SPEC-0005 REQ "API Response Structures"
+func buildLinkResponse(ctx context.Context, links *store.LinkStore, ownership *store.OwnershipStore, link *store.Link) (*LinkResponse, error) {
+	owners, err := ownership.ListOwnerUsers(link.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -679,7 +687,7 @@ func (h *linksAPIHandler) toLinkResponse(ctx context.Context, link *store.Link) 
 		})
 	}
 
-	tags, err := h.links.ListTags(ctx, link.ID)
+	tags, err := links.ListTags(ctx, link.ID)
 	if err != nil {
 		return nil, err
 	}

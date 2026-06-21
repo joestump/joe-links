@@ -53,7 +53,7 @@ func NewAPIRouter(deps Deps) http.Handler {
 
 		// Tag routes.
 		// Governing: SPEC-0005 REQ "Tags"
-		registerTagRoutes(r, deps.TagStore, deps.LinkStore)
+		registerTagRoutes(r, deps.TagStore, deps.LinkStore, deps.OwnershipStore)
 
 		// User profile routes.
 		// Governing: SPEC-0005 REQ "User Profile"
