@@ -51,9 +51,15 @@ represent a single click event and MUST contain:
 | `link_id`    | TEXT/UUID | FK → `links.id` ON DELETE CASCADE             |
 | `user_id`    | TEXT/UUID | FK → `users.id` ON DELETE SET NULL; nullable  |
 | `ip_hash`    | TEXT     | SHA-256(client IP + daily salt); NOT NULL      |
-| `user_agent` | TEXT     | Truncated to 512 chars; nullable               |
-| `referrer`   | TEXT     | Truncated to 2048 chars; nullable              |
+| `user_agent` | TEXT     | App-truncated to 512 chars; nullable           |
+| `referrer`   | TEXT     | App-truncated to 2048 chars; nullable          |
 | `clicked_at` | DATETIME | UTC timestamp; NOT NULL                        |
+
+The `user_agent` (512) and `referrer` (2048) length limits MUST be enforced in
+the application layer at insert time, not as a database column constraint: the
+columns are declared `TEXT` so the schema stays portable across SQLite, MySQL,
+and PostgreSQL. Truncation MUST be rune-aware (count Unicode code points, never
+split a multi-byte character).
 
 A composite index on `(link_id, clicked_at DESC)` MUST be created to support
 per-link recent-click queries without full table scans. The `user_id` column

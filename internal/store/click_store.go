@@ -11,6 +11,15 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// truncateRunes returns s limited to at most n Unicode code points, never
+// splitting a multi-byte character.
+func truncateRunes(s string, n int) string {
+	if len([]rune(s)) <= n {
+		return s
+	}
+	return string([]rune(s)[:n])
+}
+
 // ClickEvent represents a single click to be recorded.
 type ClickEvent struct {
 	LinkID    string
@@ -22,8 +31,8 @@ type ClickEvent struct {
 
 // ClickStats holds aggregate click counts for a link.
 type ClickStats struct {
-	Total  int64
-	Last7d int64
+	Total   int64
+	Last7d  int64
 	Last30d int64
 }
 
@@ -54,15 +63,12 @@ func (s *ClickStore) RecordClick(ctx context.Context, e ClickEvent) error {
 	id := uuid.New().String()
 	now := time.Now().UTC()
 
-	// Truncate user_agent to 512 chars, referrer to 2048.
-	ua := e.UserAgent
-	if len(ua) > 512 {
-		ua = ua[:512]
-	}
-	ref := e.Referrer
-	if len(ref) > 2048 {
-		ref = ref[:2048]
-	}
+	// Governing: SPEC-0016 REQ "Click Data Schema" — user_agent/referrer are TEXT
+	// columns; length limits (512 / 2048 characters) are enforced here in the
+	// application layer, not by a DB constraint. Truncation is rune-aware so a
+	// multi-byte character is never split into invalid UTF-8.
+	ua := truncateRunes(e.UserAgent, 512)
+	ref := truncateRunes(e.Referrer, 2048)
 
 	var userID interface{}
 	if e.UserID != "" {

@@ -45,7 +45,14 @@ func (h *StatsHandler) Show(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	link, err := h.links.GetByID(r.Context(), id)
 	if err != nil {
-		http.NotFound(w, r)
+		// Governing: SPEC-0016 REQ "Link Stats Dashboard Page" — styled 404, not bare text
+		w.WriteHeader(http.StatusNotFound)
+		data := notFoundPage{BasePage: newBasePage(r, user), User: user}
+		if isHTMX(r) {
+			renderPageFragment(w, "404.html", "content", data)
+			return
+		}
+		render(w, "404.html", data)
 		return
 	}
 
