@@ -2,6 +2,7 @@ package store_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -250,5 +251,35 @@ func TestLinkStore_ListByTag(t *testing.T) {
 	}
 	if links[0].Slug != "tag-filter" {
 		t.Errorf("slug = %q, want %q", links[0].Slug, "tag-filter")
+	}
+}
+
+// Governing: SPEC-0002 REQ "Multi-Ownership via link_owners" — created_at column populated on insert.
+func TestLinkStore_Create_OwnerCreatedAt(t *testing.T) {
+	db := testutil.NewTestDB(t)
+	owns := store.NewOwnershipStore(db)
+	tags := store.NewTagStore(db)
+	ls := store.NewLinkStore(db, owns, tags)
+	us := store.NewUserStore(db)
+	ctx := context.Background()
+
+	u, err := us.Upsert(ctx, "test", "sub1", "owner@example.com", "Owner", "")
+	if err != nil {
+		t.Fatalf("seed user: %v", err)
+	}
+	link, err := ls.Create(ctx, "ts-link", "https://example.com", u.ID, "", "", "")
+	if err != nil {
+		t.Fatalf("Create: %v", err)
+	}
+
+	var createdAt sql.NullTime
+	if err := db.QueryRowx(
+		db.Rebind(`SELECT created_at FROM link_owners WHERE link_id = ? AND user_id = ?`),
+		link.ID, u.ID,
+	).Scan(&createdAt); err != nil {
+		t.Fatalf("query created_at: %v", err)
+	}
+	if !createdAt.Valid || createdAt.Time.IsZero() {
+		t.Errorf("link_owners.created_at = %v, want a non-zero timestamp", createdAt)
 	}
 }

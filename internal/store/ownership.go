@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -32,8 +33,8 @@ func (s *OwnershipStore) q(query string) string { return s.db.Rebind(query) }
 // Returns ErrAlreadyOwner if already present.
 func (s *OwnershipStore) AddOwner(linkID, userID string) error {
 	_, err := s.db.Exec(
-		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 0)`),
-		linkID, userID,
+		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary, created_at) VALUES (?, ?, 0, ?)`),
+		linkID, userID, time.Now().UTC(),
 	)
 	if err != nil {
 		if isUniqueConstraintError(err) {
@@ -47,8 +48,8 @@ func (s *OwnershipStore) AddOwner(linkID, userID string) error {
 // AddPrimaryOwner adds userID as the primary owner during link creation.
 func (s *OwnershipStore) AddPrimaryOwner(linkID, userID string) error {
 	_, err := s.db.Exec(
-		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 1)`),
-		linkID, userID,
+		s.q(`INSERT INTO link_owners (link_id, user_id, is_primary, created_at) VALUES (?, ?, 1, ?)`),
+		linkID, userID, time.Now().UTC(),
 	)
 	return err
 }

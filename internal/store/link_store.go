@@ -97,8 +97,8 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 	}
 
 	_, err = tx.ExecContext(ctx, tx.Rebind(`
-		INSERT INTO link_owners (link_id, user_id, is_primary) VALUES (?, ?, 1)
-	`), id, ownerID)
+		INSERT INTO link_owners (link_id, user_id, is_primary, created_at) VALUES (?, ?, 1, ?)
+	`), id, ownerID, now)
 	if err != nil {
 		return nil, err
 	}
