@@ -25,6 +25,28 @@ joe-links is configured via environment variables (prefixed with `JOE_`) or a `j
 | `JOE_SHORT_KEYWORD` | *(first DNS label of server hostname)* | No | Short-link prefix used in the UI and browser extension. Derived from the server hostname at request time — `go` from `go.example.com`, `links` from `links.example.com`, `localhost` from `localhost:8080`. Set explicitly if your hostname doesn't match your desired keyword |
 | `JOE_SESSION_LIFETIME` | `720h` | No | Session absolute expiry as a Go duration string |
 | `JOE_INSECURE_COOKIES` | `false` | No | Set to `true` to disable the `Secure` cookie flag (for local HTTP development) |
+| `JOE_LLM_PROVIDER` | -- | No | Enables AI metadata suggestions. One of `anthropic`, `openai`, or `openai-compatible`. Unset = feature disabled |
+| `JOE_LLM_API_KEY` | -- | No | API key for the LLM provider. Optional for keyless `openai-compatible` endpoints (e.g. Ollama) |
+| `JOE_LLM_MODEL` | *(provider default)* | No | Model name. Defaults: `claude-haiku-4-5-20251001` (anthropic), `gpt-4o-mini` (openai/compatible) |
+| `JOE_LLM_BASE_URL` | -- | No | Base URL override for `openai-compatible` providers (e.g. `http://localhost:11434/v1` for Ollama) |
+| `JOE_LLM_PROMPT` | *(built-in template)* | No | Override the built-in suggestion prompt template |
+
+## AI Metadata Suggestions
+
+Set `JOE_LLM_PROVIDER` to enable the optional AI suggestion endpoint (`POST /api/v1/links/suggest`), which the browser extension uses to pre-fill a link's slug, title, description, and tags from its URL. See the [API Guide](./api-guide.md#suggest-link-metadata) for the request and response shape. When `JOE_LLM_PROVIDER` is unset the feature is completely disabled — no LLM calls are made and the endpoint returns `503`.
+
+| Provider | `JOE_LLM_PROVIDER` | Notes |
+|----------|--------------------|-------|
+| Anthropic | `anthropic` | Requires `JOE_LLM_API_KEY`. Default model `claude-haiku-4-5-20251001` |
+| OpenAI | `openai` | Requires `JOE_LLM_API_KEY`. Default model `gpt-4o-mini` |
+| OpenAI-compatible | `openai-compatible` | Set `JOE_LLM_BASE_URL` (e.g. Ollama); `JOE_LLM_API_KEY` optional |
+
+```
+# Example: local Ollama, no API key required
+JOE_LLM_PROVIDER=openai-compatible
+JOE_LLM_BASE_URL=http://localhost:11434/v1
+JOE_LLM_MODEL=llama3.2
+```
 
 ## Admin Role Assignment
 

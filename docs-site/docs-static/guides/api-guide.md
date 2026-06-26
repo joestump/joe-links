@@ -158,6 +158,43 @@ DELETE /api/v1/links/{id}
 
 Returns `204 No Content` on success. Only owners and admins may delete.
 
+#### Suggest Link Metadata
+
+```
+POST /api/v1/links/suggest
+```
+
+```json
+{
+  "url": "https://reactjs.org/docs/hooks-intro.html",
+  "title": "Introducing Hooks",
+  "description": ""
+}
+```
+
+Uses a configured LLM to suggest a `slug`, `title`, `description`, and `tags` for a URL. `url` is required; the optional `title` and `description` are passed to the model as additional context. The browser extension calls this endpoint to pre-fill the create-link form.
+
+```json
+{
+  "slug": "react-hooks",
+  "title": "Introducing Hooks – React",
+  "description": "An overview of React Hooks and the problems they solve.",
+  "tags": ["react", "frontend", "docs"]
+}
+```
+
+Suggested values are validated server-side (the slug follows the same rules as a user-supplied slug; over-length title/description are dropped), so any field may come back empty.
+
+| Status | Meaning |
+|--------|---------|
+| `200` | Suggestions returned |
+| `400` | `url` is missing |
+| `401` | Missing or invalid token |
+| `502` | The LLM provider returned an error or malformed response |
+| `503` | AI suggestions are not configured (`JOE_LLM_PROVIDER` unset) |
+
+This endpoint requires the server to be configured with an LLM provider — see [Configuration → AI Metadata Suggestions](./configuration.md#ai-metadata-suggestions).
+
 ### Co-Owners
 
 #### List Owners
