@@ -15,13 +15,13 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/joestump/joe-links/docs/swagger"
 	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/llm"
 	"github.com/joestump/joe-links/internal/mcp"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
-	_ "github.com/joestump/joe-links/docs/swagger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
@@ -37,10 +37,10 @@ type Deps struct {
 	UserStore      *store.UserStore
 	TokenStore     auth.TokenStore
 	KeywordStore   *store.KeywordStore
-	ClickStore     *store.ClickStore   // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
+	ClickStore     *store.ClickStore       // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
 	ClickCh        chan<- store.ClickEvent // Governing: SPEC-0016 REQ "Click Recording", ADR-0016
-	Suggester      llm.Suggester          // Governing: SPEC-0017 REQ "Suggest API Endpoint", ADR-0017; nil when LLM is not configured
-	ShortKeyword   string // optional override (e.g. "go"); defaults to first label of HTTP host
+	Suggester      llm.Suggester           // Governing: SPEC-0017 REQ "Suggest API Endpoint", ADR-0017; nil when LLM is not configured
+	ShortKeyword   string                  // optional override (e.g. "go"); defaults to first label of HTTP host
 }
 
 // NewRouter assembles the full chi router with all middleware and routes.

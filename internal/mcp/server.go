@@ -109,6 +109,8 @@ func (cw *challengeWriter) WriteHeader(status int) {
 // Codes reuse the REST API vocabulary so one documented table serves both
 // surfaces.
 // Governing: SPEC-0018 REQ "Structured Tool Errors"
+//
+//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 type toolError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -117,6 +119,8 @@ type toolError struct {
 // errorResult builds an MCP tool result flagged as an error, carrying a
 // stable code plus a human-readable message as JSON text content.
 // Governing: SPEC-0018 REQ "Structured Tool Errors"
+//
+//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 func errorResult(code, message string) *sdk.CallToolResult {
 	payload, err := json.Marshal(toolError{Code: code, Message: message})
 	if err != nil {
@@ -131,6 +135,8 @@ func errorResult(code, message string) *sdk.CallToolResult {
 // addTool registers a typed tool wrapped with per-call metrics and structured
 // logging. All v1 tools MUST be registered through this helper.
 // Governing: SPEC-0018 REQ "Observability", REQ "Error Handling Standards"
+//
+//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 func addTool[In, Out any](s *sdk.Server, t *sdk.Tool, h sdk.ToolHandlerFor[In, Out]) {
 	sdk.AddTool(s, t, func(ctx context.Context, req *sdk.CallToolRequest, in In) (*sdk.CallToolResult, Out, error) {
 		res, out, err := h(ctx, req, in)

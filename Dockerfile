@@ -9,7 +9,7 @@ COPY web/ web/
 RUN npm run build
 
 # Stage 2 — Go builder
-FROM golang:1.24-alpine AS go-builder
+FROM golang:1.25-alpine AS go-builder
 ARG VERSION=dev
 ARG COMMIT=unknown
 ARG BRANCH=unknown

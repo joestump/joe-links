@@ -108,10 +108,10 @@ func (s *UserStore) Upsert(ctx context.Context, provider, subject, email, displa
 	var existingID string
 	var existing User
 	err := s.db.GetContext(ctx, &existing, s.q(`SELECT * FROM users WHERE provider = ? AND subject = ?`), provider, subject)
-	switch {
-	case err == nil:
+	switch err {
+	case nil:
 		existingID = existing.ID
-	case err == sql.ErrNoRows:
+	case sql.ErrNoRows:
 		// New user — existingID stays empty.
 	default:
 		return nil, fmt.Errorf("lookup existing user: %w", err)

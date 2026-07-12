@@ -16,13 +16,13 @@ import (
 // Governing: SPEC-0010 REQ "Dashboard Visibility Filtering"
 type DashboardPage struct {
 	BasePage
-	User      *store.User
-	Links     []*store.Link
-	Tags      []*store.Tag
-	Query     string // current search query
-	Tag       string // current tag filter slug
-	Filter    string // "shared" for shared-with-me view
-	Flash     *Flash
+	User           *store.User
+	Links          []*store.Link
+	Tags           []*store.Tag
+	Query          string // current search query
+	Tag            string // current tag filter slug
+	Filter         string // "shared" for shared-with-me view
+	Flash          *Flash
 	ShowTitle      bool // show Title column
 	ShowOwner      bool // show Owner(s) column
 	ShowTags       bool // show Tags column

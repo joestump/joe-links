@@ -19,9 +19,11 @@ jobs:
           go-version-file: go.mod
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          # Pinned (not "latest") so lint results are reproducible; v2.x is
+          # required for repos with a go >= 1.25 directive. See issue #213.
+          version: v2.11.4
 
       - name: Install swag
         run: go install github.com/swaggo/swag/cmd/swag@latest
