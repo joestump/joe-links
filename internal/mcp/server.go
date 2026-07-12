@@ -73,9 +73,39 @@ func NewHandler(deps Deps, bearer *auth.BearerTokenMiddleware) http.Handler {
 	)
 	limited := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-		streamable.ServeHTTP(w, r)
+		// Stash the request's base URL so tool handlers can build canonical
+		// short URLs (the SDK threads this context into tool calls).
+		// Governing: SPEC-0018 REQ "Tool Inventory" — short URL in results
+		ctx := context.WithValue(r.Context(), baseURLKey{}, baseURLFromRequest(r))
+		streamable.ServeHTTP(w, r.WithContext(ctx))
 	})
 	return securityHeaders(bearer.Authenticate(limited))
+}
+
+// baseURLKey is the context key for the per-request scheme://host.
+type baseURLKey struct{}
+
+// baseURLFromRequest derives scheme://host the same way the web UI's SiteURL
+// does: X-Forwarded-Proto from the reverse proxy, else TLS state.
+func baseURLFromRequest(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	if xf := r.Header.Get("X-Forwarded-Proto"); xf != "" {
+		scheme = xf
+	}
+	return scheme + "://" + r.Host
+}
+
+// shortURL builds the canonical short URL for a slug from the request-scoped
+// base URL. Falls back to a bare path when no base is in context (never the
+// case for real requests).
+func shortURL(ctx context.Context, slug string) string {
+	if base, ok := ctx.Value(baseURLKey{}).(string); ok && base != "" {
+		return base + "/" + slug
+	}
+	return "/" + slug
 }
 
 // securityHeaders sets the response headers required by SPEC-0018 and adds a
@@ -109,8 +139,6 @@ func (cw *challengeWriter) WriteHeader(status int) {
 // Codes reuse the REST API vocabulary so one documented table serves both
 // surfaces.
 // Governing: SPEC-0018 REQ "Structured Tool Errors"
-//
-//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 type toolError struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -119,8 +147,6 @@ type toolError struct {
 // errorResult builds an MCP tool result flagged as an error, carrying a
 // stable code plus a human-readable message as JSON text content.
 // Governing: SPEC-0018 REQ "Structured Tool Errors"
-//
-//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 func errorResult(code, message string) *sdk.CallToolResult {
 	payload, err := json.Marshal(toolError{Code: code, Message: message})
 	if err != nil {
@@ -135,8 +161,6 @@ func errorResult(code, message string) *sdk.CallToolResult {
 // addTool registers a typed tool wrapped with per-call metrics and structured
 // logging. All v1 tools MUST be registered through this helper.
 // Governing: SPEC-0018 REQ "Observability", REQ "Error Handling Standards"
-//
-//nolint:unused // wired up by the SPEC-0018 tool-inventory story (#225)
 func addTool[In, Out any](s *sdk.Server, t *sdk.Tool, h sdk.ToolHandlerFor[In, Out]) {
 	sdk.AddTool(s, t, func(ctx context.Context, req *sdk.CallToolRequest, in In) (*sdk.CallToolResult, Out, error) {
 		res, out, err := h(ctx, req, in)
@@ -157,12 +181,4 @@ func addTool[In, Out any](s *sdk.Server, t *sdk.Tool, h sdk.ToolHandlerFor[In, O
 
 		return res, out, err
 	})
-}
-
-// registerTools registers the SPEC-0018 v1 tool inventory. Tools are added in
-// the tool-inventory story; the scaffold registers none.
-// Governing: SPEC-0018 REQ "Tool Inventory"
-func registerTools(s *sdk.Server, deps Deps) {
-	_ = s
-	_ = deps
 }

@@ -101,6 +101,86 @@ func (s *LinkStore) Create(ctx context.Context, slug, url, ownerID, title, descr
 	return s.GetByID(ctx, id)
 }
 
+// CreateFull creates a link together with its primary owner, tags, and share
+// grants in a single transaction: if any write fails, no partial link exists.
+// Tag names are deduplicated by their upserted tag ID so duplicate spellings
+// of the same tag cannot violate the link_tags primary key and roll back the
+// write. Share user IDs must be pre-resolved to existing users by the caller.
+// Governing: SPEC-0018 REQ "Database Operation Standards", ADR-0018
+func (s *LinkStore) CreateFull(ctx context.Context, slug, url, ownerID, title, description, visibility string, tagNames, shareUserIDs []string, sharedBy string) (*Link, error) {
+	// Governing: SPEC-0002 REQ "Links Table" — reject over-length title/description before insert
+	if err := ValidateLinkText(title, description); err != nil {
+		return nil, err
+	}
+	if visibility == "" {
+		visibility = "public"
+	}
+	id := uuid.New().String()
+	now := time.Now().UTC()
+
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create full link: begin tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
+		INSERT INTO links (id, slug, url, title, description, visibility, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	`), id, slug, url, title, description, visibility, now, now)
+	if err != nil {
+		if isUniqueConstraintError(err) {
+			return nil, ErrSlugTaken
+		}
+		return nil, fmt.Errorf("create full link: insert link: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, tx.Rebind(`
+		INSERT INTO link_owners (link_id, user_id, is_primary, created_at) VALUES (?, ?, 1, ?)
+	`), id, ownerID, now)
+	if err != nil {
+		return nil, fmt.Errorf("create full link: insert owner: %w", err)
+	}
+
+	seenTags := make(map[string]bool, len(tagNames))
+	for _, name := range tagNames {
+		tag, err := s.tags.upsertTx(ctx, tx, name)
+		if err != nil {
+			return nil, fmt.Errorf("create full link: upsert tag %q: %w", name, err)
+		}
+		if seenTags[tag.ID] {
+			continue
+		}
+		seenTags[tag.ID] = true
+		_, err = tx.ExecContext(ctx, tx.Rebind(`
+			INSERT INTO link_tags (link_id, tag_id) VALUES (?, ?)
+		`), id, tag.ID)
+		if err != nil {
+			return nil, fmt.Errorf("create full link: insert link_tag: %w", err)
+		}
+	}
+
+	seenShares := make(map[string]bool, len(shareUserIDs))
+	for _, uid := range shareUserIDs {
+		if seenShares[uid] {
+			continue
+		}
+		seenShares[uid] = true
+		_, err = tx.ExecContext(ctx, tx.Rebind(`
+			INSERT INTO link_shares (link_id, user_id, shared_by) VALUES (?, ?, ?)
+		`), id, uid, sharedBy)
+		if err != nil {
+			return nil, fmt.Errorf("create full link: insert share: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("create full link: commit: %w", err)
+	}
+
+	return s.GetByID(ctx, id)
+}
+
 // GetBySlug returns the link matching slug, or ErrNotFound.
 // Governing: SPEC-0002 REQ "Link Store Interface" — WHEN GetBySlug called with missing slug THEN returns sentinel ErrNotFound
 func (s *LinkStore) GetBySlug(ctx context.Context, slug string) (*Link, error) {
