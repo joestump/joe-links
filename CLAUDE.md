@@ -87,3 +87,22 @@ Third-party integrations live under `integrations/` to avoid polluting the repo 
 | `/sdd:check` | Quick-check code against ADRs and specs for drift |
 | `/sdd:audit` | Comprehensive design artifact alignment audit |
 | `/sdd:prime` | Load architecture context into session |
+
+### SDD Configuration
+
+- **Tracker**: GitHub
+- **Owner**: joestump
+- **Repo**: joe-links
+
+#### Branch Conventions
+- Prefix: `feature`
+- Epic Prefix: `epic`
+- Slug Max Length: 50
+
+#### PR Conventions
+- Close Keyword: `Closes`
+- Ref Keyword: `Part of`
+- Include Spec Reference: true
+
+#### Projects
+- Default Mode: per-epic
