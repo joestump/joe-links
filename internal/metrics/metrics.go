@@ -37,4 +37,10 @@ var (
 		Name: "joelinks_users_total",
 		Help: "Total number of registered users in the database.",
 	})
+
+	// Governing: SPEC-0018 REQ "Observability", ADR-0018
+	MCPToolCallsTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "joelinks_mcp_tool_calls_total",
+		Help: "MCP tool invocations by tool name and outcome.",
+	}, []string{"tool", "outcome"})
 )

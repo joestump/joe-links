@@ -56,6 +56,7 @@ var (
 		"u":         true,
 		"links":     true, // Governing: SPEC-0012 REQ "Public Link Browser Route Priority"
 		"metrics":   true, // Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+		"mcp":       true, // Governing: SPEC-0018 REQ "MCP Endpoint", ADR-0018
 	}
 )
 

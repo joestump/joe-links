@@ -5,6 +5,7 @@
 // Governing: SPEC-0007 REQ "Swagger UI Endpoint", ADR-0010
 // Governing: SPEC-0012 REQ "User Profile Route Priority"
 // Governing: SPEC-0016 REQ "Prometheus Metrics Endpoint", ADR-0016
+// Governing: SPEC-0018 REQ "MCP Endpoint", ADR-0018
 package handler
 
 import (
@@ -17,6 +18,7 @@ import (
 	"github.com/joestump/joe-links/internal/api"
 	"github.com/joestump/joe-links/internal/auth"
 	"github.com/joestump/joe-links/internal/llm"
+	"github.com/joestump/joe-links/internal/mcp"
 	"github.com/joestump/joe-links/internal/store"
 	"github.com/joestump/joe-links/web"
 	_ "github.com/joestump/joe-links/docs/swagger"
@@ -178,6 +180,22 @@ func NewRouter(deps Deps) http.Handler {
 		Suggester:        deps.Suggester,
 	})
 	r.Mount("/api/v1", apiRouter)
+
+	// MCP endpoint — Streamable HTTP (stateless), PAT bearer auth only;
+	// MUST be before slug catch-all. Serves POST/GET/DELETE on the single
+	// /mcp path per the Streamable HTTP transport.
+	// Governing: ADR-0018, SPEC-0018 REQ "MCP Endpoint", REQ "Bearer Token Authentication"
+	mcpHandler := mcp.NewHandler(mcp.Deps{
+		LinkStore:      deps.LinkStore,
+		OwnershipStore: deps.OwnershipStore,
+		TagStore:       deps.TagStore,
+		UserStore:      deps.UserStore,
+		KeywordStore:   deps.KeywordStore,
+		ClickStore:     deps.ClickStore,
+		Suggester:      deps.Suggester,
+		ShortKeyword:   deps.ShortKeyword,
+	}, bearerMiddleware)
+	r.Handle("/mcp", mcpHandler)
 
 	// User profile pages — no auth required, BEFORE slug catch-all.
 	// Governing: SPEC-0012 REQ "User Profile Page (GET /u/{display_name_slug})", REQ "User Profile Route Priority"
