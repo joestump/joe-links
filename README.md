@@ -62,6 +62,10 @@ All configuration uses environment variables prefixed with `JOE_`. You can also 
 | `JOE_SESSION_LIFETIME` | `720h` | Session absolute expiry (Go duration, default 30 days) |
 | `JOE_INSECURE_COOKIES` | `false` | Disable `Secure` flag on cookies (for local HTTP dev) |
 | `JOE_CLICK_RETENTION` | *(unset — retention off)* | Click retention horizon in integer days (minimum `90`). When set, a background pruner periodically deletes click rows older than the horizon. **Pruned rows are unrecoverable** — leave unset to keep click history forever (the default; nothing is ever deleted). With retention active, "all-time" totals become totals within the retention window and the UI labels them so. Run at most one instance with retention enabled |
+| `JOE_HEALTH_CHECKS_ENABLED` | `true` | Enables the destination health checker — a background goroutine that probes link destinations and records outcomes for the UI. Set `false` to stop all probing (in multi-replica deployments, run it on a single instance) |
+| `JOE_HEALTH_CHECK_INTERVAL` | `24h` | Health-check probe cadence (Go duration). Minimum `1h` — lower values are clamped to 1h, not rejected |
+| `JOE_HEALTH_CHECK_TIMEOUT` | `10s` | Per-probe timeout (Go duration). Maximum `30s` — higher values are clamped to 30s |
+| `JOE_HEALTH_CHECK_ALLOW_PRIVATE` | `false` | Allow health probes to private/internal addresses (operator-level SSRF escape hatch for intranet deployments that shortlink internal services) |
 
 ### DSN Examples
 

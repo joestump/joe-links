@@ -25,11 +25,16 @@ joe-links is configured via environment variables (prefixed with `JOE_`) or a `j
 | `JOE_SHORT_KEYWORD` | *(first DNS label of server hostname)* | No | Short-link prefix used in the UI and browser extension. Derived from the server hostname at request time — `go` from `go.example.com`, `links` from `links.example.com`, `localhost` from `localhost:8080`. Set explicitly if your hostname doesn't match your desired keyword |
 | `JOE_SESSION_LIFETIME` | `720h` | No | Session absolute expiry as a Go duration string |
 | `JOE_INSECURE_COOKIES` | `false` | No | Set to `true` to disable the `Secure` cookie flag (for local HTTP development) |
+| `JOE_CLICK_RETENTION` | *(unset — retention off)* | No | Click retention horizon in integer days (minimum `90`). When set, a background pruner deletes click rows older than the horizon — **pruned rows are unrecoverable**. Unset keeps click history forever (the default) |
 | `JOE_LLM_PROVIDER` | -- | No | Enables AI metadata suggestions. One of `anthropic`, `openai`, or `openai-compatible`. Unset = feature disabled |
 | `JOE_LLM_API_KEY` | -- | No | API key for the LLM provider. Optional for keyless `openai-compatible` endpoints (e.g. Ollama) |
 | `JOE_LLM_MODEL` | *(provider default)* | No | Model name. Defaults: `claude-haiku-4-5-20251001` (anthropic), `gpt-4o-mini` (openai/compatible) |
 | `JOE_LLM_BASE_URL` | -- | No | Base URL override for `openai-compatible` providers (e.g. `http://localhost:11434/v1` for Ollama) |
 | `JOE_LLM_PROMPT` | *(built-in template)* | No | Override the built-in suggestion prompt template |
+| `JOE_HEALTH_CHECKS_ENABLED` | `true` | No | Enables the destination health checker (a background goroutine that probes link destinations). Set `false` to disable all probing |
+| `JOE_HEALTH_CHECK_INTERVAL` | `24h` | No | Health-check probe cadence (Go duration). Minimum `1h` — lower values are clamped to 1h |
+| `JOE_HEALTH_CHECK_TIMEOUT` | `10s` | No | Per-probe timeout (Go duration). Maximum `30s` — higher values are clamped to 30s |
+| `JOE_HEALTH_CHECK_ALLOW_PRIVATE` | `false` | No | Allow health probes to private/internal addresses (SSRF escape hatch for intranet deployments) |
 
 ## AI Metadata Suggestions
 
@@ -98,7 +103,16 @@ oidc:
 admin_email: admin@example.com
 short_keyword: go
 insecure_cookies: false
-session_lifetime: 720h
+# NOTE: the session key is nested (session.lifetime) — a flat
+# session_lifetime does not bind.
+session:
+  lifetime: 720h
+# health_checks:
+#   enabled: true
+# health_check:
+#   interval: 24h
+#   timeout: 10s
+#   allow_private: false
 ```
 
 ## Session Lifetime Format

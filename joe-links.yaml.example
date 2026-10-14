@@ -40,6 +40,18 @@ session:
 # instance in multi-replica deployments.
 # click_retention: 365
 
+# Destination health checks (enabled by default). A background goroutine
+# probes link destinations and records outcomes for the UI; politeness
+# bounds are fixed by design. NOTE: the enabled flag lives under
+# `health_checks` (plural) while the tuning keys live under `health_check`
+# (singular) — a flat health_checks_enabled does not bind.
+# health_checks:
+#   enabled: true
+# health_check:
+#   interval: 24h        # probe cadence (minimum 1h; below is clamped)
+#   timeout: 10s         # per-probe timeout (maximum 30s; above is clamped)
+#   allow_private: false # probe private/internal addresses (SSRF escape hatch)
+
 # --- LLM slug suggestions (optional — omit provider to disable) ---
 # llm:
 #   provider: anthropic        # "anthropic", "openai", or "openai-compatible"
